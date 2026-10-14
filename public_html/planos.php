@@ -76,6 +76,6 @@ require __DIR__ . '/includes/header.php';
     </article>
 </section>
 
-<p class="plan-commitment page-width" style="margin-bottom: 42px"><span>Planos sem fidelidade. Cancele quando quiser.</span></p>
+<p class="plan-commitment page-width" style="margin-bottom: 42px"><span>PLANOS SEM FIDELIDADE. Cancele quando quiser.</span></p>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

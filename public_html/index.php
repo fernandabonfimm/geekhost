@@ -203,7 +203,7 @@ require __DIR__ . '/includes/header.php';
             <a class="arrow-link" href="https://wa.me/5516997399174">Fale com a equipe <span aria-hidden="true">↗</span></a>
         </article>
     </div>
-    <p class="plan-commitment"><span>Planos sem FIDELIDADE. CANCELE quando quiser.</span></p>
+    <p class="plan-commitment"><span>PLANOS SEM FIDELIDADE. Cancele quando quiser.</span></p>
 </section>
 
 <section class="technology-section" aria-labelledby="technology-title">
