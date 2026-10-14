@@ -393,6 +393,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .plan-includes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 25px; margin: 0; padding: 0; list-style: none; }
 .plan-includes-grid li { padding: 12px 0; border-top: 1px solid #d9ded7; color: #424950; font-size: 14px; }
 .plan-includes-grid li::before { content: '+'; margin-right: 10px; color: var(--leaf); font-weight: 800; }
+.detail-plan-includes { grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; margin: 8px 0 0; gap: 0 24px; }
+.detail-plan-includes li { font-size: 13px; }
 .simple-cta { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 0 80px; }
 .simple-cta p { margin: 0; color: var(--forest); font: 600 20px var(--font-display); }
 
