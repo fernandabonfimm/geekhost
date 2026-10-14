@@ -142,14 +142,14 @@ require __DIR__ . '/includes/header.php';
             <a class="button button-lime" href="#planos">Conheça os planos <span aria-hidden="true">↘</span></a>
             <a class="button button-outline button-support button-support-light" href="https://wa.me/5516997399174"><span>Fale com o suporte</span><span class="support-favicon" aria-hidden="true"><img src="assets/images/favicon.png" alt="" width="24" height="24"></span></a>
         </div>
-        <p class="hero-footnote">Teste e portabilidade sujeitos às condições comerciais.</p>
+        <p class="hero-footnote">7 dias grátis para começar. Sem fidelidade.</p>
     </div>
 </section>
 
 <section class="proof-strip page-width" aria-label="Destaques da oferta GeekHost">
-    <article><strong>3</strong><span>planos para diferentes etapas do seu projeto</span></article>
-    <article><strong>7 dias</strong><span>para testar, conforme as condições comerciais</span></article>
-    <article><strong>R$ 0</strong><span>de custo na portabilidade, conforme as condições comerciais</span></article>
+    <article><strong>4</strong><span>opções para diferentes necessidades</span></article>
+    <article><strong>7 dias</strong><span>grátis para começar</span></article>
+    <article><strong>Sem</strong><span>fidelidade: cancele quando quiser</span></article>
 </section>
 
 <section class="section section-plans page-width" id="planos">
@@ -158,41 +158,52 @@ require __DIR__ . '/includes/header.php';
             <p class="eyebrow">Encontre seu ponto de partida</p>
             <h2>Um plano para<br>cada próximo passo.</h2>
         </div>
-        <p class="section-lede">Do primeiro site a um projeto em expansão: compare os planos Light, Empresa e Premium. Os valores exibidos são de renovação.</p>
+        <p class="section-lede">Escolha entre três planos de hospedagem ou fale com a equipe para montar uma solução personalizada.</p>
     </div>
     <div class="plan-grid">
         <article class="plan-card plan-card-light" id="light" data-plan-card>
             <span class="plan-number">01 / PRESENÇA</span>
             <h3>Plano Light</h3>
             <p>Para colocar seu site e suas ideias no ar.</p>
-            <p class="plan-reference">De <del>R$ 514,80</del> em 12 cobranças mensais</p>
-            <p class="plan-price"><strong>R$ 32,90</strong><span>/mês no anual*</span></p>
-            <p class="plan-billing">R$ 394,80 pelo ciclo anual</p>
-            <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>23% OFF</strong><small>Economize R$ 120,00</small></span></div>
-            <a class="arrow-link" href="planos.php#light">Começar agora <span aria-hidden="true">↗</span></a>
+            <p class="plan-price"><strong>R$ 19,90</strong><span>/no 1º mês</span></p>
+            <p class="plan-regular-price">A partir do 2º mês: <strong>R$ 35,90/mês</strong></p>
+            <div class="plan-first-month"><span>7 dias grátis para começar</span></div>
+            <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>45% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div>
+            <ul class="plan-features"><li>5 contas de e-mail</li><li>10 GB de espaço</li><li>Banco de dados ilimitado</li></ul>
+            <a class="arrow-link" href="planos.php#light">Conhecer o Light <span aria-hidden="true">↗</span></a>
         </article>
         <article class="plan-card plan-card-green plan-card-recommended" id="empresa" data-plan-card>
             <span class="plan-recommendation">✓ Recomendado</span>
             <span class="plan-number">02 / CRESCIMENTO</span>
             <h3>Plano Empresa</h3>
             <p>Para negócios e equipes que querem crescer online.</p>
-            <p class="plan-reference">De <del>R$ 660,00</del> em 12 cobranças mensais</p>
-            <p class="plan-price"><strong>R$ 19,95</strong><span>/mês no anual*</span></p>
-            <p class="plan-billing">R$ 239,40 pelo ciclo anual</p>
-            <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>64% OFF</strong><small>Economize R$ 420,60</small></span></div>
-            <a class="arrow-link" href="planos.php#empresa">Começar agora <span aria-hidden="true">↗</span></a>
+            <p class="plan-price"><strong>R$ 29,90</strong><span>/no 1º mês</span></p>
+            <p class="plan-regular-price">A partir do 2º mês: <strong>R$ 45,90/mês</strong></p>
+            <div class="plan-first-month"><span>7 dias grátis para começar</span></div>
+            <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>35% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div>
+            <ul class="plan-features"><li>10 contas de e-mail</li><li>15 GB de espaço</li><li>Banco de dados ilimitado</li></ul>
+            <a class="arrow-link" href="planos.php#empresa">Conhecer o Empresa <span aria-hidden="true">↗</span></a>
         </article>
         <article class="plan-card plan-card-lime" id="premium" data-plan-card>
             <span class="plan-number">03 / COMÉRCIO</span>
             <h3>Plano Premium</h3>
             <p>Para projetos que precisam de uma estrutura mais completa.</p>
-            <p class="plan-reference">De <del>R$ 744,00</del> em 12 cobranças mensais</p>
-            <p class="plan-price"><strong>R$ 24,95</strong><span>/mês no anual*</span></p>
-            <p class="plan-billing">R$ 299,40 pelo ciclo anual</p>
-            <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>60% OFF</strong><small>Economize R$ 444,60</small></span></div>
-            <a class="arrow-link" href="planos.php#premium">Começar agora <span aria-hidden="true">↗</span></a>
+            <p class="plan-price"><strong>R$ 39,90</strong><span>/no 1º mês</span></p>
+            <p class="plan-regular-price">A partir do 2º mês: <strong>R$ 55,90/mês</strong></p>
+            <div class="plan-first-month"><span>7 dias grátis para começar</span></div>
+            <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>29% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div>
+            <ul class="plan-features"><li>E-mails ilimitados</li><li>25 GB de espaço</li><li>Banco de dados ilimitado</li></ul>
+            <a class="arrow-link" href="planos.php#premium">Conhecer o Premium <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="plan-card plan-card-custom" id="personalizado" data-plan-card>
+            <span class="plan-number">04 / SOB MEDIDA</span>
+            <h3>Plano Personalizado</h3>
+            <p>Precisa de mais? Entre em contato!</p>
+            <p class="plan-custom-note">Vamos entender o seu projeto e conversar sobre uma solução sob medida.</p>
+            <a class="arrow-link" href="https://wa.me/5516997399174">Fale com a equipe <span aria-hidden="true">↗</span></a>
         </article>
     </div>
+    <p class="plan-commitment"><span>Planos sem FIDELIDADE. CANCELE quando quiser.</span></p>
 </section>
 
 <section class="technology-section" aria-labelledby="technology-title">
@@ -247,7 +258,7 @@ require __DIR__ . '/includes/header.php';
             <article class="benefit-item"><span>03</span><h3>Painel cPanel em português</h3><p>Gerencie hospedagem e e-mails em um painel conhecido, completo e fácil de usar.</p></article>
             <article class="benefit-item"><span>04</span><h3>Suporte humano</h3><p>Fale com o time GeekHost pelo WhatsApp quando precisar de orientação.</p></article>
         </div>
-        <p class="benefit-note">Teste grátis por 7 dias e portabilidade gratuita sujeitos às condições comerciais.</p>
+        <p class="benefit-note">7 dias grátis no início da contratação, conforme as condições comerciais. Todos os planos são sem fidelidade.</p>
     </div>
 </section>
 
@@ -386,12 +397,12 @@ require __DIR__ . '/includes/header.php';
                 <p>O Light é uma opção para colocar um primeiro site no ar; o Empresa atende negócios que querem crescer online; e o Premium é voltado a projetos em expansão. Compare os ciclos e confirme os recursos de cada plano antes de contratar.</p>
             </details>
             <details>
-                <summary>Como comparar os valores mensal, semestral e anual?</summary>
-                <p>Na página de planos você encontra os valores de cada ciclo. Na home, o preço mensal em destaque no ciclo anual é uma equivalência: o total anual dividido por 12. A cobrança do ciclo anual corresponde ao total indicado.</p>
+                <summary>Como funciona o preço promocional do primeiro mês?</summary>
+                <p>Após os 7 dias grátis, aplica-se o valor promocional informado para o primeiro mês. A partir do segundo mês, passa a valer o preço mensal regular exibido para cada plano.</p>
             </details>
             <details>
                 <summary>A GeekHost pode migrar meu site?</summary>
-                <p>A GeekHost oferece portabilidade gratuita, sujeita às condições do serviço. Fale com a equipe para confirmar a elegibilidade e os detalhes da migração do seu site.</p>
+                <p>Fale com a equipe para verificar as possibilidades e as condições de migração do seu site para a GeekHost.</p>
             </details>
             <details>
                 <summary>Existe um período para testar a hospedagem?</summary>
