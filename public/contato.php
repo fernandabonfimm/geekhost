@@ -41,7 +41,7 @@ $subjectLabels = [
         <?php if ($companyWhatsapp !== ''): ?>
             <div class="contact-detail">
                 <span class="contact-symbol" aria-hidden="true">↗</span>
-                <div><span class="contact-label">WhatsApp</span><a href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer">Iniciar conversa</a></div>
+                <div><span class="contact-label">WhatsApp</span><a class="button button-outline button-support" href="whatsapp.php" target="_blank" rel="noopener noreferrer"><span>Iniciar conversa</span><span class="support-favicon" aria-hidden="true"><img src="assets/images/favicon.png" alt="" width="24" height="24"></span></a></div>
             </div>
         <?php endif; ?>
     </div>
@@ -64,7 +64,7 @@ $subjectLabels = [
             </select>
             <label for="contact-message">Sua mensagem</label>
             <textarea id="contact-message" name="message" rows="5" required maxlength="3000" placeholder="Escreva aqui o que você gostaria de saber." <?= $companyEmail === '' ? 'disabled' : '' ?>></textarea>
-            <button class="button button-dark" type="submit" <?= $companyEmail === '' ? 'disabled' : '' ?>>Preparar e-mail <span aria-hidden="true">↗</span></button>
+            <button class="button button-dark" type="submit" <?= $companyEmail === '' ? 'disabled' : '' ?>>Enviar e-mail <span aria-hidden="true">↗</span></button>
             <p class="form-status" data-contact-status aria-live="polite"></p>
             <p class="fine-print">O envio abrirá o aplicativo de e-mail configurado no seu dispositivo.</p>
         </form>

@@ -24,6 +24,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const testimonialCarousel = document.querySelector('[data-testimonial-carousel]');
+    if (testimonialCarousel) {
+        const slides = [...testimonialCarousel.querySelectorAll('[data-testimonial-slide]')];
+        const previousButton = testimonialCarousel.querySelector('[data-testimonial-prev]');
+        const nextButton = testimonialCarousel.querySelector('[data-testimonial-next]');
+        const dots = [...testimonialCarousel.querySelectorAll('[data-testimonial-dot]')];
+        const status = testimonialCarousel.querySelector('[data-testimonial-status]');
+
+        if (slides.length > 1 && previousButton && nextButton) {
+            let activeIndex = Math.max(0, slides.findIndex((slide) => slide.classList.contains('is-active')));
+
+            const showSlide = (index) => {
+                activeIndex = (index + slides.length) % slides.length;
+                slides.forEach((slide, slideIndex) => {
+                    const isActive = slideIndex === activeIndex;
+                    slide.classList.toggle('is-active', isActive);
+                    slide.setAttribute('aria-hidden', String(!isActive));
+                    slide.inert = !isActive;
+                });
+                dots.forEach((dot, dotIndex) => {
+                    const isActive = dotIndex === activeIndex;
+                    dot.classList.toggle('is-active', isActive);
+                    dot.setAttribute('aria-pressed', String(isActive));
+                });
+                if (status) status.textContent = `Depoimento ${activeIndex + 1} de ${slides.length}`;
+            };
+
+            previousButton.addEventListener('click', () => showSlide(activeIndex - 1));
+            nextButton.addEventListener('click', () => showSlide(activeIndex + 1));
+            dots.forEach((dot) => {
+                dot.addEventListener('click', () => showSlide(Number(dot.dataset.testimonialDot)));
+            });
+            testimonialCarousel.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    showSlide(activeIndex - 1);
+                } else if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    showSlide(activeIndex + 1);
+                }
+            });
+            showSlide(activeIndex);
+        }
+    }
+
     const contactForm = document.querySelector('[data-contact-form]');
     if (contactForm) {
         contactForm.addEventListener('submit', (event) => {
@@ -61,25 +106,57 @@ document.addEventListener('DOMContentLoaded', () => {
         const resultHint = document.querySelector('[data-result-hint]');
         const resultWrap = document.querySelector('[data-generated-link-wrap]');
         const generatedLink = document.querySelector('[data-generated-link]');
+        const linkExpiryNote = document.querySelector('[data-link-expiry]');
         const openWhatsapp = document.querySelector('[data-open-whatsapp]');
         const copyButton = document.querySelector('[data-copy-link]');
         const downloadButton = document.querySelector('[data-download-qr]');
+        const submitButton = generatorForm.querySelector('button[type="submit"]');
         const hostingDialog = document.querySelector('[data-hosting-dialog]');
         const dialogContinue = document.querySelector('[data-dialog-continue]');
         const dialogClose = document.querySelector('[data-dialog-close]');
         let pendingLink = '';
 
-        const generateResult = (link) => {
-            generatedLink.value = link;
-            openWhatsapp.href = link;
+        const generateResult = async (linkData) => {
+            submitButton.disabled = true;
+            resultWrap.hidden = true;
+            resultHint.hidden = false;
+            linkExpiryNote.hidden = true;
+            qrError.hidden = true;
+            qrPlaceholder.hidden = false;
+            qrContainer.hidden = true;
+            status.textContent = 'Criando seu link temporário...';
+
+            let result;
+            try {
+                const response = await fetch('criar-link.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(linkData),
+                });
+                result = await response.json();
+                if (!response.ok || typeof result.url !== 'string' || !Number.isInteger(result.expiresAt)) {
+                    throw new Error('Link temporário indisponível. Tente novamente.');
+                }
+            } catch {
+                status.textContent = 'Não foi possível criar o link temporário. Tente novamente.';
+                submitButton.disabled = false;
+                return;
+            }
+
+            generatedLink.value = result.url;
+            openWhatsapp.href = result.url;
             resultWrap.hidden = false;
             resultHint.hidden = true;
-            qrError.hidden = true;
-            status.textContent = 'Link criado. Confira o resultado e teste antes de divulgar.';
+            status.textContent = 'Link criado. Confira e teste antes de divulgar.';
+            const expiresAt = new Date(result.expiresAt * 1000);
+            const formattedExpiry = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(expiresAt);
+            linkExpiryNote.textContent = `Válido até ${formattedExpiry}. Depois desse prazo, os acessos serão direcionados aos planos GeekHost.`;
+            linkExpiryNote.hidden = false;
 
             if (typeof window.QRCode !== 'function') {
                 qrPlaceholder.hidden = true;
                 qrError.hidden = false;
+                submitButton.disabled = false;
                 return;
             }
 
@@ -87,13 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
             qrContainer.hidden = false;
             qrContainer.replaceChildren();
             new window.QRCode(qrContainer, {
-                text: link,
+                text: result.url,
                 width: 220,
                 height: 220,
                 colorDark: '#1a1e24',
                 colorLight: '#ffffff',
                 correctLevel: window.QRCode.CorrectLevel.H,
             });
+            submitButton.disabled = false;
         };
 
         generatorForm.addEventListener('submit', (event) => {
@@ -108,26 +186,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const fullNumber = `${countryCode}${phone}`;
-            const query = message ? `?text=${encodeURIComponent(message)}` : '';
-            const link = `https://wa.me/${fullNumber}${query}`;
+            const linkData = { number: `${countryCode}${phone}`, message };
 
             if (hostingDialog && typeof hostingDialog.showModal === 'function') {
-                pendingLink = link;
+                pendingLink = linkData;
                 status.textContent = 'Escolha se deseja conhecer os planos ou continuar com o gerador gratuito.';
                 hostingDialog.showModal();
                 return;
             }
 
-            generateResult(link);
+            generateResult(linkData);
         });
 
         if (hostingDialog && dialogContinue) {
             dialogContinue.addEventListener('click', () => {
-                const link = pendingLink;
+                const linkData = pendingLink;
                 pendingLink = '';
                 hostingDialog.close();
-                if (link) generateResult(link);
+                if (linkData) generateResult(linkData);
             });
 
             hostingDialog.addEventListener('close', () => {

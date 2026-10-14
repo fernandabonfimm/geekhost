@@ -27,7 +27,7 @@ $navigation = [
 <header class="site-header">
     <div class="header-inner">
         <a class="brand" href="index.php" aria-label="GeekHost, página inicial">
-            <img class="header-logo" src="assets/images/logo-header.png" alt="" width="190" height="48">
+            <img class="header-logo" src="assets/images/logo-header.png" alt="" width="400" height="240">
         </a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation">
             Menu
@@ -36,7 +36,7 @@ $navigation = [
             <?php foreach ($navigation as $key => $item): ?>
                 <a href="<?= e($item['href']) ?>" <?= $currentPage === $key ? 'aria-current="page"' : '' ?>><?= e($item['label']) ?></a>
             <?php endforeach; ?>
-            <a class="nav-tool" href="gerador.php">Gerador de WhatsApp <span aria-hidden="true">↗</span></a>
+            <a class="nav-tool" href="<?= $currentPage === 'inicio' ? '#planos' : 'planos.php' ?>">Ver planos <span aria-hidden="true">↗</span></a>
         </nav>
     </div>
 </header>

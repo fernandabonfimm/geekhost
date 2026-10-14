@@ -2,8 +2,8 @@
 <footer class="site-footer">
     <div class="footer-inner">
         <a class="brand brand-footer" href="index.php" aria-label="GeekHost, página inicial">
-            <img class="footer-emblem" src="assets/images/emblema.png" alt="" width="48" height="48">
-            <span class="brand-name">geekhost<span class="brand-dot">.</span></span>
+            <img class="footer-emblem" src="assets/images/emblema.png" alt="" width="60" height="60">
+            <span class="brand-name">geekhost</span>
         </a>
         <p>Seu projeto merece um bom começo.</p>
         <nav class="footer-links" aria-label="Links do rodapé">
@@ -11,7 +11,7 @@
             <a href="contato.php">Contato</a>
             <a href="gerador.php">Gerador de WhatsApp</a>
         </nav>
-        <small>&copy; <?= date('Y') ?> GeekHost. Consulte as condições comerciais antes de contratar.</small>
+        <small>&copy; <?= date('Y') ?> GeekHost - Criado por dois nerds apaixonados por códigos</small>
     </div>
 </footer>
 <button class="scroll-top" type="button" data-scroll-top aria-label="Voltar ao topo" title="Voltar ao topo" hidden>
