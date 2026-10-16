@@ -247,10 +247,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .people-heading .eyebrow { margin-bottom: 12px; }
 .people-heading h2 { max-width: 650px; margin: 0; color: var(--forest); font: 600 38px/1.12 var(--font-display); }
 .people-heading > p:last-child { max-width: 600px; margin: 14px 0 0; color: var(--muted); }
-.people-story { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: center; gap: clamp(28px, 5vw, 70px); padding-block: 25px; border-top: 1px solid #cbd0d4; }
+.people-story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; gap: clamp(28px, 5vw, 70px); padding-block: 25px; border-top: 1px solid #cbd0d4; }
+.people-story-reverse { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
 .people-story-reverse .people-story-visual { order: 2; }
 .people-story-visual { min-width: 0; margin: 0; overflow: hidden; border-radius: 5px; background: #dfe2e5; }
-.people-story-visual img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+.people-story-visual img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
 .people-story-copy { max-width: 460px; }
 .people-story-label { color: var(--leaf); font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .people-story-copy h3 { margin: 12px 0 10px; color: var(--forest); font: 600 26px/1.2 var(--font-display); }
@@ -378,6 +379,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .detail-plan-card .plan-price span { font-size: 15px; }
 .detail-plan-card .plan-regular-price { max-width: none; margin: 8px 0 0; font-size: 16px; }
 .detail-plan-card .plan-regular-price strong { font-size: 17px; }
+.detail-plan-period-prices { display: grid; gap: 2px; margin-top: 8px; color: #4e555d; font-size: 14px; line-height: 1.4; }
+.detail-plan-period-prices p { margin: 0; }
+.detail-plan-period-prices strong { color: var(--forest); }
+.plan-card-green .detail-plan-period-prices, .plan-card-green .detail-plan-period-prices strong { color: rgba(255, 255, 255, .9); }
 .detail-plan-card .plan-first-month { max-width: 420px; margin-top: 14px; font-size: 14px; }
 .detail-plan-card .plan-savings { width: 100%; max-width: none; margin-top: 12px; }
 .detail-plan-card .plan-savings strong { font-size: 13px; }
@@ -487,15 +492,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .footer-links { display: flex; gap: 23px; color: rgba(255, 255, 255, .78); font-size: 12px; }
 .footer-links a:hover { color: var(--lime); }
 .footer-inner > small { grid-column: 1 / -1; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .17); color: rgba(255, 255, 255, .78); font-size: 12px; line-height: 1.6; }
+.footer-social { display: flex; grid-column: 1 / -1; gap: 9px; }
+.footer-social a { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid rgba(255, 255, 255, .42); border-radius: 50%; background: transparent; transition: border-color .18s ease, background-color .18s ease, transform .18s ease; }
+.footer-social a:hover { transform: translateY(-2px); border-color: var(--white); background: rgba(255, 255, 255, .08); }
+.footer-social img { display: block; width: 16px; height: 16px; object-fit: contain; }
 .scroll-top { position: fixed; right: 24px; bottom: 24px; z-index: 25; display: grid; width: 48px; height: 48px; place-items: center; border: 0; border-radius: 2px; background: var(--lime); color: var(--forest); box-shadow: 0 5px 18px rgba(26, 30, 36, .2); cursor: pointer; font-size: 24px; line-height: 1; transition: transform .18s ease, background-color .18s ease; }
 .scroll-top:hover { transform: translateY(-3px); background: #19f264; }
 .scroll-top[hidden] { display: none; }
+.whatsapp-float { position: fixed; right: 24px; bottom: 88px; z-index: 26; display: grid; width: 58px; height: 58px; place-items: center; border: 2px solid #25d366; border-radius: 50%; background: #25d366; box-shadow: 0 4px 16px rgba(37, 211, 102, .36); transition: transform .18s ease, box-shadow .18s ease; }
+.whatsapp-float::before { position: absolute; inset: -3px; border: 2px solid #25d366; border-radius: inherit; content: ''; animation: whatsapp-pulse 1.8s ease-out infinite; }
+.whatsapp-float:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(37, 211, 102, .5); }
+.whatsapp-float img { display: block; width: 30px; height: 30px; }
 
 [hidden] { display: none !important; }
 @keyframes arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulse-dot {
     0%, 100% { transform: scale(1); opacity: .8; }
     50% { transform: scale(1.3); opacity: 1; }
+}
+@keyframes whatsapp-pulse {
+    0% { transform: scale(1); opacity: .8; }
+    100% { transform: scale(1.55); opacity: 0; }
 }
 @keyframes float-orb {
     0%, 100% { transform: translateY(0) scale(1); opacity: .35; }
@@ -713,6 +730,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .footer-links { flex-wrap: wrap; gap: 12px 20px; }
     .footer-inner > small { grid-column: 1; margin-top: 5px; }
     .scroll-top { right: 18px; bottom: 18px; width: 44px; height: 44px; }
+    .whatsapp-float { right: 18px; bottom: 78px; width: 54px; height: 54px; }
 }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

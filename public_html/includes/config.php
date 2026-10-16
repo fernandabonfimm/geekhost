@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $siteName = 'GeekHost';
 $companyEmail = filter_var(getenv('GEEKHOST_CONTACT_EMAIL') ?: 'contato@geekhost.com.br', FILTER_VALIDATE_EMAIL) ?: '';
-$companyWhatsapp = preg_replace('/\D+/', '', getenv('GEEKHOST_WHATSAPP') ?: '');
+$companyWhatsapp = preg_replace('/\D+/', '', getenv('GEEKHOST_WHATSAPP') ?: '5516997399174');
 
 function e(string $value): string
 {
