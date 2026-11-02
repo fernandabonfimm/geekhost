@@ -50,7 +50,7 @@ require __DIR__ . '/includes/header.php';
 		<div class="hosting-dialog-copy">
 			<p class="eyebrow">Seu próximo passo</p>
 			<h2 id="hosting-dialog-title">Seu projeto também merece um site próprio.</h2>
-			<p>Os links gratuitos gerados aqui valem por 7 dias. Depois desse prazo, os acessos são direcionados aos planos GeekHost. Para apresentar sua marca, seus serviços e seus projetos em um endereço próprio, conheça a hospedagem.</p>
+			<p>Os links gratuitos gerados aqui valem por 7 dias. Depois desse prazo, os acessos são direcionados aos planos GeekHost. Para apresentar sua marca, seus serviços e seus projetos em um endereço próprio, conheça a hospedagem de sites.</p>
 			<ul class="hosting-benefits">
 				<li>Hospedagem otimizada em SSD</li>
 				<li>Teste grátis por 7 dias*</li>

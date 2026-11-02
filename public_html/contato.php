@@ -1,7 +1,7 @@
 <?php
 
 $pageTitle = 'Entre em contato';
-$pageDescription = 'Entre em contato com a GeekHost para tirar dúvidas sobre hospedagem e encontrar uma opção para seu projeto.';
+$pageDescription = 'Entre em contato com a GeekHost para tirar dúvidas sobre hospedagem de sites e encontrar uma opção para seu projeto.';
 $currentPage = 'contato';
 require __DIR__ . '/includes/header.php';
 
@@ -20,7 +20,7 @@ $subjectLabels = [
 <section class="page-hero page-width contact-hero">
     <p class="eyebrow">Contato</p>
     <h1>Conta pra gente<br>o que você imagina.</h1>
-    <p class="page-hero-copy">Dúvidas sobre hospedagem ou sobre o próximo passo do seu site? Envie uma mensagem para a equipe.</p>
+    <p class="page-hero-copy">Dúvidas sobre hospedagem de sites ou sobre o próximo passo do seu site? Envie uma mensagem para a equipe.</p>
 </section>
 
 <section class="contact-layout page-width">
