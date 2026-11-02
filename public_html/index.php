@@ -102,7 +102,7 @@ $testimonials = [
     [
         'name' => 'Mariana Costa',
         'profile' => 'Empreendedora',
-        'text' => 'Ter um site profissional fez toda a diferença para o meu negócio. Eu precisava de uma hospedagem fácil de administrar e que me desse tranquilidade no dia a dia. A GeekHost é a escolha que eu buscava para manter meu projeto online.',
+        'text' => 'Ter um site profissional fez toda a diferença para o meu negócio. Eu precisava de uma hospedagem de sites fácil de administrar e que me desse tranquilidade no dia a dia. A GeekHost é a escolha que eu buscava para manter meu projeto online.',
         'image' => 'assets/images/depoimentos/Mariana%20Costa.jpg',
         'image_alt' => 'Foto ilustrativa de uma empreendedora em seu ambiente de trabalho',
         'rating' => null,
@@ -196,9 +196,9 @@ require __DIR__ . '/includes/header.php';
             <p class="eyebrow">Hospedagem de sites</p>
             <h2>Um plano de hospedagem<br>para cada próximo passo.</h2>
         </div>
-        <p class="section-lede">Escolha entre três planos de hospedagem de sites ou fale com a equipe para montar uma solução personalizada.</p>
+        <p class="section-lede">Escolha entre planos de hospedagem de sites, servidores VPS ou fale com a equipe para montar uma solução personalizada.</p>
     </div>
-    <div class="plan-grid">
+    <div class="plan-grid plan-grid-five">
         <article class="plan-card plan-card-light" id="light" data-plan-card>
             <span class="plan-type-label">Hospedagem de sites</span>
             <span class="plan-number">01 / PRESENÇA</span>
@@ -236,8 +236,19 @@ require __DIR__ . '/includes/header.php';
             <ul class="plan-features"><li>E-mails ilimitados</li><li>25 GB de espaço</li><li>Banco de dados ilimitado</li></ul>
             <a class="arrow-link" href="planos.php#premium">Conhecer o Premium <span aria-hidden="true">↗</span></a>
         </article>
+        <article class="plan-card plan-card-vps" id="vps" data-plan-card>
+            <span class="plan-type-label">Servidor VPS</span>
+            <span class="plan-number">04 / SERVIDOR</span>
+            <h3>Plano VPS</h3>
+            <p>Recursos dedicados com NVMe, root e desempenho para projetos exigentes.</p>
+            <p class="plan-price"><strong>R$ 89,90</strong><span>/a partir de</span></p>
+            <p class="plan-regular-price">Servidores VPS com LiteSpeed, SSL e suporte GeekHost.</p>
+            <div class="plan-first-month"><span>Foco em performance e controle</span></div>
+            <ul class="plan-features"><li>NVMe SSD</li><li>Acesso root</li><li>LiteSpeed + SSL</li></ul>
+            <a class="arrow-link" href="vps.php">Conhecer a VPS <span aria-hidden="true">↗</span></a>
+        </article>
         <article class="plan-card plan-card-custom" id="personalizado" data-plan-card>
-            <span class="plan-number">04 / SOB MEDIDA</span>
+            <span class="plan-number">05 / SOB MEDIDA</span>
             <h3>Plano Personalizado</h3>
             <p>Precisa de mais? Entre em contato!</p>
             <p class="plan-custom-note">Vamos entender o seu projeto e conversar sobre uma solução sob medida.</p>
@@ -276,7 +287,7 @@ require __DIR__ . '/includes/header.php';
     <div class="page-width security-layout">
         <div class="security-copy">
             <p class="security-badge"><span aria-hidden="true">✓</span> Segurança Avançada</p>
-            <h2 id="security-title">Site de hospedagem seguro</h2>
+            <h2 id="security-title">Site de hospedagem de sites seguro</h2>
             <ul class="security-bullets">
                 <li><span class="security-check" aria-hidden="true">✓</span><p><strong>Certificados SSL gratuitos</strong>, instalados automaticamente, garantem criptografia forte e protegem os dados — sempre ativos, com renovação automática.</p></li>
                 <li><span class="security-check" aria-hidden="true">✓</span><p><strong>Detector de malware avançado</strong>, identifica, isola e remove ameaças em tempo real nos sites dos seus clientes, reduzindo riscos com relatórios e alertas automáticos.</p></li>
@@ -375,6 +386,36 @@ require __DIR__ . '/includes/header.php';
     </div>
 </section>
 
+<section class="vps-home-section" id="vps-destaque" aria-labelledby="vps-home-title">
+    <div class="page-width vps-home-layout">
+        <div class="vps-home-copy">
+            <p class="eyebrow">Servidores VPS</p>
+            <h2 id="vps-home-title">Precisa de mais poder?<br>Conheça nossos servidores VPS.</h2>
+            <p>Para projetos que pedem recursos dedicados, acesso root e desempenho NVMe. LiteSpeed, SSL grátis, Softaculous e suporte GeekHost para colocar sua aplicação no ar com mais controle.</p>
+            <ul class="vps-home-points">
+                <li>NVMe SSD e banda premium</li>
+                <li>Recursos dedicados com root</li>
+                <li>LiteSpeed, CloudLinux e Cloudflare CDN</li>
+            </ul>
+            <div class="vps-home-actions">
+                <a class="button button-lime" href="vps.php">Ver planos VPS <span aria-hidden="true">↗</span></a>
+                <a class="button button-outline-dark" href="https://wa.me/5516997399174?text=Quero%20conhecer%20os%20servidores%20VPS">Falar no WhatsApp</a>
+            </div>
+        </div>
+        <aside class="vps-home-panel" aria-label="Destaque VPS GeekHost">
+            <p class="vps-home-panel-label">A partir de</p>
+            <p class="vps-home-panel-price"><strong>R$ 89,90</strong><span>/mês</span></p>
+            <ul>
+                <li>40 GB NVMe SSD</li>
+                <li>1 vCPU · 2 GB RAM</li>
+                <li>LiteSpeed + SSL grátis</li>
+                <li>Acesso root</li>
+            </ul>
+            <a class="arrow-link" href="vps.php">Montar meu VPS <span aria-hidden="true">↗</span></a>
+        </aside>
+    </div>
+</section>
+
 <section class="benefits-section" id="vantagens">
     <div class="page-width">
         <div class="section-heading">
@@ -386,8 +427,8 @@ require __DIR__ . '/includes/header.php';
         </div>
         <div class="benefit-grid">
             <article class="benefit-item"><span>01</span><h3>Performance em SSD</h3><p>Plataforma baseada em SSD e estrutura pensada para aplicações que precisam de agilidade.</p></article>
-            <article class="benefit-item"><span>02</span><h3>Hospedagem gerenciada</h3><p>Conte com uma equipe para apoiar a rotina de hospedagem e deixar você focar no seu projeto.</p></article>
-            <article class="benefit-item"><span>03</span><h3>Painel cPanel em português</h3><p>Gerencie hospedagem e e-mails em um painel conhecido, completo e fácil de usar.</p></article>
+            <article class="benefit-item"><span>02</span><h3>Hospedagem de sites gerenciada</h3><p>Conte com uma equipe para apoiar a rotina de hospedagem de sites e deixar você focar no seu projeto.</p></article>
+            <article class="benefit-item"><span>03</span><h3>Painel cPanel em português</h3><p>Gerencie hospedagem de sites e e-mails em um painel conhecido, completo e fácil de usar.</p></article>
             <article class="benefit-item"><span>04</span><h3>Suporte humano</h3><p>Fale com o time GeekHost pelo WhatsApp quando precisar de orientação.</p></article>
         </div>
         <p class="benefit-note">7 dias grátis no início da contratação, conforme as condições comerciais. Todos os planos são sem fidelidade.</p>
@@ -546,7 +587,7 @@ require __DIR__ . '/includes/header.php';
 
 <section class="closing-cta page-width">
     <p class="eyebrow">Vamos tirar do papel?</p>
-    <div class="closing-row"><h2>Seu próximo site<br>começa pela hospedagem certa.</h2><a class="button button-dark" href="#planos">Ver planos de hospedagem <span aria-hidden="true">↗</span></a></div>
+    <div class="closing-row"><h2>Seu próximo site<br>começa pela hospedagem de sites certa.</h2><a class="button button-dark" href="#planos">Ver planos de hospedagem de sites <span aria-hidden="true">↗</span></a></div>
 </section>
 
 <section class="generator-promo" id="gerador" aria-labelledby="generator-title">

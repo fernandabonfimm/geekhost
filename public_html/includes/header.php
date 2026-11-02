@@ -8,6 +8,7 @@ $currentPage = $currentPage ?? '';
 $navigation = [
     'inicio' => ['label' => 'Início', 'href' => 'index.php'],
     'planos' => ['label' => 'Planos', 'href' => 'planos.php'],
+    'vps' => ['label' => 'VPS', 'href' => 'vps.php'],
     'contato' => ['label' => 'Contato', 'href' => 'contato.php'],
 ];
 ?>
