@@ -1,7 +1,7 @@
 <?php
 
-$pageTitle = 'Planos de hospedagem de sites e VPS';
-$pageDescription = 'Conheça os planos de hospedagem de sites e servidores VPS da GeekHost: Light, Empresa, Premium, VPS e Personalizado.';
+$pageTitle = 'Planos de hospedagem de sites';
+$pageDescription = 'Conheça os planos de hospedagem de sites mensais, semestrais e anuais Light, Empresa, Premium e Personalizado da GeekHost, com 7 dias grátis e recursos para cada etapa do seu projeto.';
 $currentPage = 'planos';
 $sharedPlanFeatures = [
     'SSL grátis em todos os planos',
@@ -16,26 +16,16 @@ $sharedPlanFeatures = [
     'WordPress Toolkit',
     'Anti-Spam Profissional',
 ];
-$vpsPlanFeatures = [
-    'Armazenamento NVMe SSD',
-    'Acesso root',
-    'LiteSpeed Webserver',
-    'SSL grátis',
-    'Softaculous',
-    'CloudLinux + CageFS',
-    'Cloudflare CDN',
-    'Suporte GeekHost',
-];
 require __DIR__ . '/includes/header.php';
 ?>
 
 <section class="page-hero page-width">
-    <p class="eyebrow">Hospedagem e VPS</p>
-    <h1>Escolha a estrutura<br>para o seu projeto.</h1>
-    <p class="page-hero-copy">Os planos Light, Empresa e Premium são de hospedagem de sites. O Plano VPS oferece recursos dedicados para quem precisa de mais desempenho e controle.</p>
+    <p class="eyebrow">Hospedagem de sites</p>
+    <h1>Escolha a hospedagem<br>para o seu site.</h1>
+    <p class="page-hero-copy">Os três planos com preço são de hospedagem de sites e incluem 7 dias grátis. Compare os recursos, o preço promocional do primeiro mês e os valores semestrais e anuais. Para servidores dedicados, conheça a página de <a href="vps.php">VPS</a>.</p>
 </section>
 
-<section class="detail-plan-grid page-width" aria-label="Planos GeekHost">
+<section class="detail-plan-grid page-width" aria-label="Planos de hospedagem de sites">
     <article class="plan-card plan-card-light detail-plan-card" id="light" data-plan-card>
         <div class="detail-plan-top"><div class="detail-plan-labels"><span class="plan-type-label">Hospedagem de sites</span><span class="plan-number">01 / PRESENÇA</span></div><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
         <div class="detail-plan-content">
@@ -73,23 +63,11 @@ require __DIR__ . '/includes/header.php';
         </div>
         <a class="arrow-link" href="https://wa.me/5516997399174?text=Quero%20conhecer%20o%20Plano%20Premium">Assinar o Premium <span aria-hidden="true">↗</span></a>
     </article>
-    <article class="plan-card plan-card-vps detail-plan-card" id="vps" data-plan-card>
-        <div class="detail-plan-top"><div class="detail-plan-labels"><span class="plan-type-label">Servidor VPS</span><span class="plan-number">04 / SERVIDOR</span></div><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
-        <div class="detail-plan-content">
-            <div class="detail-plan-intro"><h2>Plano VPS</h2><p>Servidores com recursos dedicados, NVMe e acesso root para projetos que pedem mais desempenho.</p></div>
-            <div class="detail-plan-offer"><p class="plan-price"><strong>R$ 89,90</strong><span>/a partir de</span></p><p class="plan-regular-price">Compare os planos Start, Plus e Pro na página de VPS.</p><div class="plan-first-month"><span>Foco em performance e controle</span></div></div>
-            <ul class="plan-features"><li>NVMe SSD</li><li>Acesso root</li><li>LiteSpeed + SSL</li></ul>
-            <ul class="plan-includes-grid detail-plan-includes" aria-label="Recursos incluídos no Plano VPS">
-                <?php foreach ($vpsPlanFeatures as $feature): ?><li><?= e($feature) ?></li><?php endforeach; ?>
-            </ul>
-        </div>
-        <a class="arrow-link" href="vps.php">Ver planos VPS <span aria-hidden="true">↗</span></a>
-    </article>
     <article class="plan-card plan-card-custom detail-plan-card" id="personalizado" data-plan-card>
-        <div class="detail-plan-top"><span class="plan-number">05 / SOB MEDIDA</span><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
+        <div class="detail-plan-top"><span class="plan-number">04 / SOB MEDIDA</span><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
         <div class="detail-plan-content detail-plan-content-custom">
             <div class="detail-plan-intro"><h2>Plano Personalizado</h2><p>Precisa de mais? Entre em contato!</p></div>
-            <p class="plan-custom-note">Converse com a equipe para avaliar uma solução de hospedagem ou VPS adequada às necessidades do seu projeto.</p>
+            <p class="plan-custom-note">Converse com a equipe para avaliar uma solução de hospedagem adequada às necessidades do seu projeto.</p>
         </div>
         <a class="arrow-link" href="https://wa.me/5516997399174?text=Quero%20conversar%20sobre%20um%20Plano%20Personalizado">Fale com a equipe <span aria-hidden="true">↗</span></a>
     </article>

@@ -196,9 +196,9 @@ require __DIR__ . '/includes/header.php';
             <p class="eyebrow">Hospedagem de sites</p>
             <h2>Um plano de hospedagem<br>para cada próximo passo.</h2>
         </div>
-        <p class="section-lede">Escolha entre planos de hospedagem de sites, servidores VPS ou fale com a equipe para montar uma solução personalizada.</p>
+        <p class="section-lede">Escolha entre três planos de hospedagem de sites ou fale com a equipe para montar uma solução personalizada.</p>
     </div>
-    <div class="plan-grid plan-grid-five">
+    <div class="plan-grid">
         <article class="plan-card plan-card-light" id="light" data-plan-card>
             <span class="plan-type-label">Hospedagem de sites</span>
             <span class="plan-number">01 / PRESENÇA</span>
@@ -236,19 +236,8 @@ require __DIR__ . '/includes/header.php';
             <ul class="plan-features"><li>E-mails ilimitados</li><li>25 GB de espaço</li><li>Banco de dados ilimitado</li></ul>
             <a class="arrow-link" href="planos.php#premium">Conhecer o Premium <span aria-hidden="true">↗</span></a>
         </article>
-        <article class="plan-card plan-card-vps" id="vps" data-plan-card>
-            <span class="plan-type-label">Servidor VPS</span>
-            <span class="plan-number">04 / SERVIDOR</span>
-            <h3>Plano VPS</h3>
-            <p>Recursos dedicados com NVMe, root e desempenho para projetos exigentes.</p>
-            <p class="plan-price"><strong>R$ 89,90</strong><span>/a partir de</span></p>
-            <p class="plan-regular-price">Servidores VPS com LiteSpeed, SSL e suporte GeekHost.</p>
-            <div class="plan-first-month"><span>Foco em performance e controle</span></div>
-            <ul class="plan-features"><li>NVMe SSD</li><li>Acesso root</li><li>LiteSpeed + SSL</li></ul>
-            <a class="arrow-link" href="vps.php">Conhecer a VPS <span aria-hidden="true">↗</span></a>
-        </article>
         <article class="plan-card plan-card-custom" id="personalizado" data-plan-card>
-            <span class="plan-number">05 / SOB MEDIDA</span>
+            <span class="plan-number">04 / SOB MEDIDA</span>
             <h3>Plano Personalizado</h3>
             <p>Precisa de mais? Entre em contato!</p>
             <p class="plan-custom-note">Vamos entender o seu projeto e conversar sobre uma solução sob medida.</p>
