@@ -634,8 +634,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .site-navigation .nav-tool { align-self: flex-start; margin-top: 8px; }
     .home-hero { min-height: clamp(520px, 68vh, 640px); height: auto; background-position: 56% center; align-items: flex-start; }
     .hero-shade { background: linear-gradient(90deg, rgba(26, 30, 36, .92), rgba(26, 30, 36, .56)); }
-    .hero-content { padding-block: 54px 72px; }
+    .hero-content { padding-block: 68px 76px; }
     .home-hero h1 { max-width: 100%; }
+    .home-hero .eyebrow { margin-bottom: 16px; }
     .hero-dynamic-word-shell { flex: 1 1 100%; }
     .intro-strip { grid-template-columns: 1fr auto; gap: 9px 18px; padding-block: 21px; }
     .intro-strip p:first-child { grid-column: 1; margin: 0; }
