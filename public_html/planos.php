@@ -1,7 +1,7 @@
 <?php
 
-$pageTitle = 'Planos de hospedagem';
-$pageDescription = 'Conheça os planos mensais, semestrais e anuais Light, Empresa, Premium e Personalizado da GeekHost, com 7 dias grátis e recursos para cada etapa do seu projeto.';
+$pageTitle = 'Planos de hospedagem de sites';
+$pageDescription = 'Conheça os planos de hospedagem de sites mensais, semestrais e anuais Light, Empresa, Premium e Personalizado da GeekHost, com 7 dias grátis e recursos para cada etapa do seu projeto.';
 $currentPage = 'planos';
 $sharedPlanFeatures = [
     'SSL grátis em todos os planos',
@@ -20,14 +20,14 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <section class="page-hero page-width">
-    <p class="eyebrow">Planos GeekHost</p>
-    <h1>Escolha a estrutura<br>para o seu projeto.</h1>
-    <p class="page-hero-copy">Todos os planos incluem 7 dias grátis. Compare os recursos, o preço promocional do primeiro mês e os valores semestrais e anuais.</p>
+    <p class="eyebrow">Hospedagem de sites</p>
+    <h1>Escolha a hospedagem<br>para o seu site.</h1>
+    <p class="page-hero-copy">Os três planos com preço são de hospedagem de sites e incluem 7 dias grátis. Compare os recursos, o preço promocional do primeiro mês e os valores semestrais e anuais.</p>
 </section>
 
-<section class="detail-plan-grid page-width" aria-label="Planos de hospedagem">
+<section class="detail-plan-grid page-width" aria-label="Planos de hospedagem de sites">
     <article class="plan-card plan-card-light detail-plan-card" id="light" data-plan-card>
-        <div class="detail-plan-top"><span class="plan-number">01 / PRESENÇA</span><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
+        <div class="detail-plan-top"><div class="detail-plan-labels"><span class="plan-type-label">Hospedagem de sites</span><span class="plan-number">01 / PRESENÇA</span></div><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
         <div class="detail-plan-content">
             <div class="detail-plan-intro"><h2>Plano Light</h2><p>Para colocar seu site e suas ideias no ar.</p></div>
             <div class="detail-plan-offer"><p class="plan-price"><strong>R$ 19,90</strong><span>/no 1º mês</span></p><p class="plan-regular-price">A partir do 2º mês: <strong>R$ 35,90/mês</strong></p><div class="detail-plan-period-prices"><p>Semestral: <strong>R$ 239,00</strong></p><p>Anual: <strong>R$ 299,90</strong></p></div><div class="plan-first-month"><span>7 dias grátis para começar</span></div><div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>45% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div></div>
@@ -40,7 +40,7 @@ require __DIR__ . '/includes/header.php';
     </article>
     <article class="plan-card plan-card-green plan-card-recommended detail-plan-card" id="empresa" data-plan-card>
         <span class="plan-recommendation">✓ Recomendado</span>
-        <div class="detail-plan-top"><span class="plan-number">02 / CRESCIMENTO</span><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
+        <div class="detail-plan-top"><div class="detail-plan-labels"><span class="plan-type-label">Hospedagem de sites</span><span class="plan-number">02 / CRESCIMENTO</span></div><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
         <div class="detail-plan-content">
             <div class="detail-plan-intro"><h2>Plano Empresa</h2><p>Para negócios e equipes que querem crescer online.</p></div>
             <div class="detail-plan-offer"><p class="plan-price"><strong>R$ 29,90</strong><span>/no 1º mês</span></p><p class="plan-regular-price">A partir do 2º mês: <strong>R$ 45,90/mês</strong></p><div class="detail-plan-period-prices"><p>Semestral: <strong>R$ 299,00</strong></p><p>Anual: <strong>R$ 394,00</strong></p></div><div class="plan-first-month"><span>7 dias grátis para começar</span></div><div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>35% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div></div>
@@ -52,7 +52,7 @@ require __DIR__ . '/includes/header.php';
         <a class="arrow-link" href="https://wa.me/5516997399174?text=Quero%20conhecer%20o%20Plano%20Empresa">Assinar o Empresa <span aria-hidden="true">↗</span></a>
     </article>
     <article class="plan-card plan-card-lime detail-plan-card" id="premium" data-plan-card>
-        <div class="detail-plan-top"><span class="plan-number">03 / COMÉRCIO</span><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
+        <div class="detail-plan-top"><div class="detail-plan-labels"><span class="plan-type-label">Hospedagem de sites</span><span class="plan-number">03 / COMÉRCIO</span></div><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
         <div class="detail-plan-content">
             <div class="detail-plan-intro"><h2>Plano Premium</h2><p>Para projetos que precisam de uma estrutura mais completa.</p></div>
             <div class="detail-plan-offer"><p class="plan-price"><strong>R$ 39,90</strong><span>/no 1º mês</span></p><p class="plan-regular-price">A partir do 2º mês: <strong>R$ 55,90/mês</strong></p><div class="detail-plan-period-prices"><p>Semestral: <strong>R$ 359,00</strong></p><p>Anual: <strong>R$ 460,00</strong></p></div><div class="plan-first-month"><span>7 dias grátis para começar</span></div><div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>29% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div></div>
