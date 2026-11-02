@@ -92,7 +92,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .nav-tool span { color: var(--lime); }
 .menu-toggle { display: none; border: 1px solid var(--line); background: transparent; color: var(--forest); padding: 9px 12px; font-weight: 700; }
 
-.home-hero { position: relative; display: flex; align-items: center; min-height: 590px; height: min(690px, 74vh); overflow: hidden; background: #1a1e24 url('../images/home-photos/bannerprincipal.jpg') center 48% / cover no-repeat; color: var(--white); }
+.home-hero { position: relative; display: flex; align-items: center; min-height: clamp(560px, 74vh, 690px); height: auto; overflow: hidden; background: #1a1e24 url('../images/home-photos/bannerprincipal.jpg') center 48% / cover no-repeat; color: var(--white); }
 .hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(26, 30, 36, .94) 0%, rgba(26, 30, 36, .78) 49%, rgba(26, 30, 36, .28) 100%); }
 .hero-ambient { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .hero-ambient::before { content: ''; position: absolute; inset: -25% -10% auto; height: 130%; background: radial-gradient(circle at 18% 24%, rgba(1, 225, 82, .2), transparent 26%), radial-gradient(circle at 70% 32%, rgba(1, 225, 82, .14), transparent 24%), radial-gradient(circle at 54% 76%, rgba(1, 225, 82, .1), transparent 24%); transform: translate3d(0, 0, 0); animation: ambient-drift 22s ease-in-out infinite alternate; }
@@ -106,15 +106,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .grid-line-1 { top: 22%; left: 40%; width: 180px; height: 1px; transform: rotate(18deg); }
 .grid-line-2 { right: 16%; top: 58%; width: 190px; height: 1px; transform: rotate(-18deg); }
 .grid-line-3 { left: 18%; bottom: 18%; width: 220px; height: 1px; transform: rotate(-7deg); }
-.hero-content { position: relative; z-index: 1; padding-block: 74px 90px; animation: arrive .65s ease-out both; }
+.hero-content { position: relative; z-index: 1; width: 100%; padding-block: clamp(56px, 8vh, 90px) clamp(64px, 9vh, 98px); animation: arrive .65s ease-out both; }
 .eyebrow { margin: 0 0 18px; color: var(--leaf); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
 .eyebrow-light { color: var(--lime); }
 .eyebrow-light > span { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--coral); vertical-align: 1px; animation: pulse-dot 2.2s ease-in-out infinite; }
 .home-hero h1, .page-hero h1 { max-width: 760px; margin: 0; font: 600 64px/1.07 var(--font-display); letter-spacing: 0; }
-.home-hero h1 { display: block; animation: title-enter .75s ease-out both; }
-.hero-title-line { display: inline-flex; align-items: baseline; gap: .2em; flex-wrap: wrap; }
-.hero-dynamic-word-shell { display: inline-block; min-width: 14.5ch; margin-left: .1em; }
-.hero-dynamic-word { display: inline-block; min-width: 14.5ch; color: var(--lime); font-style: normal; opacity: 0; transform: translateY(11px); transition: opacity .45s ease, transform .45s ease; }
+.home-hero h1 { display: block; max-width: min(760px, 100%); font-size: clamp(2.05rem, 1.2rem + 3.4vw, 4rem); line-height: 1.12; overflow-wrap: break-word; animation: title-enter .75s ease-out both; }
+.hero-title-line { display: flex; max-width: 100%; align-items: baseline; align-content: flex-start; gap: .12em .28em; flex-wrap: wrap; }
+.hero-dynamic-word-shell { display: inline-flex; max-width: 100%; min-width: 0; margin-left: 0; overflow: visible; line-height: 1.15; }
+.hero-dynamic-word { display: inline-block; max-width: 100%; min-width: 0; color: var(--lime); font-style: normal; opacity: 0; transform: translateY(11px); transition: opacity .45s ease, transform .45s ease; overflow-wrap: break-word; }
 .hero-dynamic-word.is-visible { opacity: 1; transform: translateY(0); }
 .hero-dynamic-word.is-exit { opacity: 0; transform: translateY(-9px); }
 .home-hero h1 em { color: var(--lime); font-style: normal; }
@@ -632,9 +632,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .site-navigation.is-open { display: flex; flex-direction: column; }
     .site-navigation > a:not(.nav-tool) { padding: 11px 0; }
     .site-navigation .nav-tool { align-self: flex-start; margin-top: 8px; }
-    .home-hero { min-height: 540px; height: 68vh; background-position: 56% center; }
+    .home-hero { min-height: clamp(520px, 68vh, 640px); height: auto; background-position: 56% center; align-items: flex-start; }
     .hero-shade { background: linear-gradient(90deg, rgba(26, 30, 36, .92), rgba(26, 30, 36, .56)); }
-    .home-hero h1 { max-width: 620px; font-size: 52px; }
+    .hero-content { padding-block: 54px 72px; }
+    .home-hero h1 { max-width: 100%; }
+    .hero-dynamic-word-shell { flex: 1 1 100%; }
     .intro-strip { grid-template-columns: 1fr auto; gap: 9px 18px; padding-block: 21px; }
     .intro-strip p:first-child { grid-column: 1; margin: 0; }
     .intro-strip p:nth-child(2) { grid-column: 1; font-size: 15px; }
@@ -695,12 +697,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width: 560px) {
     body { font-size: 15px; }
     .page-width, .header-inner, .footer-inner { width: calc(100% - 36px); }
-    .home-hero { min-height: 565px; height: 68svh; background-position: 59% center; }
-    .hero-content { padding-block: 59px 88px; }
-    .hero-title-line { display: inline; }
-    .hero-dynamic-word-shell { display: inline-block; min-width: 10.5ch; margin-left: .05em; }
-    .home-hero h1 { max-width: 460px; font-size: 43px; }
-    .hero-copy { max-width: 390px; font-size: 15px; }
+    .home-hero { min-height: clamp(520px, 68svh, 620px); height: auto; background-position: 59% center; align-items: flex-start; }
+    .hero-content { padding-block: 48px 64px; }
+    .hero-title-line { display: flex; }
+    .hero-dynamic-word-shell { display: inline-flex; flex: 1 1 100%; margin-left: 0; }
+    .home-hero h1 { max-width: 100%; }
+    .hero-copy { max-width: 100%; font-size: 15px; }
     .hero-actions { align-items: flex-start; flex-direction: column; gap: 15px; }
     .hero-index { right: 19px; bottom: 22px; }
     .intro-strip { min-height: 118px; }
