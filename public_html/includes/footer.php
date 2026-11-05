@@ -34,8 +34,7 @@
 <footer class="site-footer">
     <div class="footer-inner">
         <a class="brand brand-footer" href="index.php" aria-label="GeekHost, página inicial">
-            <img class="footer-emblem" src="assets/images/emblema.png" alt="" width="60" height="60">
-            <span class="brand-name">geekhost</span>
+            <img class="footer-emblem" src="assets/images/LOGO-02.png" alt="" width="200" height="120">
         </a>
         <p>Seu projeto merece um bom começo.</p>
         <nav class="footer-links" aria-label="Links do rodapé">

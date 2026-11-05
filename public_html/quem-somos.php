@@ -47,6 +47,9 @@ require __DIR__ . '/includes/header.php';
                 </article>
             </div>
         </div>
+        <div class="about-timeline-grid">
+            <img src="assets/images/equipe.png" alt="fundadores da GeekHost" width="100%" height="100%">
+        </div>
     </div>
 </section>
 
