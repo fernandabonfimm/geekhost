@@ -39,7 +39,7 @@ require __DIR__ . '/includes/header.php';
                 </article>
                 <article>
                     <strong>2025</strong>
-                    <p>Esse sócio encontra um engenheiro de software que compartilha a mesma paixão por tech. Juntos, estruturam a GeekHost para servir qualquer cliente, com operação mais leve e foco no melhor custo-benefício.</p>
+                    <p>Esse sócio encontra uma engenheira de software que compartilha a mesma paixão por tech. Juntos, estruturam a GeekHost para servir qualquer cliente, com operação mais leve e foco no melhor custo-benefício.</p>
                 </article>
                 <article>
                     <strong>Hoje</strong>
@@ -54,7 +54,7 @@ require __DIR__ . '/includes/header.php';
     <div class="about-story-inner">
         <p class="eyebrow">Por que nos unimos</p>
         <h2 id="about-story-title">Uma parceria nascida da vontade de hospedar melhor.</h2>
-        <p>Em 2023, a GeekHost já existia na prática: uma operação enxuta que cuidava só dos projetos da agência do primeiro sócio. Funcionava — mas o potencial era maior. Em 2025, o encontro com um engenheiro de software mudou o rumo. Dois perfis complementares, a mesma inquietação com o mercado: filas longas de suporte, ausência de backup de verdade e planos que cobram caro sem entregar clareza.</p>
+        <p>Em 2023, a GeekHost já existia na prática: uma operação enxuta que cuidava só dos projetos da agência do primeiro sócio. Funcionava — mas o potencial era maior. Em 2025, o encontro com uma engenheira de software mudou o rumo. Dois perfis complementares, a mesma inquietação com o mercado: filas longas de suporte, ausência de backup de verdade e planos que cobram caro sem entregar clareza.</p>
         <p>Juntos, decidiram abrir as portas. Estruturaram a GeekHost para qualquer cliente que precise de hospedagem com desempenho, painel simples e gente que responde. A missão ficou objetiva: o melhor custo-benefício para quem cria, vende e cresce online — com operação do dia a dia mais leve para a equipe e mais previsível para quem confia o site a nós.</p>
     </div>
 </section>
