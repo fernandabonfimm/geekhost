@@ -192,7 +192,7 @@ $whatsappBase = 'https://wa.me/5516997399174?text=';
 
 <section class="closing-cta" aria-labelledby="vps-closing-title">
     <div class="closing-cta-inner page-width">
-        <p class="eyebrow eyebrow-light"><span></span> Pronto para escalar?</p>
+        <p class="eyebrow"><span></span> Pronto para escalar?</p>
         <div class="closing-row">
             <div class="closing-copy">
                 <h2 id="vps-closing-title">Contrate seu servidor VPS GeekHost agora.</h2>

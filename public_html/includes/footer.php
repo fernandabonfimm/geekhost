@@ -73,6 +73,42 @@
 <button class="scroll-top" type="button" data-scroll-top aria-label="Voltar ao topo" title="Voltar ao topo" hidden>
     <span aria-hidden="true">↑</span>
 </button>
+<dialog class="exit-intent" data-exit-intent aria-labelledby="exit-intent-title">
+    <div class="exit-intent-panel">
+        <aside class="exit-intent-visual">
+            <img src="assets/images/mascotes-suporte.png" alt="" width="420" height="630" loading="lazy" decoding="async">
+            <span class="exit-intent-badge">Infraestrutura sob medida</span>
+        </aside>
+        <div class="exit-intent-content">
+            <button class="exit-intent-close" type="button" data-exit-intent-close aria-label="Fechar">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+            <p class="exit-intent-status"><span class="exit-intent-status-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i><i class="exit-intent-online-dot"></i></span> Especialistas online</p>
+            <h2 id="exit-intent-title">Como podemos acelerar seu projeto hoje?</h2>
+            <p class="exit-intent-copy">Nossa equipe está pronta para indicar a hospedagem ideal para o seu site, sem complicação.</p>
+            <div class="exit-intent-channels">
+                <?php if ($companyWhatsapp !== ''): ?>
+                    <a class="exit-intent-card" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer">
+                        <span class="exit-intent-card-icon exit-intent-card-icon-whatsapp" aria-hidden="true"><i class="bi bi-whatsapp"></i></span>
+                        <span class="exit-intent-card-copy"><strong>WhatsApp</strong><small>Fale agora com o suporte GeekHost</small></span>
+                        <span class="exit-intent-pill exit-intent-pill-online">Online</span>
+                    </a>
+                <?php endif; ?>
+                <a class="exit-intent-card" href="https://www.instagram.com/geekhost" target="_blank" rel="noopener noreferrer">
+                    <span class="exit-intent-card-icon exit-intent-card-icon-instagram" aria-hidden="true"><i class="bi bi-instagram"></i></span>
+                    <span class="exit-intent-card-copy"><strong>Instagram</strong><small>Novidades e bastidores da equipe</small></span>
+                    <span class="exit-intent-pill">Seguir</span>
+                </a>
+                <a class="exit-intent-card" href="https://br.linkedin.com/company/geekhost" target="_blank" rel="noopener noreferrer">
+                    <span class="exit-intent-card-icon exit-intent-card-icon-linkedin" aria-hidden="true"><i class="bi bi-linkedin"></i></span>
+                    <span class="exit-intent-card-copy"><strong>LinkedIn</strong><small>Conteúdo e oportunidades GeekHost</small></span>
+                    <span class="exit-intent-pill">Conectar</span>
+                </a>
+            </div>
+            <p class="exit-intent-meta">Resposta média: <strong>3 min</strong> · Equipe online: <strong>24 horas</strong></p>
+        </div>
+    </div>
+</dialog>
 <div class="cookie-banner" data-cookie-banner hidden>
     <div class="cookie-banner-inner page-width">
         <div class="cookie-banner-copy">

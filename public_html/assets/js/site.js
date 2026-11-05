@@ -356,4 +356,82 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadLink.click();
         });
     }
+
+    const exitIntent = document.querySelector('[data-exit-intent]');
+    if (exitIntent instanceof HTMLDialogElement) {
+        const storageKey = 'geekhost_exit_intent_shown';
+        const closeButtons = exitIntent.querySelectorAll('[data-exit-intent-close]');
+        let armed = false;
+        let shown = false;
+
+        const alreadyShown = () => {
+            try {
+                return window.sessionStorage.getItem(storageKey) === '1';
+            } catch {
+                return shown;
+            }
+        };
+
+        const markShown = () => {
+            shown = true;
+            try {
+                window.sessionStorage.setItem(storageKey, '1');
+            } catch {
+                // Ignore storage failures for this session flag.
+            }
+        };
+
+        const openExitIntent = () => {
+            if (shown || alreadyShown() || exitIntent.open) return;
+            markShown();
+            if (typeof exitIntent.showModal === 'function') {
+                exitIntent.showModal();
+            } else {
+                exitIntent.setAttribute('open', '');
+            }
+            document.body.classList.add('exit-intent-open');
+        };
+
+        const closeExitIntent = () => {
+            if (typeof exitIntent.close === 'function') {
+                exitIntent.close();
+            } else {
+                exitIntent.removeAttribute('open');
+            }
+            document.body.classList.remove('exit-intent-open');
+        };
+
+        closeButtons.forEach((button) => {
+            button.addEventListener('click', closeExitIntent);
+        });
+
+        exitIntent.addEventListener('cancel', (event) => {
+            event.preventDefault();
+            closeExitIntent();
+        });
+
+        exitIntent.addEventListener('click', (event) => {
+            if (event.target === exitIntent) closeExitIntent();
+        });
+
+        window.setTimeout(() => {
+            armed = true;
+        }, 1800);
+
+        document.addEventListener('mouseout', (event) => {
+            if (!armed || shown || alreadyShown()) return;
+            const toElement = event.relatedTarget || event.toElement;
+            if (toElement) return;
+            if (event.clientY > 12) return;
+            openExitIntent();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!armed || shown || alreadyShown()) return;
+            if (document.visibilityState === 'hidden') {
+                // Best-effort when the tab is backgrounded; modal shows on return if still needed.
+                // Do not open while hidden; mark intent and open on visible if not dismissed.
+            }
+        });
+    }
 });

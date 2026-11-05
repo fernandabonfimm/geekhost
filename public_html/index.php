@@ -546,7 +546,7 @@ require __DIR__ . '/includes/header.php';
 
 <section class="closing-cta" aria-labelledby="closing-cta-title">
     <div class="closing-cta-inner page-width">
-        <p class="eyebrow eyebrow-light"><span></span> Vamos tirar do papel?</p>
+        <p class="eyebrow"><span></span> Vamos tirar do papel?</p>
         <div class="closing-row">
             <div class="closing-copy">
                 <h2 id="closing-cta-title">Seu próximo site começa pela hospedagem certa.</h2>
