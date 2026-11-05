@@ -26,12 +26,7 @@
             <?php endif; ?>
         </div>
         <figure class="support-center-visual support-center-visual-mascots">
-            <span class="support-mascot-glow" aria-hidden="true"></span>
-            <img src="assets/images/mascotes-suporte.png" alt="Mascotes GeekHost colaborando no computador para atender o suporte" width="1024" height="1536" loading="lazy">
-            <figcaption>
-                <strong>Atendimento GeekHost</strong>
-                <span>Orientação clara para o seu próximo passo online.</span>
-            </figcaption>
+            <img src="assets/images/mascotes-suporte.png" alt="Mascotes GeekHost colaborando no computador para atender o suporte" width="1024" height="1536" loading="eager" decoding="async">
         </figure>
     </div>
 </section>
