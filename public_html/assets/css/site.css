@@ -777,7 +777,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .about-dual-cta p { margin: 0; color: var(--muted); }
 .about-cta-dark p { color: rgba(255, 255, 255, .72); }
 
-.advantages-hero { position: relative; overflow: hidden; min-height: 520px; display: block; color: var(--white); background: #1a1e24 url('../images/vantagens-banner.jpg') center 45% / cover no-repeat; }
+.advantages-hero { position: relative; overflow: hidden; min-height: 520px; display: block; color: var(--white); background: #1a1e24 url('../images/onlinesite-analysis.jpg') center 45% / cover no-repeat; }
 .advantages-hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(26, 30, 36, .94) 0%, rgba(26, 30, 36, .78) 52%, rgba(26, 30, 36, .35) 100%); }
 .advantages-hero-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-height: 520px; padding-block: 78px 70px; text-align: left; }
 .advantages-hero h1 { max-width: 680px; margin: 0; font: 600 56px/1.08 var(--font-display); text-align: left; }
