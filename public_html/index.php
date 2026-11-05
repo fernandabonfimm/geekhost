@@ -375,36 +375,6 @@ require __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<section class="vps-home-section" id="vps-destaque" aria-labelledby="vps-home-title">
-    <div class="page-width vps-home-layout">
-        <div class="vps-home-copy">
-            <p class="eyebrow">Servidores VPS</p>
-            <h2 id="vps-home-title">Precisa de mais poder?<br>Conheça nossos servidores VPS.</h2>
-            <p>Para projetos que pedem recursos dedicados, acesso root e desempenho NVMe. LiteSpeed, SSL grátis, Softaculous e suporte GeekHost para colocar sua aplicação no ar com mais controle.</p>
-            <ul class="vps-home-points">
-                <li>NVMe SSD e banda premium</li>
-                <li>Recursos dedicados com root</li>
-                <li>LiteSpeed, CloudLinux e Cloudflare CDN</li>
-            </ul>
-            <div class="vps-home-actions">
-                <a class="button button-lime" href="vps.php">Ver planos VPS <span aria-hidden="true">↗</span></a>
-                <a class="button button-outline-dark" href="https://wa.me/5516997399174?text=Quero%20conhecer%20os%20servidores%20VPS">Falar no WhatsApp</a>
-            </div>
-        </div>
-        <aside class="vps-home-panel" aria-label="Destaque VPS GeekHost">
-            <p class="vps-home-panel-label">A partir de</p>
-            <p class="vps-home-panel-price"><strong>R$ 89,90</strong><span>/mês</span></p>
-            <ul>
-                <li>40 GB NVMe SSD</li>
-                <li>1 vCPU · 2 GB RAM</li>
-                <li>LiteSpeed + SSL grátis</li>
-                <li>Acesso root</li>
-            </ul>
-            <a class="arrow-link" href="vps.php">Montar meu VPS <span aria-hidden="true">↗</span></a>
-        </aside>
-    </div>
-</section>
-
 <section class="benefits-section" id="vantagens">
     <div class="page-width">
         <div class="section-heading">
@@ -584,18 +554,6 @@ require __DIR__ . '/includes/header.php';
             </div>
             <a class="button button-lime" href="#planos">Ver planos <span aria-hidden="true">↗</span></a>
         </div>
-    </div>
-</section>
-
-<section class="generator-promo" id="gerador" aria-labelledby="generator-title">
-    <div class="generator-promo-inner page-width">
-        <div class="generator-promo-copy">
-            <p class="eyebrow eyebrow-light">Ferramenta gratuita</p>
-            <h2 id="generator-title">Um toque.<br>Uma conversa.</h2>
-            <p>Crie um link direto para o WhatsApp e gere um QR code para compartilhar seu atendimento.</p>
-            <a class="button button-lime" href="gerador.php">Acessar o gerador <span aria-hidden="true">↗</span></a>
-        </div>
-        <img class="generator-promo-image" src="assets/images/link-qrcoce.png" alt="Mascote GeekHost ao lado de um link e de um QR code do WhatsApp" width="1328" height="1056" loading="lazy">
     </div>
 </section>
 
