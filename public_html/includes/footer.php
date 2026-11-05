@@ -16,8 +16,12 @@
             <a href="https://www.instagram.com/geekhost" target="_blank" rel="noopener noreferrer" aria-label="Instagram GeekHost" title="Instagram GeekHost">
                 <img src="https://cdn.simpleicons.org/instagram/ffffff" alt="" width="16" height="16">
             </a>
-            <a href="https://br.linkedin.com/company/geekhost" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn GeekHost" title="LinkedIn GeekHost">
-                <img src="https://cdn.simpleicons.org/linkedin/ffffff" alt="" width="16" height="16">
+            <a href="https://www.linkedin.com/company/geekhost-brasil" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn GeekHost" title="LinkedIn GeekHost">
+                <img src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/linkedin.svg"
+                    alt="LinkedIn"
+                    width="16"
+                    height="16"
+                    style="filter: brightness(0) invert(1);">           
             </a>
             <?php if ($companyWhatsapp !== ''): ?>
                 <a href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp GeekHost" title="WhatsApp GeekHost">

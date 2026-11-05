@@ -1,70 +1,108 @@
 <?php
 
-$pageTitle = 'Hospedagem para o seu próximo projeto';
-$pageDescription = 'Conheça as opções de hospedagem GeekHost e encontre um ponto de partida para seu site, negócio ou loja online.';
+$pageTitle = 'Hospedagem de sites para o seu próximo projeto';
+$pageDescription = 'Hospedagem de sites GeekHost para colocar seu site, negócio ou loja online com desempenho, segurança e suporte humano.';
 $currentPage = 'inicio';
-$technologyCategories = [
+$hostingEnvironment = [
     [
-        'name' => 'Linguagens e tecnologias web',
-        'items' => [
-            ['name' => 'PHP', 'icon' => 'php', 'color' => '777BB4'],
-            ['name' => 'HTML5', 'icon' => 'html5', 'color' => 'E34F26'],
-            ['name' => 'CSS3', 'src' => 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg'],
-            ['name' => 'JavaScript', 'icon' => 'javascript', 'color' => 'F7DF1E'],
-        ],
+        'title' => 'Criadores de Sites',
+        'description' => '3 criadores de sites gratuitos com mais de 1.200 templates disponíveis',
+        'symbol' => '◫',
     ],
     [
-        'name' => 'Frameworks PHP',
-        'items' => [
-            ['name' => 'Laravel', 'icon' => 'laravel', 'color' => 'FF2D20'],
-            ['name' => 'CakePHP', 'icon' => 'cakephp', 'color' => 'D33C43'],
-            ['name' => 'Symfony', 'icon' => 'symfony', 'color' => '000000'],
-            ['name' => 'CodeIgniter', 'icon' => 'codeigniter', 'color' => 'EF4223'],
-        ],
+        'title' => 'Instalador de Apps Grátis',
+        'description' => 'Instalação de mais de 470 aplicações com 1 clique',
+        'symbol' => '▦',
     ],
     [
-        'name' => 'CMS e e-commerce',
-        'items' => [
-            ['name' => 'WordPress', 'icon' => 'wordpress', 'color' => '21759B', 'featured' => true],
-            ['name' => 'WooCommerce', 'icon' => 'woocommerce', 'color' => '96588A', 'featured' => true],
-            ['name' => 'Joomla', 'icon' => 'joomla', 'color' => '5091CD'],
-            ['name' => 'Drupal', 'icon' => 'drupal', 'color' => '0678BE'],
-            ['name' => 'PrestaShop', 'icon' => 'prestashop', 'color' => 'DF0067'],
-        ],
+        'title' => 'Certificado SSL Grátis',
+        'description' => 'Certificado SSL totalmente grátis para todos os domínios',
+        'symbol' => 'SSL',
+        'tone' => 'ssl',
     ],
     [
-        'name' => 'Bancos de dados',
-        'items' => [
-            ['name' => 'MySQL', 'icon' => 'mysql', 'color' => '4479A1'],
-            ['name' => 'MariaDB', 'icon' => 'mariadb', 'color' => '003545'],
-        ],
+        'title' => 'SSH Pré-Ativado',
+        'description' => 'Todas as contas nos planos tem acesso SSH pré-ativado',
+        'symbol' => '>_',
     ],
     [
-        'name' => 'Ferramentas de desenvolvimento',
-        'items' => [
-            ['name' => 'Composer', 'icon' => 'composer', 'color' => '885630'],
-            ['name' => 'Git', 'icon' => 'git', 'color' => 'F05032'],
-            ['name' => 'npm', 'icon' => 'npm', 'color' => 'CB3837'],
-            ['name' => 'SSH', 'symbol' => '>_'],
-        ],
+        'title' => 'PHP Múltiplo',
+        'description' => 'Você escolhe qual versão do PHP usar, temos da 4.4 até a 8.3',
+        'icon' => 'php',
+        'color' => '777BB4',
     ],
     [
-        'name' => 'Serviços para seu site',
-        'items' => [
-            ['name' => 'E-mail profissional', 'symbol' => '@'],
-            ['name' => 'Certificado SSL', 'symbol' => '✓'],
-            ['name' => 'Gerenciamento de DNS', 'symbol' => 'DNS'],
-            ['name' => 'FTP/SFTP', 'symbol' => '↔'],
-            ['name' => 'Backups', 'symbol' => '↻'],
-            ['name' => 'Instalador de apps', 'symbol' => '+'],
-        ],
+        'title' => 'Proteção Imunify360',
+        'description' => 'Todos os domínios com proteção total do Imunify360',
+        'symbol' => '360',
+        'tone' => 'imunify',
+    ],
+    [
+        'title' => 'MariaDB e PostgreSQL',
+        'description' => 'Crie ilimitadas bases de dados MariaDB (MySQL) e PostgreSQL',
+        'icon' => 'mariadb',
+        'color' => '003545',
+    ],
+    [
+        'title' => 'GIT/Composer',
+        'description' => 'Acesso fácil ao GIT e também ao Composer direto via SSH',
+        'icon' => 'git',
+        'color' => 'F05032',
+    ],
+    [
+        'title' => 'cPanel/WHM em Português',
+        'description' => 'Painel cPanel/WHM em português para gerenciamento completo de contas de revenda',
+        'icon' => 'cpanel',
+        'color' => 'FF6C2C',
+    ],
+    [
+        'title' => 'JetBackup Grátis',
+        'description' => 'Backups são automáticos e você pode restaurá-los gratuitamente',
+        'symbol' => '↻',
+        'tone' => 'backup',
+    ],
+    [
+        'title' => 'Anti-Spam Profissional',
+        'description' => 'Possuímos a mais poderosa e personalizável ferramenta Anti-Spam',
+        'symbol' => '@',
+        'tone' => 'mail',
+    ],
+    [
+        'title' => 'WordPress Toolkit',
+        'description' => 'O mais completo gerenciador automatizado para WordPress',
+        'icon' => 'wordpress',
+        'color' => '21759B',
+    ],
+    [
+        'title' => 'NodeJS Múltiplo',
+        'description' => 'Você escolhe qual versão do NodeJS usar, temos da 6.x até a 22.x',
+        'icon' => 'nodedotjs',
+        'color' => '339933',
+    ],
+    [
+        'title' => 'Ruby Múltiplo',
+        'description' => 'Você escolhe qual versão do Ruby usar, temos da 1.8 até a 3.3',
+        'icon' => 'ruby',
+        'color' => 'CC342D',
+    ],
+    [
+        'title' => 'Python Múltiplo',
+        'description' => 'Você escolhe qual versão do Python usar, temos da 2.7.x até a 3.12.x',
+        'icon' => 'python',
+        'color' => '3776AB',
+    ],
+    [
+        'title' => 'Servidor Nginx',
+        'description' => 'Ultra performance de aceleração Nginx com cache',
+        'icon' => 'nginx',
+        'color' => '009639',
     ],
 ];
 $testimonials = [
     [
         'name' => 'Mariana Costa',
         'profile' => 'Empreendedora',
-        'text' => 'Ter um site profissional fez toda a diferença para o meu negócio. Eu precisava de uma hospedagem fácil de administrar e que me desse tranquilidade no dia a dia. A GeekHost é a escolha que eu buscava para manter meu projeto online.',
+        'text' => 'Ter um site profissional fez toda a diferença para o meu negócio. Eu precisava de uma hospedagem de sites fácil de administrar e que me desse tranquilidade no dia a dia. A GeekHost é a escolha que eu buscava para manter meu projeto online.',
         'image' => 'assets/images/depoimentos/Mariana%20Costa.jpg',
         'image_alt' => 'Foto ilustrativa de uma empreendedora em seu ambiente de trabalho',
         'rating' => null,
@@ -127,17 +165,17 @@ require __DIR__ . '/includes/header.php';
         <span class="grid-line grid-line-3"></span>
     </div>
     <div class="hero-content page-width">
-        <p class="eyebrow eyebrow-light"><span></span> De nerd para nerd</p>
+        <p class="eyebrow eyebrow-light"><span></span> Hospedagem de sites</p>
         <h1>
-            Sua ideia no ar.<br>
+            Seu site no ar.<br>
             <span class="hero-title-line">
-                Seu projeto merece
+                Hospedagem de sites com
                 <span class="hero-dynamic-word-shell">
-                    <span class="hero-dynamic-word is-visible" data-hero-words='["mais velocidade","mais desempenho","mais liberdade","mais possibilidades","mais tecnologia"]'>mais velocidade</span>
+                    <span class="hero-dynamic-word is-visible" data-hero-words='["mais velocidade","mais desempenho","mais segurança","mais liberdade","mais tecnologia"]'>mais velocidade</span>
                 </span>
             </span>
         </h1>
-        <p class="hero-copy">Hospedagem para programadores, agências e empresas. Tenha seu site em uma estrutura gerenciada, com suporte humano pelo WhatsApp e ajuda para trazer seu site para a GeekHost.</p>
+        <p class="hero-copy">Hospedagem de sites para programadores, agências e empresas. Publique e gerencie seu site em uma estrutura rápida, com suporte humano pelo WhatsApp e ajuda para migrar para a GeekHost.</p>
         <div class="hero-actions">
             <a class="button button-lime" href="#planos">Conheça os planos <span aria-hidden="true">↘</span></a>
             <a class="button button-outline button-support button-support-light" href="https://wa.me/5516997399174"><span>Fale com o suporte</span><span class="support-favicon" aria-hidden="true"><img src="assets/images/favicon.png" alt="" width="24" height="24"></span></a>
@@ -147,7 +185,7 @@ require __DIR__ . '/includes/header.php';
 </section>
 
 <section class="proof-strip page-width" aria-label="Destaques da oferta GeekHost">
-    <article><strong>4</strong><span>opções para diferentes necessidades</span></article>
+    <article><strong>3</strong><span>planos de hospedagem de sites</span></article>
     <article><strong>7 dias</strong><span>grátis para começar</span></article>
     <article><strong>Sem</strong><span>fidelidade: cancele quando quiser</span></article>
 </section>
@@ -155,13 +193,14 @@ require __DIR__ . '/includes/header.php';
 <section class="section section-plans page-width" id="planos">
     <div class="section-heading">
         <div>
-            <p class="eyebrow">Encontre seu ponto de partida</p>
-            <h2>Um plano para<br>cada próximo passo.</h2>
+            <p class="eyebrow">Hospedagem de sites</p>
+            <h2>Um plano de hospedagem<br>para cada próximo passo.</h2>
         </div>
-        <p class="section-lede">Escolha entre três planos de hospedagem ou fale com a equipe para montar uma solução personalizada.</p>
+        <p class="section-lede">Escolha entre três planos de hospedagem de sites ou fale com a equipe para montar uma solução personalizada.</p>
     </div>
     <div class="plan-grid">
         <article class="plan-card plan-card-light" id="light" data-plan-card>
+            <span class="plan-type-label">Hospedagem de sites</span>
             <span class="plan-number">01 / PRESENÇA</span>
             <h3>Plano Light</h3>
             <p>Para colocar seu site e suas ideias no ar.</p>
@@ -174,6 +213,7 @@ require __DIR__ . '/includes/header.php';
         </article>
         <article class="plan-card plan-card-green plan-card-recommended" id="empresa" data-plan-card>
             <span class="plan-recommendation">✓ Recomendado</span>
+            <span class="plan-type-label">Hospedagem de sites</span>
             <span class="plan-number">02 / CRESCIMENTO</span>
             <h3>Plano Empresa</h3>
             <p>Para negócios e equipes que querem crescer online.</p>
@@ -185,6 +225,7 @@ require __DIR__ . '/includes/header.php';
             <a class="arrow-link" href="planos.php#empresa">Conhecer o Empresa <span aria-hidden="true">↗</span></a>
         </article>
         <article class="plan-card plan-card-lime" id="premium" data-plan-card>
+            <span class="plan-type-label">Hospedagem de sites</span>
             <span class="plan-number">03 / COMÉRCIO</span>
             <h3>Plano Premium</h3>
             <p>Para projetos que precisam de uma estrutura mais completa.</p>
@@ -212,34 +253,155 @@ require __DIR__ . '/includes/header.php';
             <p class="eyebrow">Seu ambiente de hospedagem</p>
             <h2 id="technology-title">Tecnologias para tirar seu projeto do papel.</h2>
         </div>
-        <p class="section-lede">Linguagens, plataformas, ferramentas e serviços para seu site.</p>
+        <p class="section-lede">Recursos, painéis e stacks prontos para hospedar e gerenciar seu site.</p>
     </div>
-    <div class="technology-marquee" aria-label="Tecnologias e serviços disponíveis na hospedagem GeekHost">
-        <div class="technology-track">
-            <?php for ($group = 0; $group < 2; $group++): ?>
-                <div class="technology-group" <?= $group > 0 ? 'aria-hidden="true"' : '' ?>>
-                    <?php foreach ($technologyCategories as $category): ?>
-                        <div class="technology-category">
-                            <!-- <span class="technology-category-name"><?= e($category['name']) ?></span> -->
-                            <div class="technology-items">
-                                <?php foreach ($category['items'] as $technology): ?>
-                                    <div class="technology-item <?= !empty($technology['featured']) ? 'technology-item-featured' : '' ?>">
-                                        <?php if (isset($technology['src'])): ?>
-                                            <img src="<?= e($technology['src']) ?>" alt="" width="46" height="46" loading="lazy">
-                                        <?php elseif (isset($technology['icon'])): ?>
-                                            <img src="https://cdn.simpleicons.org/<?= e($technology['icon']) ?>/<?= e($technology['color']) ?>" alt="" width="46" height="46" loading="lazy">
-                                        <?php else: ?>
-                                            <span class="technology-symbol" aria-hidden="true"><?= e($technology['symbol']) ?></span>
-                                        <?php endif; ?>
-                                        <!-- <span><?= e($technology['name']) ?></span> -->
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+    <div class="page-width environment-grid" aria-label="Tecnologias e serviços disponíveis na hospedagem GeekHost">
+        <?php foreach ($hostingEnvironment as $feature): ?>
+            <article class="environment-card">
+                <div class="environment-card-icon<?= isset($feature['tone']) ? ' environment-card-icon-' . e($feature['tone']) : '' ?>" aria-hidden="true">
+                    <?php if (isset($feature['icon'])): ?>
+                        <img src="https://cdn.simpleicons.org/<?= e($feature['icon']) ?>/<?= e($feature['color']) ?>" alt="" width="40" height="40" loading="lazy">
+                    <?php else: ?>
+                        <span class="environment-symbol"><?= e($feature['symbol']) ?></span>
+                    <?php endif; ?>
                 </div>
-            <?php endfor; ?>
+                <h3><?= e($feature['title']) ?></h3>
+                <p><?= e($feature['description']) ?></p>
+            </article>
+        <?php endforeach; ?>
+    </div>
+</section>
+
+<section class="security-section" aria-labelledby="security-title">
+    <div class="page-width security-layout">
+        <div class="security-copy">
+            <p class="security-badge"><span aria-hidden="true">✓</span> Segurança Avançada</p>
+            <h2 id="security-title">Site de hospedagem de sites seguro</h2>
+            <ul class="security-bullets">
+                <li><span class="security-check" aria-hidden="true">✓</span><p><strong>Certificados SSL gratuitos</strong>, instalados automaticamente, garantem criptografia forte e protegem os dados — sempre ativos, com renovação automática.</p></li>
+                <li><span class="security-check" aria-hidden="true">✓</span><p><strong>Detector de malware avançado</strong>, identifica, isola e remove ameaças em tempo real nos sites dos seus clientes, reduzindo riscos com relatórios e alertas automáticos.</p></li>
+                <li><span class="security-check" aria-hidden="true">✓</span><p><strong>Proteção de privacidade reforçada</strong>, mantém seus dados seguros, em conformidade com a LGPD e boas práticas — políticas claras e auditáveis.</p></li>
+            </ul>
         </div>
+        <div class="security-panel" aria-label="Painel de Segurança">
+            <div class="panel-chrome">
+                <span class="panel-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="panel-url">seguranca.geekhost.com.br</span>
+            </div>
+            <div class="security-panel-body">
+                <div class="security-panel-heading">
+                    <h3>Painel de Segurança</h3>
+                    <span class="security-status"><i aria-hidden="true"></i> Protegido</span>
+                </div>
+                <ul class="security-rows">
+                    <li>
+                        <span class="security-row-icon security-row-icon-ssl" aria-hidden="true">SSL</span>
+                        <div>
+                            <strong>Certificado SSL</strong>
+                            <small>Let's Encrypt · Renovação automática</small>
+                        </div>
+                        <span class="security-pill security-pill-ok">Ativo</span>
+                    </li>
+                    <li>
+                        <span class="security-row-icon security-row-icon-imunify" aria-hidden="true">360</span>
+                        <div>
+                            <strong>Imunify360</strong>
+                            <small>Último scan: há 12 min</small>
+                        </div>
+                        <span class="security-pill security-pill-ok">0 ameaças</span>
+                    </li>
+                    <li>
+                        <span class="security-row-icon security-row-icon-waf" aria-hidden="true">WAF</span>
+                        <div>
+                            <strong>Firewall WAF</strong>
+                            <small>1.247 ataques bloqueados hoje</small>
+                        </div>
+                        <span class="security-pill security-pill-warn">Ativo</span>
+                    </li>
+                    <li>
+                        <span class="security-row-icon security-row-icon-lgpd" aria-hidden="true">OK</span>
+                        <div>
+                            <strong>Conformidade LGPD</strong>
+                            <small>Proteção de dados auditável</small>
+                        </div>
+                        <span class="security-pill security-pill-ok">Conforme</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="performance-section" aria-labelledby="performance-title">
+    <div class="page-width">
+        <header class="performance-heading">
+            <span class="performance-mark" aria-hidden="true">»</span>
+            <h2 id="performance-title">Desempenho ultrarrápido com uptime de 99,9%</h2>
+            <p>Carregamento ultrarrápido com NVMe e LiteSpeed, cache de objetos e rede otimizada — tudo com monitoramento 24/7 e SLA de 99,9% para manter o site sempre online.</p>
+        </header>
+        <div class="performance-monitor" aria-label="Monitor de desempenho GeekHost">
+            <div class="panel-chrome">
+                <span class="panel-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="panel-url">monitor.geekhost.com.br</span>
+            </div>
+            <div class="performance-monitor-body">
+                <div class="perf-metrics">
+                    <article><span>Uptime</span><strong class="perf-metric-green">99.98%</strong></article>
+                    <article><span>TTFB</span><strong class="perf-metric-blue">84ms</strong></article>
+                    <article><span>Speed</span><strong>A+</strong></article>
+                </div>
+                <div class="perf-chart-card">
+                    <div class="perf-chart-heading">
+                        <h3>Performance (últimas 24h)</h3>
+                        <div class="perf-legend" aria-hidden="true"><span class="perf-legend-uptime"></span> Uptime <span class="perf-legend-ttfb"></span> TTFB</div>
+                    </div>
+                    <div class="perf-chart" role="img" aria-label="Gráfico de performance das últimas 24 horas">
+                        <?php
+                        $chartHeights = [62, 70, 58, 74, 66, 80, 72, 68, 76, 84, 78, 70, 88, 82, 74, 90, 86, 78, 92, 84, 76, 88, 80, 72];
+                        foreach ($chartHeights as $height):
+                        ?>
+                            <span style="--bar-height: <?= (int) $height ?>%"><i></i></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="perf-chart-axis" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:59</span></div>
+                </div>
+                <ul class="perf-locations">
+                    <li><span class="perf-location-dot" aria-hidden="true"></span><span>BR-SP1 (Ascenty)</span><strong>2ms</strong></li>
+                    <li><span class="perf-location-dot" aria-hidden="true"></span><span>US-FL1 (Hivelocity)</span><strong>118ms</strong></li>
+                    <li><span class="perf-location-dot" aria-hidden="true"></span><span>CA-BH1 (OVHcloud)</span><strong>142ms</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="vps-home-section" id="vps-destaque" aria-labelledby="vps-home-title">
+    <div class="page-width vps-home-layout">
+        <div class="vps-home-copy">
+            <p class="eyebrow">Servidores VPS</p>
+            <h2 id="vps-home-title">Precisa de mais poder?<br>Conheça nossos servidores VPS.</h2>
+            <p>Para projetos que pedem recursos dedicados, acesso root e desempenho NVMe. LiteSpeed, SSL grátis, Softaculous e suporte GeekHost para colocar sua aplicação no ar com mais controle.</p>
+            <ul class="vps-home-points">
+                <li>NVMe SSD e banda premium</li>
+                <li>Recursos dedicados com root</li>
+                <li>LiteSpeed, CloudLinux e Cloudflare CDN</li>
+            </ul>
+            <div class="vps-home-actions">
+                <a class="button button-lime" href="vps.php">Ver planos VPS <span aria-hidden="true">↗</span></a>
+                <a class="button button-outline-dark" href="https://wa.me/5516997399174?text=Quero%20conhecer%20os%20servidores%20VPS">Falar no WhatsApp</a>
+            </div>
+        </div>
+        <aside class="vps-home-panel" aria-label="Destaque VPS GeekHost">
+            <p class="vps-home-panel-label">A partir de</p>
+            <p class="vps-home-panel-price"><strong>R$ 89,90</strong><span>/mês</span></p>
+            <ul>
+                <li>40 GB NVMe SSD</li>
+                <li>1 vCPU · 2 GB RAM</li>
+                <li>LiteSpeed + SSL grátis</li>
+                <li>Acesso root</li>
+            </ul>
+            <a class="arrow-link" href="vps.php">Montar meu VPS <span aria-hidden="true">↗</span></a>
+        </aside>
     </div>
 </section>
 
@@ -254,8 +416,8 @@ require __DIR__ . '/includes/header.php';
         </div>
         <div class="benefit-grid">
             <article class="benefit-item"><span>01</span><h3>Performance em SSD</h3><p>Plataforma baseada em SSD e estrutura pensada para aplicações que precisam de agilidade.</p></article>
-            <article class="benefit-item"><span>02</span><h3>Hospedagem gerenciada</h3><p>Conte com uma equipe para apoiar a rotina de hospedagem e deixar você focar no seu projeto.</p></article>
-            <article class="benefit-item"><span>03</span><h3>Painel cPanel em português</h3><p>Gerencie hospedagem e e-mails em um painel conhecido, completo e fácil de usar.</p></article>
+            <article class="benefit-item"><span>02</span><h3>Hospedagem de sites gerenciada</h3><p>Conte com uma equipe para apoiar a rotina de hospedagem de sites e deixar você focar no seu projeto.</p></article>
+            <article class="benefit-item"><span>03</span><h3>Painel cPanel em português</h3><p>Gerencie hospedagem de sites e e-mails em um painel conhecido, completo e fácil de usar.</p></article>
             <article class="benefit-item"><span>04</span><h3>Suporte humano</h3><p>Fale com o time GeekHost pelo WhatsApp quando precisar de orientação.</p></article>
         </div>
         <p class="benefit-note">7 dias grátis no início da contratação, conforme as condições comerciais. Todos os planos são sem fidelidade.</p>
@@ -285,8 +447,8 @@ require __DIR__ . '/includes/header.php';
             </figure>
             <div class="people-story-copy">
                 <span class="people-story-label">Negócios online</span>
-                <h3>Mostre o que sua empresa faz com uma presença profissional.</h3>
-                <p>Apresente seus serviços em um endereço próprio e torne mais simples para as pessoas conhecerem e encontrarem seu negócio.</p>
+                <h3>Mostre o que sua empresa faz com uma presença profissional e rápida.</h3>
+                <p>Apresente seus serviços em um endereço próprio, com servidores rápidos e carregamento ultrarrápido para quem visita o site — e torne mais simples para as pessoas conhecerem e encontrarem seu negócio.</p>
             </div>
         </article>
     </div>
@@ -414,7 +576,7 @@ require __DIR__ . '/includes/header.php';
 
 <section class="closing-cta page-width">
     <p class="eyebrow">Vamos tirar do papel?</p>
-    <div class="closing-row"><h2>Seu próximo passo<br>começa pelo plano certo.</h2><a class="button button-dark" href="#planos">Ver planos e preços <span aria-hidden="true">↗</span></a></div>
+    <div class="closing-row"><h2>Seu próximo site<br>começa pela hospedagem de sites certa.</h2><a class="button button-dark" href="#planos">Ver planos de hospedagem de sites <span aria-hidden="true">↗</span></a></div>
 </section>
 
 <section class="generator-promo" id="gerador" aria-labelledby="generator-title">

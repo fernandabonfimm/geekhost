@@ -2,12 +2,13 @@
 
 require_once __DIR__ . '/config.php';
 
-$pageTitle = $pageTitle ?? 'Hospedagem para o seu próximo projeto';
-$pageDescription = $pageDescription ?? 'Tire seu projeto do papel com a GeekHost. Conheça as opções de hospedagem e encontre o plano para o seu momento.';
+$pageTitle = $pageTitle ?? 'Hospedagem de sites para o seu próximo projeto';
+$pageDescription = $pageDescription ?? 'Tire seu projeto do papel com a GeekHost. Conheça as opções de hospedagem de sites e encontre o plano para o seu momento.';
 $currentPage = $currentPage ?? '';
 $navigation = [
     'inicio' => ['label' => 'Início', 'href' => 'index.php'],
     'planos' => ['label' => 'Planos', 'href' => 'planos.php'],
+    'vps' => ['label' => 'VPS', 'href' => 'vps.php'],
     'contato' => ['label' => 'Contato', 'href' => 'contato.php'],
 ];
 ?>
@@ -18,7 +19,7 @@ $navigation = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="<?= e($pageDescription) ?>">
     <meta name="theme-color" content="#1a1e24">
-    <title>Hospedagem de Sites: Rápida e Segura</title>
+    <title><?= e($pageTitle) ?> | GeekHost</title>
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
     <link rel="stylesheet" href="assets/css/site.css">
 </head>

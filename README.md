@@ -43,7 +43,7 @@ O site lê as configurações com `getenv()`. Use o recurso de variáveis de amb
 Configure:
 
 - `GEEKHOST_CONTACT_EMAIL`: `contato@geekhost.com.br` (já é o padrão do projeto; configure a variável apenas se quiser substituí-lo).
-- `GEEKHOST_WHATSAPP`: telefone internacional com país e DDD, somente dígitos. Ele é usado pelo redirecionador `whatsapp.php`; não é escrito nos links HTML.
+- `GEEKHOST_WHATSAPP`: telefone internacional com país e DDD, somente dígitos. O padrão é `5516997399174`; configure a variável apenas para substituí-lo. Ele é usado nos links e no redirecionador `whatsapp.php`.
 - `GEEKHOST_PUBLIC_URL`: URL pública canônica do site, por exemplo `https://seudominio.com.br`, sem barra final, query string ou fragmento.
 - `GEEKHOST_LINK_SECRET`: segredo aleatório de pelo menos 32 bytes para assinar os links temporários. Gere localmente com `php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"` e cadastre diretamente na configuração privada do servidor. Não use o mesmo segredo em outros projetos.
 
@@ -62,7 +62,7 @@ Se o cPanel não oferecer um método para disponibilizar variáveis via `getenv(
 Defina as variáveis de ambiente antes de iniciar o servidor:
 
 - `GEEKHOST_CONTACT_EMAIL`: endereço usado para preparar mensagens de contato; o padrão é `contato@geekhost.com.br`.
-- `GEEKHOST_WHATSAPP`: telefone comercial em formato internacional, com código do país e DDD, somente dígitos. É necessário para habilitar os redirecionamentos de suporte/planos; o número não aparece nos links HTML.
+- `GEEKHOST_WHATSAPP`: telefone comercial em formato internacional, com código do país e DDD, somente dígitos. O padrão é `5516997399174`; configure a variável para substituí-lo.
 - `GEEKHOST_PUBLIC_URL`: URL pública base do site, por exemplo `https://seudominio.com.br`.
 - `GEEKHOST_LINK_SECRET`: segredo aleatório com pelo menos 32 bytes, usado para assinar os links temporários. Gere um valor com `php -r "echo bin2hex(random_bytes(32));"` e mantenha-o somente na configuração de ambiente do servidor.
 
