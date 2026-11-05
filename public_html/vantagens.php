@@ -84,9 +84,9 @@ require __DIR__ . '/includes/header.php';
             <h2 id="feature-performance-title">Velocidade e estabilidade para o site não travar o negócio.</h2>
             <p>Estrutura pensada para quem precisa publicar com agilidade e manter a experiência do visitante fluida no dia a dia.</p>
             <ul class="feature-alt-list">
-                <li>Armazenamento em SSD</li>
-                <li>Ambiente preparado para PHP e CMS populares</li>
-                <li>SSL para conexão segura</li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-hdd-stack"></i></span><span>Armazenamento em SSD</span></li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-code-slash"></i></span><span>Ambiente preparado para PHP e CMS populares</span></li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-shield-lock"></i></span><span>SSL para conexão segura</span></li>
             </ul>
         </div>
     </div>
@@ -102,9 +102,9 @@ require __DIR__ . '/includes/header.php';
             <h2 id="feature-security-title">Controle o ambiente sem precisar virar especialista em servidor.</h2>
             <p>Gerencie e-mails, arquivos, bancos e DNS em um painel conhecido, com suporte próximo quando surgir qualquer dúvida.</p>
             <ul class="feature-alt-list">
-                <li>cPanel completo em português</li>
-                <li>Backups e rotinas de manutenção</li>
-                <li>Orientação humana para DNS e publicação</li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-sliders"></i></span><span>cPanel completo em português</span></li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-cloud-arrow-down"></i></span><span>Backups e rotinas de manutenção</span></li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-headset"></i></span><span>Orientação humana para DNS e publicação</span></li>
             </ul>
         </div>
     </div>
@@ -120,9 +120,9 @@ require __DIR__ . '/includes/header.php';
             <h2 id="feature-migration-title">Traga seu site com acompanhamento de verdade.</h2>
             <p>Não precisa enfrentar a mudança sozinho. A equipe ajuda a avaliar o cenário e conduzir a migração com mais segurança.</p>
             <ul class="feature-alt-list">
-                <li>Suporte na transição entre provedores</li>
-                <li>Checklist claro antes e depois da troca</li>
-                <li>Canal direto no WhatsApp</li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-arrow-left-right"></i></span><span>Suporte na transição entre provedores</span></li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-list-check"></i></span><span>Checklist claro antes e depois da troca</span></li>
+                <li><span class="feature-icon" aria-hidden="true"><i class="bi bi-whatsapp"></i></span><span>Canal direto no WhatsApp</span></li>
             </ul>
         </div>
     </div>

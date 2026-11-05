@@ -190,13 +190,18 @@ $whatsappBase = 'https://wa.me/5516997399174?text=';
     </div>
 </section>
 
-<section class="closing-cta page-width">
-    <p class="eyebrow">Pronto para escalar?</p>
-    <div class="closing-row">
-        <h2>Contrate seu servidor<br>VPS GeekHost agora.</h2>
-        <div class="vps-home-actions">
-            <a class="button button-dark" href="#planos-vps">Ver planos VPS <span aria-hidden="true">↗</span></a>
-            <a class="button button-outline-dark" href="<?= e($whatsappBase . rawurlencode('Quero contratar um servidor VPS GeekHost')) ?>">WhatsApp</a>
+<section class="closing-cta" aria-labelledby="vps-closing-title">
+    <div class="closing-cta-inner page-width">
+        <p class="eyebrow eyebrow-light"><span></span> Pronto para escalar?</p>
+        <div class="closing-row">
+            <div class="closing-copy">
+                <h2 id="vps-closing-title">Contrate seu servidor VPS GeekHost agora.</h2>
+                <p>Escolha a configuração certa e fale com o suporte quando precisar.</p>
+            </div>
+            <div class="vps-home-actions">
+                <a class="button button-lime" href="#planos-vps">Ver planos VPS <span aria-hidden="true">↗</span></a>
+                <a class="button button-outline button-support-light" href="<?= e($whatsappBase . rawurlencode('Quero contratar um servidor VPS GeekHost')) ?>">WhatsApp</a>
+            </div>
         </div>
     </div>
 </section>

@@ -23,6 +23,7 @@ $pageDocumentTitle = $pageDocumentTitle ?? 'Hospedagem de Sites: Rápida e Segur
     <meta name="theme-color" content="#1a1e24">
     <title><?= e($pageDocumentTitle) ?></title>
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="assets/css/site.css">
 </head>
 <body>
@@ -30,7 +31,7 @@ $pageDocumentTitle = $pageDocumentTitle ?? 'Hospedagem de Sites: Rápida e Segur
 <header class="site-header">
     <div class="header-inner page-width">
         <a class="brand" href="index.php" aria-label="GeekHost, página inicial">
-            <img class="header-logo" src="assets/images/logo-header.png" alt="GeekHost" width="400" height="240">
+            <img class="header-logo" src="assets/images/logo-header.png" alt="GeekHost" width="200" height="70">
         </a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation">
             Menu

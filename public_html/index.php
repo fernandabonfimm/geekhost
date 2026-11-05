@@ -574,9 +574,17 @@ require __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<section class="closing-cta page-width">
-    <p class="eyebrow">Vamos tirar do papel?</p>
-    <div class="closing-row"><h2>Seu próximo site<br>começa pela hospedagem de sites certa.</h2><a class="button button-dark" href="#planos">Ver planos de hospedagem de sites <span aria-hidden="true">↗</span></a></div>
+<section class="closing-cta" aria-labelledby="closing-cta-title">
+    <div class="closing-cta-inner page-width">
+        <p class="eyebrow eyebrow-light"><span></span> Vamos tirar do papel?</p>
+        <div class="closing-row">
+            <div class="closing-copy">
+                <h2 id="closing-cta-title">Seu próximo site começa pela hospedagem certa.</h2>
+                <p>Escolha um plano, teste 7 dias e publique com suporte humano do outro lado.</p>
+            </div>
+            <a class="button button-lime" href="#planos">Ver planos <span aria-hidden="true">↗</span></a>
+        </div>
+    </div>
 </section>
 
 <section class="generator-promo" id="gerador" aria-labelledby="generator-title">
