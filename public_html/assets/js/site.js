@@ -1,4 +1,67 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const cookieBanner = document.querySelector('[data-cookie-banner]');
+    if (cookieBanner) {
+        const storageKey = 'geekhost_cookie_consent';
+        const acceptButton = cookieBanner.querySelector('[data-cookie-accept]');
+        const rejectButton = cookieBanner.querySelector('[data-cookie-reject]');
+        const preferencesButton = cookieBanner.querySelector('[data-cookie-preferences]');
+        const saveButton = cookieBanner.querySelector('[data-cookie-save]');
+        const preferencesPanel = cookieBanner.querySelector('[data-cookie-panel]');
+        const prefsCheckbox = cookieBanner.querySelector('[data-cookie-prefs]');
+
+        const readConsent = () => {
+            try {
+                const raw = window.localStorage.getItem(storageKey);
+                return raw ? JSON.parse(raw) : null;
+            } catch {
+                return null;
+            }
+        };
+
+        const writeConsent = (payload) => {
+            const value = JSON.stringify({
+                ...payload,
+                updatedAt: new Date().toISOString(),
+            });
+            try {
+                window.localStorage.setItem(storageKey, value);
+            } catch {
+                // Ignore storage failures and still hide the banner for this session.
+            }
+            document.cookie = `geekhost_cookie_consent=${encodeURIComponent(payload.status)}; Max-Age=31536000; Path=/; SameSite=Lax`;
+            cookieBanner.hidden = true;
+        };
+
+        const existingConsent = readConsent();
+        if (!existingConsent || !existingConsent.status) {
+            cookieBanner.hidden = false;
+        } else if (prefsCheckbox && typeof existingConsent.preferences === 'boolean') {
+            prefsCheckbox.checked = existingConsent.preferences;
+        }
+
+        acceptButton?.addEventListener('click', () => {
+            writeConsent({ status: 'accepted', essential: true, preferences: true });
+        });
+
+        rejectButton?.addEventListener('click', () => {
+            writeConsent({ status: 'rejected', essential: true, preferences: false });
+        });
+
+        preferencesButton?.addEventListener('click', () => {
+            if (!preferencesPanel) return;
+            preferencesPanel.hidden = !preferencesPanel.hidden;
+        });
+
+        saveButton?.addEventListener('click', () => {
+            const preferencesEnabled = Boolean(prefsCheckbox?.checked);
+            writeConsent({
+                status: preferencesEnabled ? 'custom' : 'rejected',
+                essential: true,
+                preferences: preferencesEnabled,
+            });
+        });
+    }
+
     const heroWord = document.querySelector('.hero-dynamic-word');
     if (heroWord) {
         const phrases = JSON.parse(heroWord.dataset.heroWords || '[]');
