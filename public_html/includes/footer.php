@@ -43,13 +43,15 @@
             <a href="quem-somos.php">Quem Somos</a>
             <a href="contato.php">Contato</a>
             <a href="gerador.php">Gerador de WhatsApp</a>
+            <a href="termos-de-uso.php">Termos de Uso</a>
+            <a href="politica-de-privacidade.php">Política de Privacidade</a>
         </nav>
         <small>&copy; <?= date('Y') ?> FBS Tecnologia - CNPJ 61.171.635/0001-46. Rua Pais Leme, 215, Conj. 1713, Pinheiros, São Paulo/SP, CEP 05424-150. Todos os direitos reservados.</small>
         <nav class="footer-social" aria-label="Redes sociais GeekHost">
             <a href="https://www.instagram.com/geekhost" target="_blank" rel="noopener noreferrer" aria-label="Instagram GeekHost" title="Instagram GeekHost">
                 <img src="https://cdn.simpleicons.org/instagram/ffffff" alt="" width="16" height="16">
             </a>
-            <a href="https://br.linkedin.com/company/geekhost" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn GeekHost" title="LinkedIn GeekHost">
+            <a href="https://www.linkedin.com/company/geekhost-brasil" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn GeekHost" title="LinkedIn GeekHost">
                 <img src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/linkedin.svg"
                 alt="LinkedIn"
                 width="16"
@@ -98,7 +100,7 @@
                     <span class="exit-intent-card-copy"><strong>Instagram</strong><small>Novidades e bastidores da equipe</small></span>
                     <span class="exit-intent-pill">Seguir</span>
                 </a>
-                <a class="exit-intent-card" href="https://br.linkedin.com/company/geekhost" target="_blank" rel="noopener noreferrer">
+                <a class="exit-intent-card" href="https://www.linkedin.com/company/geekhost-brasil" target="_blank" rel="noopener noreferrer">
                     <span class="exit-intent-card-icon exit-intent-card-icon-linkedin" aria-hidden="true"><i class="bi bi-linkedin"></i></span>
                     <span class="exit-intent-card-copy"><strong>LinkedIn</strong><small>Conteúdo e oportunidades GeekHost</small></span>
                     <span class="exit-intent-pill">Conectar</span>
@@ -112,12 +114,13 @@
     <div class="cookie-banner-inner page-width">
         <div class="cookie-banner-copy">
             <strong>Privacidade e cookies</strong>
-            <p>Usamos cookies essenciais para o funcionamento do site e, com o seu consentimento, cookies de preferências para lembrar suas escolhas (LGPD). Você pode aceitar, recusar os não essenciais ou ajustar as preferências.</p>
+            <p>Usamos cookies essenciais para o funcionamento do site e, com o seu consentimento, cookies de preferências para lembrar suas escolhas (LGPD). Você pode aceitar, recusar os não essenciais ou ajustar as preferências. Saiba mais na <a href="politica-de-privacidade.php">Política de Privacidade</a>.</p>
         </div>
         <div class="cookie-banner-actions">
             <button class="button button-lime" type="button" data-cookie-accept>Aceitar</button>
             <button class="button button-outline-dark cookie-btn-reject" type="button" data-cookie-reject>Recusar</button>
             <button class="text-link" type="button" data-cookie-preferences>Preferências</button>
+            <a class="text-link" href="politica-de-privacidade.php">Política de Privacidade</a>
         </div>
         <div class="cookie-preferences" data-cookie-panel hidden>
             <label class="cookie-option">
@@ -128,6 +131,7 @@
                 <input type="checkbox" data-cookie-prefs checked>
                 <span><strong>Preferências</strong> Lembram escolhas como idioma e layout para melhorar sua experiência.</span>
             </label>
+            <p class="cookie-policy-note">Detalhes sobre cookies e direitos do titular estão na <a href="politica-de-privacidade.php">Política de Privacidade</a>.</p>
             <button class="button button-dark" type="button" data-cookie-save>Salvar preferências</button>
         </div>
     </div>
