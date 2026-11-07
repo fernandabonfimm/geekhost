@@ -175,6 +175,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     showSlide(activeIndex + 1);
                 }
             });
+
+            const viewport = testimonialCarousel.querySelector('[data-testimonial-viewport]');
+            if (viewport) {
+                let pointerId = null;
+                let startX = 0;
+                let startY = 0;
+                viewport.addEventListener('pointerdown', (event) => {
+                    if (event.pointerType === 'mouse') return;
+                    pointerId = event.pointerId;
+                    startX = event.clientX;
+                    startY = event.clientY;
+                });
+                viewport.addEventListener('pointerup', (event) => {
+                    if (pointerId !== event.pointerId) return;
+                    const deltaX = event.clientX - startX;
+                    const deltaY = event.clientY - startY;
+                    pointerId = null;
+                    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+                    showSlide(deltaX < 0 ? activeIndex + 1 : activeIndex - 1);
+                });
+                viewport.addEventListener('pointercancel', () => {
+                    pointerId = null;
+                });
+            }
             showSlide(activeIndex);
         }
     }

@@ -14,9 +14,9 @@ require __DIR__ . '/includes/header.php';
     <p class="eyebrow">Quem Somos</p>
     <h1>A parceira para todo projeto<br><em>crescer online</em></h1>
     <p class="about-hero-copy">Nascemos para tirar a hospedagem do improviso: estrutura clara, melhor custo-benefício e gente de verdade do outro lado — no Brasil e em Portugal.</p>
-    <figure class="about-team">
+    <div class="about-team">
         <img src="assets/images/team-quemsomos.jpg" alt="Equipe GeekHost reunida em um ambiente de trabalho colaborativo" width="1600" height="897" loading="eager">
-    </figure>
+    </div>
     <div class="about-trust" aria-label="Números e compromissos GeekHost">
         <article><strong>2023</strong><span>Início atendendo clientes da agência parceira</span></article>
         <article><strong>2025</strong><span>Fundação da GeekHost para todos os clientes</span></article>
@@ -47,9 +47,9 @@ require __DIR__ . '/includes/header.php';
                 </article>
             </div>
         </div>
-        <div class="about-timeline-grid">
-            <img src="assets/images/equipe.png" alt="fundadores da GeekHost" width="100%" height="100%">
-        </div>
+        <figure class="about-founders">
+            <img src="assets/images/equipe.png" alt="Fundadores da GeekHost" width="1536" height="1024" loading="lazy">
+        </figure>
     </div>
 </section>
 
