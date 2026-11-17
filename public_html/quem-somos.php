@@ -9,13 +9,13 @@ require __DIR__ . '/includes/header.php';
 
 <section class="about-hero page-width">
     <div class="about-hero-pulse" aria-hidden="true">
-        <img src="assets/images/mascotes-highfive.png" alt="" width="58" height="58">
+        <img src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="58" height="58">
     </div>
     <p class="eyebrow">Quem Somos</p>
     <h1>A parceira para todo projeto<br><em>crescer online</em></h1>
     <p class="about-hero-copy">Nascemos para tirar a hospedagem do improviso: estrutura clara, melhor custo-benefício e gente de verdade do outro lado — no Brasil e em Portugal.</p>
     <div class="about-team">
-        <img src="assets/images/team-quemsomos.jpg" alt="Equipe GeekHost reunida em um ambiente de trabalho colaborativo" width="1600" height="897" loading="eager">
+        <img src="<?= e(asset('assets/images/team-quemsomos.jpg')) ?>" alt="Equipe GeekHost reunida em um ambiente de trabalho colaborativo" width="1600" height="897" loading="eager">
     </div>
     <div class="about-trust" aria-label="Números e compromissos GeekHost">
         <article><strong>2023</strong><span>Início atendendo clientes da agência parceira</span></article>
@@ -48,7 +48,7 @@ require __DIR__ . '/includes/header.php';
             </div>
         </div>
         <figure class="about-founders">
-            <img src="assets/images/equipe.png" alt="Fundadores da GeekHost" width="1536" height="1024" loading="lazy">
+            <img src="<?= e(asset('assets/images/equipe.png')) ?>" alt="Fundadores Fernanda S. e Fernando C. da GeekHost" width="1536" height="1024" loading="lazy">
         </figure>
     </div>
 </section>
@@ -80,8 +80,7 @@ require __DIR__ . '/includes/header.php';
     <h2 id="about-map-title">A GeekHost está presente onde o empreendedor está.</h2>
     <p>Mapa mundi com destaque para o Brasil e Portugal — os mercados onde acompanhamos projetos e oferecemos suporte próximo.</p>
     <div class="world-map" role="img" aria-label="Mapa mundi pontilhado com Brasil e Portugal destacados em verde e marcadores pulsantes">
-        <img class="world-map-base" src="assets/images/mapa-mundi-ref.png" alt="" width="1024" height="485" loading="lazy" decoding="async">
-       
+        <img class="world-map-base" src="<?= e(asset('assets/images/mapa-mundi-ref.png')) ?>" alt="" width="1024" height="485" loading="lazy" decoding="async">
     </div>
 </section>
 

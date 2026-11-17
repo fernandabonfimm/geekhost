@@ -9,7 +9,7 @@
             <div class="support-center-actions">
                 <?php if ($companyWhatsapp !== ''): ?>
                     <a class="button button-lime" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer">WhatsApp <span aria-hidden="true">↗</span></a>
-                    <a class="button button-outline button-support-light" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer"><span>Chat com o suporte</span><span class="support-favicon" aria-hidden="true"><img src="assets/images/favicon.png" alt="" width="24" height="24"></span></a>
+                    <a class="button button-outline button-support-light" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer"><span>Chat com o suporte</span><span class="support-favicon" aria-hidden="true"><img src="<?= e(asset('assets/images/favicon.png')) ?>" alt="" width="24" height="24"></span></a>
                 <?php endif; ?>
                 <?php if ($companyEmail !== ''): ?>
                     <a class="text-link text-link-light" href="mailto:<?= e($companyEmail) ?>"><?= e($companyEmail) ?> <span aria-hidden="true">↗</span></a>
@@ -26,7 +26,7 @@
             <?php endif; ?>
         </div>
         <figure class="support-center-visual support-center-visual-mascots">
-            <img src="assets/images/mascotes-suporte.png" alt="Mascotes GeekHost colaborando no computador para atender o suporte" width="1024" height="1536" loading="eager" decoding="async">
+            <img src="<?= e(asset('assets/images/mascotes-suporte.png')) ?>" alt="Mascotes GeekHost colaborando no computador para atender o suporte" width="1024" height="1536" loading="eager" decoding="async">
         </figure>
     </div>
 </section>
@@ -34,7 +34,7 @@
 <footer class="site-footer">
     <div class="footer-inner">
         <a class="brand brand-footer" href="index.php" aria-label="GeekHost, página inicial">
-            <img class="footer-emblem" src="assets/images/LOGO-02.png" alt="" width="200" height="120">
+            <img class="footer-emblem" src="<?= e(asset('assets/images/LOGO-02.png')) ?>" alt="" width="200" height="120">
         </a>
         <p>Seu projeto merece um bom começo.</p>
         <nav class="footer-links" aria-label="Links do rodapé">
@@ -49,18 +49,14 @@
         <small>&copy; <?= date('Y') ?> FBS Tecnologia - CNPJ 61.171.635/0001-46. Rua Pais Leme, 215, Conj. 1713, Pinheiros, São Paulo/SP, CEP 05424-150. Todos os direitos reservados.</small>
         <nav class="footer-social" aria-label="Redes sociais GeekHost">
             <a href="https://www.instagram.com/geekhost" target="_blank" rel="noopener noreferrer" aria-label="Instagram GeekHost" title="Instagram GeekHost">
-                <img src="https://cdn.simpleicons.org/instagram/ffffff" alt="" width="16" height="16">
+                <i class="bi bi-instagram" aria-hidden="true"></i>
             </a>
             <a href="https://www.linkedin.com/company/geekhost-brasil" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn GeekHost" title="LinkedIn GeekHost">
-                <img src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/linkedin.svg"
-                alt="LinkedIn"
-                width="16"
-                height="16"
-                style="filter: brightness(0) invert(1);">  
+                <i class="bi bi-linkedin" aria-hidden="true"></i>
             </a>
             <?php if ($companyWhatsapp !== ''): ?>
                 <a href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp GeekHost" title="WhatsApp GeekHost">
-                    <img src="https://cdn.simpleicons.org/whatsapp/ffffff" alt="" width="16" height="16">
+                    <i class="bi bi-whatsapp" aria-hidden="true"></i>
                 </a>
             <?php endif; ?>
         </nav>
@@ -68,7 +64,7 @@
 </footer>
 <?php if ($companyWhatsapp !== ''): ?>
     <a class="whatsapp-float" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer" aria-label="Fale com a GeekHost pelo WhatsApp" title="Fale com a GeekHost pelo WhatsApp">
-        <img src="https://cdn.simpleicons.org/whatsapp/ffffff" alt="" width="30" height="30">
+        <i class="bi bi-whatsapp" aria-hidden="true"></i>
     </a>
 <?php endif; ?>
 <button class="scroll-top" type="button" data-scroll-top aria-label="Voltar ao topo" title="Voltar ao topo" hidden>
@@ -77,7 +73,7 @@
 <dialog class="exit-intent" data-exit-intent aria-labelledby="exit-intent-title">
     <div class="exit-intent-panel">
         <aside class="exit-intent-visual">
-            <img src="assets/images/mascotes-suporte.png" alt="" width="420" height="630" loading="lazy" decoding="async">
+            <img src="<?= e(asset('assets/images/mascotes-suporte.png')) ?>" alt="" width="420" height="630" loading="lazy" decoding="async">
             <span class="exit-intent-badge">Infraestrutura sob medida</span>
         </aside>
         <div class="exit-intent-content">
@@ -139,6 +135,6 @@
 <?php if (!empty($loadQrCode)): ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <?php endif; ?>
-<script src="assets/js/site.js" defer></script>
+<script src="<?= e(asset('assets/js/site.js')) ?>" defer></script>
 </body>
 </html>
