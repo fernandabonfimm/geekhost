@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/env.php';
+geekhost_load_env();
+
 $siteName = 'GeekHost';
-$companyEmail = filter_var(getenv('GEEKHOST_CONTACT_EMAIL') ?: 'contato@geekhost.com.br', FILTER_VALIDATE_EMAIL) ?: '';
-$companyWhatsapp = preg_replace('/\D+/', '', getenv('GEEKHOST_WHATSAPP') ?: '5516997399174');
+$companyEmail = filter_var(env('GEEKHOST_CONTACT_EMAIL', 'contato@geekhost.com.br') ?: '', FILTER_VALIDATE_EMAIL) ?: '';
+$companyWhatsapp = preg_replace('/\D+/', '', env('GEEKHOST_WHATSAPP', '5516997399174') ?: '') ?? '';
+$publicUrl = rtrim((string) env('GEEKHOST_PUBLIC_URL', ''), '/');
 
 function e(string $value): string
 {
@@ -18,4 +22,19 @@ function e(string $value): string
 function asset(string $path): string
 {
     return '/' . ltrim(str_replace('\\', '/', $path), '/');
+}
+
+function geekhost_public_url(string $path = ''): string
+{
+    global $publicUrl;
+    $base = $publicUrl !== '' ? $publicUrl : '';
+    if ($base === '') {
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $base = ($https ? 'https://' : 'http://') . $host;
+    }
+    if ($path === '') {
+        return $base;
+    }
+    return $base . '/' . ltrim($path, '/');
 }

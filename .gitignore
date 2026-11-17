@@ -1,0 +1,15 @@
+.env
+.env.local
+.env.*.local
+storage/*.sqlite
+storage/*.sqlite-journal
+storage/cacert.pem
+storage/logs/*
+!storage/logs/.gitkeep
+!storage/.gitkeep
+tmp-*.php
+vendor/
+.idea/
+.vscode/
+*.log
+public_html.zip
