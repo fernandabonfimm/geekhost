@@ -83,6 +83,11 @@
                 img.hidden = true;
             }
             result.querySelector('[data-pix-copy]').value = order.pix?.copyPaste || '';
+            if (!order.pix?.copyPaste && order.invoiceUrl) {
+                const note = document.createElement('p');
+                note.innerHTML = `QR ainda não disponível. Pague pela fatura Asaas: <a href="${order.invoiceUrl}" target="_blank" rel="noopener noreferrer">abrir fatura</a>`;
+                pixBox.appendChild(note);
+            }
         }
 
         if (order.billingType === 'BOLETO') {

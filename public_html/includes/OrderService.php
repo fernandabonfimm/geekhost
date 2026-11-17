@@ -142,12 +142,25 @@ final class OrderService
             $cardLast4 = null;
 
             if ($billingType === 'PIX') {
-                try {
-                    $pix = $this->asaas->getPixQrCode((string) $payment['id']);
-                    $pixQr = isset($pix['encodedImage']) ? (string) $pix['encodedImage'] : null;
-                    $pixCopy = isset($pix['payload']) ? (string) $pix['payload'] : null;
-                } catch (Throwable $e) {
-                    geekhost_log('pix_qr_fetch_failed', ['order' => $publicId, 'error' => $e->getMessage()]);
+                $paymentId = (string) ($payment['id'] ?? '');
+                for ($attempt = 1; $attempt <= 4; $attempt++) {
+                    try {
+                        $pix = $this->asaas->getPixQrCode($paymentId);
+                        $pixQr = isset($pix['encodedImage']) ? (string) $pix['encodedImage'] : null;
+                        $pixCopy = isset($pix['payload']) ? (string) $pix['payload'] : null;
+                        if ($pixQr || $pixCopy) {
+                            break;
+                        }
+                    } catch (Throwable $e) {
+                        geekhost_log('pix_qr_fetch_failed', [
+                            'order' => $publicId,
+                            'attempt' => $attempt,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                    if ($attempt < 4) {
+                        usleep(400000 * $attempt);
+                    }
                 }
             }
 
