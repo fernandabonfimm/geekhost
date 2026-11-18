@@ -70,7 +70,6 @@ $pct = $maxDomains > 0 ? min(100, (int) round(($used / $maxDomains) * 100)) : 0;
             <strong><?= e((string) ($plan['name'] ?? $planCode)) ?> <span class="gh-badge gh-badge-ok">Conta</span></strong>
             <a class="gh-link" href="<?= e(url('/planos.php')) ?>">Ver detalhes do plano →</a>
         </div>
-        <img class="usage-art" src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="120" height="90">
     </article>
 
     <div class="domain-toolbar" data-domain-filter>

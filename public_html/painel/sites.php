@@ -59,13 +59,11 @@ $hostingStatus = (string) ($panelUser['hostingStatus'] ?? 'pending');
             <strong><?= e((string) ($plan['name'] ?? $planCode)) ?></strong>
             <a class="gh-link" href="<?= e(url('/painel/dominios')) ?>">Começar pelo domínio →</a>
         </div>
-        <img class="usage-art" src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="120" height="90">
     </article>
 
     <div class="site-cards">
         <?php if ($sites === []): ?>
             <article class="gh-card site-empty">
-                <img src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="200" height="150">
                 <strong style="font-size:18px;color:var(--gh-ink)">Nenhum site ainda</strong>
                 <p style="margin:0;max-width:42ch;color:var(--gh-muted)">Cadastre um domínio, aponte o DNS para ns1/ns2.geekhost.com.br e use “Criar meu site” quando a propagação estiver OK.</p>
                 <a class="gh-btn gh-btn-primary" href="<?= e(url('/painel/dominios')) ?>">Começar pelos domínios</a>
@@ -128,7 +126,6 @@ $hostingStatus = (string) ($panelUser['hostingStatus'] ?? 'pending');
 
     <?php if ($used >= $maxSites && $maxSites > 0): ?>
         <article class="gh-card site-upsell">
-            <img src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="96" height="72">
             <div>
                 <strong style="font-size:16px">Precisa de mais sites?</strong>
                 <p style="margin:4px 0 0;color:var(--gh-muted);font-size:14px">Você atingiu o limite do <?= e((string) ($plan['name'] ?? $planCode)) ?>.</p>

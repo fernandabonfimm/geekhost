@@ -80,7 +80,6 @@ $hasCard = $last4 !== '';
                     A GeekHost não guarda o número completo do cartão nem o CVV. A renovação usa tokenização Asaas.
                     Não há saldo fictício nesta carteira.
                 </p>
-                <img src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="88" height="66">
             </article>
         </div>
 
