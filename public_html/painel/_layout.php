@@ -64,6 +64,12 @@ $isAuthPage = !$requireAuth;
         <a href="<?= e(url('/painel/')) ?>" class="<?= $panelSection === 'inicio' ? 'is-active' : '' ?>" title="Início">
             <i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Início</span>
         </a>
+        <a href="<?= e(url('/painel/dominios')) ?>" class="<?= $panelSection === 'dominios' ? 'is-active' : '' ?>" title="Domínios">
+            <i class="bi bi-globe2" aria-hidden="true"></i><span>Domínios</span>
+        </a>
+        <a href="<?= e(url('/painel/sites')) ?>" class="<?= $panelSection === 'sites' ? 'is-active' : '' ?>" title="Meus sites">
+            <i class="bi bi-window" aria-hidden="true"></i><span>Meus sites</span>
+        </a>
         <a href="<?= e(url('/painel/faturas')) ?>" class="<?= $panelSection === 'faturas' ? 'is-active' : '' ?>" title="Faturas">
             <i class="bi bi-receipt" aria-hidden="true"></i><span>Faturas</span>
         </a>

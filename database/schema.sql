@@ -168,3 +168,38 @@ CREATE TABLE IF NOT EXISTS webhook_events (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_webhook_events_key ON webhook_events (event_key);
+
+CREATE TABLE IF NOT EXISTS user_domains (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    user_id INTEGER NOT NULL,
+    domain VARCHAR(190) NOT NULL,
+    plan_code VARCHAR(40) NOT NULL DEFAULT 'light',
+    ns_ok INTEGER NOT NULL DEFAULT 0,
+    ns_checked_at TEXT DEFAULT NULL,
+    ns_raw_json TEXT DEFAULT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'awaiting_dns',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_domains_public ON user_domains (public_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_domains_user_domain ON user_domains (user_id, domain);
+
+CREATE TABLE IF NOT EXISTS user_sites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    user_id INTEGER NOT NULL,
+    domain_id INTEGER NOT NULL,
+    title VARCHAR(190) NOT NULL DEFAULT '',
+    status VARCHAR(40) NOT NULL DEFAULT 'ready',
+    wordpress_status VARCHAR(40) NOT NULL DEFAULT 'not_installed',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (domain_id) REFERENCES user_domains(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sites_public ON user_sites (public_id);
+CREATE INDEX IF NOT EXISTS idx_user_sites_user ON user_sites (user_id);

@@ -14,6 +14,8 @@ function geekhost_plans(): array
             'name' => 'Plano Light',
             'tagline' => 'Para colocar seu site e suas ideias no ar.',
             'checkout_enabled' => true,
+            'max_domains' => 1,
+            'max_sites' => 1,
             'features' => ['5 contas de e-mail', '10 GB de espaço', 'Banco de dados ilimitado'],
             'specs' => [
                 'Disco' => '10 GB',
@@ -53,6 +55,8 @@ function geekhost_plans(): array
             'name' => 'Plano Empresa',
             'tagline' => 'Para negócios e equipes que querem crescer online.',
             'checkout_enabled' => true,
+            'max_domains' => 3,
+            'max_sites' => 3,
             'features' => ['10 contas de e-mail', '15 GB de espaço', 'Banco de dados ilimitado'],
             'specs' => [
                 'Disco' => '15 GB',
@@ -92,6 +96,8 @@ function geekhost_plans(): array
             'name' => 'Plano Premium',
             'tagline' => 'Para projetos que precisam de uma estrutura mais completa.',
             'checkout_enabled' => true,
+            'max_domains' => 10,
+            'max_sites' => 10,
             'features' => ['E-mails ilimitados', '25 GB de espaço', 'Banco de dados ilimitado'],
             'specs' => [
                 'Disco' => '25 GB',
@@ -198,4 +204,22 @@ function geekhost_period_end_date(string $periodCode, ?int $fromTs = null): stri
         default => 1,
     };
     return gmdate('Y-m-d', strtotime('+' . $months . ' month', $fromTs));
+}
+
+/** @return list<string> */
+function geekhost_nameservers(): array
+{
+    return ['ns1.geekhost.com.br', 'ns2.geekhost.com.br'];
+}
+
+function geekhost_plan_domain_limit(string $planCode): int
+{
+    $plan = geekhost_plan($planCode);
+    return (int) ($plan['max_domains'] ?? 1);
+}
+
+function geekhost_plan_site_limit(string $planCode): int
+{
+    $plan = geekhost_plan($planCode);
+    return (int) ($plan['max_sites'] ?? 1);
 }

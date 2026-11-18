@@ -92,10 +92,10 @@ $hostingClass = match ((string) ($panelUser['hostingStatus'] ?? 'pending')) {
                     <h3>Atalhos rápidos</h3>
                 </div>
                 <div class="home-resources">
+                    <a href="<?= e(url('/painel/dominios')) ?>"><i class="bi bi-globe2"></i><strong>Domínios</strong><span>DNS ns1/ns2 GeekHost</span></a>
+                    <a href="<?= e(url('/painel/sites')) ?>"><i class="bi bi-window"></i><strong>Meus sites</strong><span>WordPress e admin</span></a>
                     <a href="<?= e(url('/painel/faturas')) ?>"><i class="bi bi-receipt"></i><strong>Faturas</strong><span>Pagamentos e histórico</span></a>
                     <a href="<?= e(url('/painel/carteira')) ?>"><i class="bi bi-credit-card-2-front"></i><strong>Carteira</strong><span>Cartão de renovação</span></a>
-                    <a href="<?= e(url('/painel/perfil')) ?>"><i class="bi bi-person"></i><strong>Perfil</strong><span>Dados e senha</span></a>
-                    <a href="<?= e(url('/')) ?>"><i class="bi bi-globe2"></i><strong>Site</strong><span>Voltar à GeekHost</span></a>
                 </div>
             </article>
         </div>

@@ -466,6 +466,14 @@ html.panel-theme-dark .panel-theme-toggle .panel-theme-icon-sun { display: inlin
 }
 .home-card-btn { width: 100%; }
 
+.domain-ns-list { margin: 0 0 12px; padding-left: 18px; }
+.domain-ns-list code { font-weight: 700; }
+.domain-list,
+.site-list { display: grid; gap: 12px; margin-top: 16px; }
+.domain-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+.domain-found { margin: 0; font-size: 13px; color: var(--panel-muted); }
+.domain-add-form { margin-top: 16px; }
+
 @media (max-width: 980px) {
     .panel-filter-bar { grid-template-columns: 1fr 1fr; }
     .panel-profile-grid,
