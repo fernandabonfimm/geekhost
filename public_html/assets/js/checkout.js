@@ -80,7 +80,7 @@
         const months = info.interval_months || 1;
         if (renewEl) {
             renewEl.textContent = info.promo
-                ? `Renova depois por ${formatBRL(renew)}/mês via Assinatura Asaas.`
+                ? `Renova depois por ${formatBRL(renew)}/mês via assinatura automática.`
                 : `Renova em ${months} meses por ${formatBRL(renew)}.`;
         }
         const domain = form.domain?.value?.trim();
@@ -221,7 +221,7 @@
 
         setHero(
             paid ? 'Pedido concluído!' : pending ? 'Pedido recebido' : refused ? 'Pagamento não confirmado' : 'Pedido criado',
-            paid ? 'Sua hospedagem foi contratada com sucesso.' : 'Acompanhe o status real do pagamento Asaas.',
+            paid ? 'Sua hospedagem foi contratada com sucesso.' : 'Acompanhe o status real do pagamento.',
             'Checkout GeekHost'
         );
 
@@ -249,7 +249,7 @@
         } else if (pending) {
             setConfirmVisual('warn');
             title.textContent = 'Aguardando confirmação do pagamento';
-            status.textContent = 'Seu pedido foi recebido. Estamos aguardando a confirmação do pagamento no Asaas.';
+            status.textContent = 'Seu pedido foi recebido. Estamos aguardando a confirmação do pagamento.';
             if (panelCta) {
                 panelCta.href = root.dataset.loginUrl;
                 panelCta.textContent = 'Ir para o login do painel';
@@ -300,7 +300,7 @@
             cardBox.hidden = false;
             result.querySelector('[data-card-msg]').textContent = paid
                 ? 'Pagamento confirmado. Crie sua senha para acessar o painel.'
-                : 'Pagamento em análise no Asaas.';
+                : 'Pagamento em análise.';
         }
 
         if (paid && setupUrl) {

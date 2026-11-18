@@ -88,7 +88,7 @@ final class AsaasClient
 
         if ($errno !== 0) {
             geekhost_log('asaas_curl_error', ['errno' => $errno, 'error' => $error, 'path' => $path]);
-            throw new RuntimeException('Falha de comunicação com o Asaas.');
+            throw new RuntimeException('Falha de comunicação com o gateway de pagamento.');
         }
 
         $decoded = null;
@@ -116,7 +116,7 @@ final class AsaasClient
     {
         $res = $this->request('POST', '/customers', $payload);
         if ($res['status'] >= 400 || !is_array($res['body'])) {
-            throw new RuntimeException($this->errorMessage($res, 'Não foi possível criar o cliente no Asaas.'));
+            throw new RuntimeException($this->errorMessage($res, 'Não foi possível criar o cliente no gateway de pagamento.'));
         }
         return $res['body'];
     }
@@ -151,7 +151,7 @@ final class AsaasClient
     {
         $res = $this->request('GET', '/payments/' . rawurlencode($paymentId));
         if ($res['status'] >= 400 || !is_array($res['body'])) {
-            throw new RuntimeException($this->errorMessage($res, 'Cobrança não encontrada no Asaas.'));
+            throw new RuntimeException($this->errorMessage($res, 'Cobrança não encontrada no gateway de pagamento.'));
         }
         return $res['body'];
     }

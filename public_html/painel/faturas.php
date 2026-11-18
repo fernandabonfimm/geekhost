@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $panelTitle = 'Faturas';
 $panelSection = 'faturas';
-$panelLead = 'Acompanhe pagamentos, vencimentos e comprovantes Asaas.';
+$panelLead = 'Acompanhe pagamentos, vencimentos e comprovantes.';
 require __DIR__ . '/_layout.php';
 require_once dirname(__DIR__) . '/includes/OrderService.php';
 
@@ -161,7 +161,7 @@ $badgeClass = static function (string $label): string {
                         <div class="domain-actions-inline">
                             <button type="button" class="gh-btn gh-btn-secondary gh-btn-sm" data-view-invoice='<?= e(json_encode($payload, JSON_UNESCAPED_UNICODE)) ?>'>Ver</button>
                             <?php if (!empty($invoice['invoiceUrl'])): ?>
-                                <a class="gh-btn gh-btn-ghost gh-btn-sm" href="<?= e((string) $invoice['invoiceUrl']) ?>" target="_blank" rel="noopener noreferrer" title="Abrir no Asaas">
+                                <a class="gh-btn gh-btn-ghost gh-btn-sm" href="<?= e((string) $invoice['invoiceUrl']) ?>" target="_blank" rel="noopener noreferrer" title="Abrir fatura">
                                     <i data-lucide="download"></i>
                                 </a>
                             <?php endif; ?>

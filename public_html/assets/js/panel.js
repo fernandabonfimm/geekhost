@@ -15,13 +15,25 @@
     window.addEventListener('load', refreshIcons);
 
     const toastHost = document.querySelector('[data-toast-host]');
-    const toast = (message, type = 'ok') => {
+    const toastIcons = {
+        ok: 'check-circle-2',
+        warn: 'circle-alert',
+        danger: 'triangle-alert',
+    };
+    const toast = (message, type = 'ok', options = {}) => {
         if (!toastHost) return;
+        const tone = ['ok', 'warn', 'danger'].includes(type) ? type : 'ok';
         const el = document.createElement('div');
-        el.className = `gh-toast gh-alert gh-alert-${type === 'danger' ? 'danger' : 'ok'}`;
-        el.innerHTML = `<div>${message}</div>`;
+        el.className = `gh-toast is-${tone}${options.href ? ' is-clickable' : ''}`;
+        el.setAttribute('role', 'status');
+        const title = options.title ? `<strong>${options.title}</strong>` : '';
+        el.innerHTML = `<i data-lucide="${toastIcons[tone]}" aria-hidden="true"></i><div>${title}<span>${message}</span></div>`;
+        if (options.href) {
+            el.addEventListener('click', () => { window.location.href = options.href; });
+        }
         toastHost.appendChild(el);
-        setTimeout(() => el.remove(), 4200);
+        refreshIcons();
+        setTimeout(() => el.remove(), options.duration || 5200);
     };
     window.ghToast = toast;
 
@@ -132,7 +144,7 @@
                 return;
             }
             notifyList.innerHTML = data.items.map((n) => `
-                <a class="panel-notify-item ${n.read ? '' : 'is-unread'}" href="${n.ticketId ? `/painel/suporte?ticket=${encodeURIComponent(n.ticketId)}` : '/painel/suporte'}">
+                <a class="panel-notify-item ${n.read ? '' : 'is-unread'}" href="${n.link || (n.ticketId ? `/painel/suporte?ticket=${encodeURIComponent(n.ticketId)}` : '/painel/')}">
                     <strong>${n.title}</strong>
                     <span>${n.body}</span>
                 </a>
@@ -172,6 +184,67 @@
         });
         loadNotifications();
         setInterval(loadNotifications, 30000);
+    }
+
+    // Unpaid hosting reminder every 30 minutes
+    if (body.dataset.unpaidHosting === '1') {
+        const payUrl = body.dataset.payUrl || '/painel/faturas?status=em_aberto';
+        const remindKey = 'gh_unpaid_toast_at';
+        const remind = () => {
+            toast('Há uma fatura em aberto. Toque para concluir o pagamento e liberar sua hospedagem.', 'warn', {
+                title: 'Pagamento pendente',
+                href: payUrl,
+                duration: 9000,
+            });
+            try { localStorage.setItem(remindKey, String(Date.now())); } catch (_) { /* ignore */ }
+        };
+        let last = 0;
+        try { last = Number(localStorage.getItem(remindKey) || 0); } catch (_) { last = 0; }
+        if (!last || (Date.now() - last) >= 30 * 60 * 1000) {
+            setTimeout(remind, 1200);
+        }
+        setInterval(() => {
+            let stamp = 0;
+            try { stamp = Number(localStorage.getItem(remindKey) || 0); } catch (_) { stamp = 0; }
+            if (!stamp || (Date.now() - stamp) >= 30 * 60 * 1000) remind();
+        }, 60 * 1000);
+    }
+
+    // Domains / sites gated actions
+    const domainsPage = document.querySelector('[data-domains-page]');
+    if (domainsPage) {
+        const flash = domainsPage.dataset.flashMessage;
+        if (flash) toast(flash, domainsPage.dataset.flashType || 'ok');
+        document.querySelectorAll('[data-add-domain-btn]').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                if (domainsPage.dataset.hasPaid !== '1') {
+                    e.preventDefault();
+                    toast('Conclua o pagamento do plano antes de cadastrar um domínio.', 'warn', {
+                        title: 'Pagamento necessário',
+                        href: '/painel/faturas?status=em_aberto',
+                    });
+                    return;
+                }
+                const modal = document.querySelector('[data-modal="add-domain"]');
+                if (modal) modal.hidden = false;
+            });
+        });
+    }
+
+    const sitesPage = document.querySelector('[data-sites-page]');
+    if (sitesPage) {
+        document.querySelectorAll('[data-new-site-btn]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                if (sitesPage.dataset.hasDomain !== '1') {
+                    toast('Cadastre um domínio e aguarde o DNS antes de criar um site.', 'warn', {
+                        title: 'Domínio necessário',
+                        href: '/painel/dominios',
+                    });
+                    return;
+                }
+                window.location.href = '/painel/dominios';
+            });
+        });
     }
 
     document.querySelectorAll('[data-copy]').forEach((btn) => {
@@ -268,7 +341,7 @@
                     <div><dt>Pago em</dt><dd>${invoice.paidAtLabel || invoice.paidAt || '—'}</dd></div>
                 </dl>
             </section>
-            ${invoice.invoiceUrl ? `<section class="invoice-section"><a class="gh-btn gh-btn-primary" href="${invoice.invoiceUrl}" target="_blank" rel="noopener noreferrer">Abrir fatura Asaas</a></section>` : ''}
+            ${invoice.invoiceUrl ? `<section class="invoice-section"><a class="gh-btn gh-btn-primary" href="${invoice.invoiceUrl}" target="_blank" rel="noopener noreferrer">Abrir fatura</a></section>` : ''}
             ${invoice.boleto?.url ? `<section class="invoice-section"><a class="gh-btn gh-btn-secondary" href="${invoice.boleto.url}" target="_blank" rel="noopener noreferrer">Abrir boleto</a></section>` : ''}
             ${invoice.pix?.copyPaste ? `<section class="invoice-section"><h3>Pix copia e cola</h3><textarea readonly rows="4" style="width:100%;border:1px solid #e5e9ef;border-radius:10px;padding:12px">${invoice.pix.copyPaste}</textarea></section>` : ''}
         `;

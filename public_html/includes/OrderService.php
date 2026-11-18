@@ -666,7 +666,6 @@ final class OrderService
                 'last4' => $order['card_last4'],
             ],
             'provisioningStatus' => $order['provisioning_status'],
-            'environment' => $this->asaas->environment(),
         ];
     }
 
@@ -1084,7 +1083,7 @@ final class OrderService
             $asaasId = (string) ($created['id'] ?? '');
         }
         if ($asaasId === '') {
-            throw new RuntimeException('Asaas não retornou ID de cliente.');
+            throw new RuntimeException('O gateway de pagamento não retornou ID de cliente.');
         }
         $this->db->prepare('UPDATE customers SET asaas_customer_id = :a, updated_at = :u WHERE id = :id')
             ->execute([':a' => $asaasId, ':u' => gmdate('c'), ':id' => $customerId]);

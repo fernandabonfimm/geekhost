@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $panelTitle = 'Carteira';
 $panelSection = 'carteira';
-$panelLead = 'Cartão de renovação Asaas. Número completo e CVV não são armazenados na GeekHost.';
+$panelLead = 'Cartão de renovação automática. Número completo e CVV não são armazenados na GeekHost.';
 $panelScripts = ['assets/js/carteira.js'];
 require __DIR__ . '/_layout.php';
 require_once dirname(__DIR__) . '/includes/OrderService.php';
@@ -77,7 +77,7 @@ $hasCard = $last4 !== '';
             <article class="gh-card wallet-secure">
                 <strong>Pagamento seguro</strong>
                 <p style="margin:0;color:var(--gh-muted);font-size:13px;line-height:1.5">
-                    A GeekHost não guarda o número completo do cartão nem o CVV. A renovação usa tokenização Asaas.
+                    A GeekHost não guarda o número completo do cartão nem o CVV. A renovação usa tokenização segura.
                     Não há saldo fictício nesta carteira.
                 </p>
             </article>
@@ -101,7 +101,7 @@ $hasCard = $last4 !== '';
                 </div>
 
                 <hr class="panel-divider">
-                <h2>Titular (Asaas)</h2>
+                <h2>Dados do titular</h2>
                 <div class="checkout-grid-2">
                     <label>Nome<input name="holderName" value="<?= e((string) $panelUser['name']) ?>" required></label>
                     <label>E-mail<input type="email" name="holderEmail" value="<?= e((string) $panelUser['email']) ?>" required></label>

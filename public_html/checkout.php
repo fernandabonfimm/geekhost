@@ -190,7 +190,7 @@ require __DIR__ . '/includes/header.php';
                         <span class="co-card-icon"><i data-lucide="credit-card"></i></span>
                         <div>
                             <h2>3. Conta e pagamento</h2>
-                            <p>Dados da conta e método Asaas. Cartão/CVV não ficam salvos na GeekHost.</p>
+                            <p>Dados da conta e forma de pagamento. Cartão/CVV não ficam salvos na GeekHost.</p>
                         </div>
                     </div>
 
@@ -221,13 +221,13 @@ require __DIR__ . '/includes/header.php';
                             <input type="radio" name="billingType" value="PIX" checked>
                             <span class="co-choice-check" aria-hidden="true"><i data-lucide="check"></i></span>
                             <strong>PIX</strong>
-                            <small>QR Code Asaas</small>
+                            <small>QR Code Pix</small>
                         </label>
                         <label class="co-pay">
                             <input type="radio" name="billingType" value="CREDIT_CARD">
                             <span class="co-choice-check" aria-hidden="true"><i data-lucide="check"></i></span>
                             <strong>Cartão de crédito</strong>
-                            <small>Tokenização Asaas</small>
+                            <small>Tokenização segura</small>
                         </label>
                         <label class="co-pay">
                             <input type="radio" name="billingType" value="BOLETO">
@@ -241,7 +241,7 @@ require __DIR__ . '/includes/header.php';
                         <i data-lucide="qr-code"></i>
                         <div>
                             <strong>Pagamento via PIX</strong>
-                            <p>Ao finalizar, geramos o QR Code e o código copia e cola pelo Asaas. O status atualiza automaticamente quando o pagamento for confirmado.</p>
+                            <p>Ao finalizar, geramos o QR Code e o código copia e cola. O status atualiza automaticamente quando o pagamento for confirmado.</p>
                         </div>
                     </div>
                     <div class="co-pay-detail" data-pay-detail="CREDIT_CARD" hidden>
@@ -253,14 +253,14 @@ require __DIR__ . '/includes/header.php';
                                 <label class="co-field"><span>Ano</span><input name="cardExpiryYear" type="text" inputmode="numeric" maxlength="4" placeholder="AAAA"></label>
                                 <label class="co-field"><span>CVV</span><input name="cardCcv" type="password" inputmode="numeric" maxlength="4" autocomplete="cc-csc"></label>
                             </div>
-                            <p class="co-hint">Número e CVV vão direto ao Asaas. Débito não está disponível.</p>
+                            <p class="co-hint">Número e CVV são processados de forma segura. Débito não está disponível.</p>
                         </div>
                     </div>
                     <div class="co-pay-detail" data-pay-detail="BOLETO" hidden>
                         <i data-lucide="barcode"></i>
                         <div>
                             <strong>Boleto bancário</strong>
-                            <p>Você receberá o link/documento Asaas. A liberação ocorre após a compensação.</p>
+                            <p>Você receberá o link/documento do boleto. A liberação ocorre após a compensação.</p>
                         </div>
                     </div>
 
@@ -337,7 +337,7 @@ require __DIR__ . '/includes/header.php';
             </div>
             <p class="co-summary-renew" data-summary-renew>
                 <?php if (!empty($selection['period']['promo'])): ?>
-                    Renova depois por <?= e(geekhost_format_brl($selection['renew_amount'])) ?>/mês via Assinatura Asaas.
+                    Renova depois por <?= e(geekhost_format_brl($selection['renew_amount'])) ?>/mês via assinatura automática.
                 <?php else: ?>
                     Renova em <?= (int) $selection['period']['interval_months'] ?> meses por <?= e(geekhost_format_brl($selection['renew_amount'])) ?>.
                 <?php endif; ?>
@@ -346,7 +346,6 @@ require __DIR__ . '/includes/header.php';
                 <div><span>Valor pago</span><strong data-paid-amount>—</strong></div>
                 <div><span>Status</span><span class="co-badge-ok" data-paid-status>Pago</span></div>
             </div>
-            <p class="co-summary-env">Ambiente Asaas: <?= e(strtolower((string) env('ASAAS_ENV', 'sandbox'))) ?></p>
         </aside>
     </div>
 </section>
