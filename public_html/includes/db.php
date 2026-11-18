@@ -67,7 +67,7 @@ function geekhost_migrate(PDO $pdo): void
         $sql = str_replace('INTEGER PRIMARY KEY AUTOINCREMENT', 'BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY', $sql);
         // Keep FK column types aligned with MySQL BIGINT UNSIGNED PKs.
         $sql = preg_replace(
-            '/\b(customer_id|user_id|order_id|subscription_id)\s+INTEGER\b/',
+            '/\b(customer_id|user_id|order_id|subscription_id|domain_id)\s+INTEGER\b/',
             '$1 BIGINT UNSIGNED',
             $sql
         ) ?? $sql;
@@ -100,6 +100,10 @@ function geekhost_migrate(PDO $pdo): void
             'CREATE UNIQUE INDEX idx_subscriptions_asaas ON subscriptions (asaas_subscription_id)',
             'CREATE UNIQUE INDEX idx_services_public_id ON services (public_id)',
             'CREATE UNIQUE INDEX idx_webhook_events_key ON webhook_events (event_key)',
+            'CREATE UNIQUE INDEX idx_user_domains_public ON user_domains (public_id)',
+            'CREATE UNIQUE INDEX idx_user_domains_user_domain ON user_domains (user_id, domain)',
+            'CREATE UNIQUE INDEX idx_user_sites_public ON user_sites (public_id)',
+            'CREATE INDEX idx_user_sites_user ON user_sites (user_id)',
         ];
         foreach ($indexes as $indexSql) {
             try {
