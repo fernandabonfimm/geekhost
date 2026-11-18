@@ -36,7 +36,7 @@ require __DIR__ . '/includes/header.php';
                 <?php foreach ($sharedPlanFeatures as $feature): ?><li><?= e($feature) ?></li><?php endforeach; ?>
             </ul>
         </div>
-        <a class="arrow-link" href="/checkout?plan=light&period=first_month">Assinar o Light <span aria-hidden="true">↗</span></a>
+        <a class="arrow-link" href="/checkout?plan=light&period=mensal">Assinar o Light <span aria-hidden="true">↗</span></a>
     </article>
     <article class="plan-card plan-card-green plan-card-recommended detail-plan-card" id="empresa" data-plan-card>
         <span class="plan-recommendation">✓ Recomendado</span>
@@ -49,7 +49,7 @@ require __DIR__ . '/includes/header.php';
                 <?php foreach ($sharedPlanFeatures as $feature): ?><li style="color: white"><?= e($feature) ?></li><?php endforeach; ?>
             </ul>
         </div>
-        <a class="arrow-link" href="/checkout?plan=empresa&period=first_month">Assinar o Empresa <span aria-hidden="true">↗</span></a>
+        <a class="arrow-link" href="/checkout?plan=empresa&period=mensal">Assinar o Empresa <span aria-hidden="true">↗</span></a>
     </article>
     <article class="plan-card plan-card-lime detail-plan-card" id="premium" data-plan-card>
         <div class="detail-plan-top"><div class="detail-plan-labels"><span class="plan-type-label">Hospedagem de sites</span><span class="plan-number">03 / COMÉRCIO</span></div><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>
@@ -61,7 +61,7 @@ require __DIR__ . '/includes/header.php';
                 <?php foreach ($sharedPlanFeatures as $feature): ?><li><?= e($feature) ?></li><?php endforeach; ?>
             </ul>
         </div>
-        <a class="arrow-link" href="/checkout?plan=premium&period=first_month">Assinar o Premium <span aria-hidden="true">↗</span></a>
+        <a class="arrow-link" href="/checkout?plan=premium&period=mensal">Assinar o Premium <span aria-hidden="true">↗</span></a>
     </article>
     <article class="plan-card plan-card-custom detail-plan-card" id="personalizado" data-plan-card>
         <div class="detail-plan-top"><span class="plan-number">04 / SOB MEDIDA</span><img class="detail-plan-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="34" height="34"></div>

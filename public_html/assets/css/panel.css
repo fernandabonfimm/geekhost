@@ -1,0 +1,55 @@
+:root {
+    --panel-lime: #01e04f;
+    --panel-grey: #1a1e24;
+    --panel-line: #e2e6ea;
+    --panel-muted: #667078;
+}
+
+.panel-body { background: #f5f6f7; min-height: 100vh; }
+.panel-header { background: var(--panel-grey); color: #fff; }
+.panel-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 72px; }
+.panel-header .header-logo { filter: brightness(0) invert(1); max-height: 40px; width: auto; }
+.panel-nav { display: flex; gap: 18px; font-weight: 700; font-size: 14px; }
+.panel-nav a[aria-current="page"] { color: var(--panel-lime); }
+.panel-user { display: flex; gap: 12px; align-items: center; font-size: 14px; }
+.panel-main { padding-block: 36px 64px; }
+.panel-footer { background: var(--panel-grey); color: rgba(255,255,255,.75); padding: 18px 0; }
+.panel-footer-inner { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.panel-alert { padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; }
+.panel-alert-danger { background: #fde8e8; color: #9b1c1c; }
+.panel-alert-ok { background: #e8fbef; color: #0f5132; }
+.panel-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 20px 0 28px; }
+.panel-card { display: grid; gap: 6px; padding: 18px; border-radius: 14px; background: #fff; border: 1px solid var(--panel-line); }
+.panel-card strong { font-size: 28px; color: var(--panel-grey); }
+.panel-service-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.panel-service-list li { padding: 14px 16px; background: #fff; border: 1px solid var(--panel-line); border-radius: 12px; display: grid; gap: 4px; }
+.panel-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+.panel-filter { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--panel-line); background: #fff; color: var(--panel-muted); font-weight: 700; font-size: 13px; }
+.panel-filter.is-active { border-color: var(--panel-lime); background: rgba(1, 224, 79, .12); color: var(--panel-grey); }
+.panel-table-wrap { overflow-x: auto; background: #fff; border: 1px solid var(--panel-line); border-radius: 14px; }
+.panel-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+.panel-table th, .panel-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--panel-line); font-size: 14px; }
+.panel-table th { color: var(--panel-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.panel-badge { font-weight: 800; }
+.panel-badge-pago { color: #0f9d58; }
+.panel-badge-em_aberto { color: #b54708; }
+.panel-badge-cancelado { color: #667078; }
+.panel-badge-reembolsado { color: #6941c6; }
+.panel-form { display: grid; gap: 12px; max-width: 560px; margin: 0 0 28px; padding: 20px; background: #fff; border: 1px solid var(--panel-line); border-radius: 14px; }
+.panel-form label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; color: var(--panel-grey); }
+.panel-form input { padding: 11px 12px; border: 1px solid var(--panel-line); border-radius: 10px; }
+.panel-avatar { width: 88px; height: 88px; object-fit: cover; border-radius: 50%; }
+.panel-auth { max-width: 420px; margin: 40px auto; padding: 24px; background: #fff; border-radius: 16px; border: 1px solid var(--panel-line); }
+.invoice-drawer[hidden] { display: none !important; }
+.invoice-drawer { position: fixed; inset: 0; z-index: 50; }
+.invoice-drawer-backdrop { position: absolute; inset: 0; background: rgba(15, 18, 22, .45); }
+.invoice-drawer-panel { position: absolute; top: 0; right: 0; width: min(420px, 100%); height: 100%; background: #fff; padding: 28px 22px; overflow: auto; box-shadow: -12px 0 40px rgba(0,0,0,.18); }
+.invoice-drawer-close { position: absolute; top: 14px; right: 14px; border: 0; background: transparent; font-size: 18px; cursor: pointer; }
+.invoice-drawer-panel dl { display: grid; gap: 10px; margin: 18px 0; }
+.invoice-drawer-panel dt { color: var(--panel-muted); font-size: 12px; }
+.invoice-drawer-panel dd { margin: 0; font-weight: 700; color: var(--panel-grey); }
+
+@media (max-width: 800px) {
+    .panel-header-inner { flex-wrap: wrap; padding-block: 12px; }
+    .panel-cards { grid-template-columns: 1fr; }
+}

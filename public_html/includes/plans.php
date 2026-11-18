@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * Official GeekHost hosting plan catalog — single source of truth for checkout amounts.
- * Amounts are in BRL (reais). Never trust frontend-submitted prices.
+ * Checkout periods: mensal | semestral | anual.
  */
 function geekhost_plans(): array
 {
@@ -15,34 +15,36 @@ function geekhost_plans(): array
             'tagline' => 'Para colocar seu site e suas ideias no ar.',
             'checkout_enabled' => true,
             'features' => ['5 contas de e-mail', '10 GB de espaço', 'Banco de dados ilimitado'],
+            'specs' => [
+                'Disco' => '10 GB',
+                'E-mails' => '5 contas',
+                'Sites' => '1 site',
+                'Painel' => 'cPanel',
+            ],
             'periods' => [
-                'first_month' => [
-                    'label' => '1º mês promocional',
-                    'amount' => 19.90,
-                    'interval' => 'month',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
-                ],
-                'monthly' => [
+                'mensal' => [
                     'label' => 'Mensal',
-                    'amount' => 35.90,
-                    'interval' => 'month',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
+                    'amount' => 19.90,
+                    'renew_amount' => 35.90,
+                    'cycle' => 'MONTHLY',
+                    'interval_months' => 1,
+                    'promo' => true,
                 ],
-                'semiannual' => [
+                'semestral' => [
                     'label' => 'Semestral',
                     'amount' => 239.00,
-                    'interval' => 'month',
-                    'interval_count' => 6,
-                    'subscription_ready' => false,
+                    'renew_amount' => 239.00,
+                    'cycle' => 'SEMIANNUALLY',
+                    'interval_months' => 6,
+                    'promo' => false,
                 ],
-                'annual' => [
+                'anual' => [
                     'label' => 'Anual',
                     'amount' => 299.90,
-                    'interval' => 'year',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
+                    'renew_amount' => 299.90,
+                    'cycle' => 'YEARLY',
+                    'interval_months' => 12,
+                    'promo' => false,
                 ],
             ],
         ],
@@ -52,34 +54,36 @@ function geekhost_plans(): array
             'tagline' => 'Para negócios e equipes que querem crescer online.',
             'checkout_enabled' => true,
             'features' => ['10 contas de e-mail', '15 GB de espaço', 'Banco de dados ilimitado'],
+            'specs' => [
+                'Disco' => '15 GB',
+                'E-mails' => '10 contas',
+                'Sites' => 'Até 3 sites',
+                'Painel' => 'cPanel',
+            ],
             'periods' => [
-                'first_month' => [
-                    'label' => '1º mês promocional',
-                    'amount' => 29.90,
-                    'interval' => 'month',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
-                ],
-                'monthly' => [
+                'mensal' => [
                     'label' => 'Mensal',
-                    'amount' => 45.90,
-                    'interval' => 'month',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
+                    'amount' => 29.90,
+                    'renew_amount' => 45.90,
+                    'cycle' => 'MONTHLY',
+                    'interval_months' => 1,
+                    'promo' => true,
                 ],
-                'semiannual' => [
+                'semestral' => [
                     'label' => 'Semestral',
                     'amount' => 299.00,
-                    'interval' => 'month',
-                    'interval_count' => 6,
-                    'subscription_ready' => false,
+                    'renew_amount' => 299.00,
+                    'cycle' => 'SEMIANNUALLY',
+                    'interval_months' => 6,
+                    'promo' => false,
                 ],
-                'annual' => [
+                'anual' => [
                     'label' => 'Anual',
                     'amount' => 394.00,
-                    'interval' => 'year',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
+                    'renew_amount' => 394.00,
+                    'cycle' => 'YEARLY',
+                    'interval_months' => 12,
+                    'promo' => false,
                 ],
             ],
         ],
@@ -89,34 +93,36 @@ function geekhost_plans(): array
             'tagline' => 'Para projetos que precisam de uma estrutura mais completa.',
             'checkout_enabled' => true,
             'features' => ['E-mails ilimitados', '25 GB de espaço', 'Banco de dados ilimitado'],
+            'specs' => [
+                'Disco' => '25 GB',
+                'E-mails' => 'Ilimitados',
+                'Sites' => 'Até 10 sites',
+                'Painel' => 'cPanel',
+            ],
             'periods' => [
-                'first_month' => [
-                    'label' => '1º mês promocional',
-                    'amount' => 39.90,
-                    'interval' => 'month',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
-                ],
-                'monthly' => [
+                'mensal' => [
                     'label' => 'Mensal',
-                    'amount' => 55.90,
-                    'interval' => 'month',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
+                    'amount' => 39.90,
+                    'renew_amount' => 55.90,
+                    'cycle' => 'MONTHLY',
+                    'interval_months' => 1,
+                    'promo' => true,
                 ],
-                'semiannual' => [
+                'semestral' => [
                     'label' => 'Semestral',
                     'amount' => 359.00,
-                    'interval' => 'month',
-                    'interval_count' => 6,
-                    'subscription_ready' => false,
+                    'renew_amount' => 359.00,
+                    'cycle' => 'SEMIANNUALLY',
+                    'interval_months' => 6,
+                    'promo' => false,
                 ],
-                'annual' => [
+                'anual' => [
                     'label' => 'Anual',
                     'amount' => 460.00,
-                    'interval' => 'year',
-                    'interval_count' => 1,
-                    'subscription_ready' => true,
+                    'renew_amount' => 460.00,
+                    'cycle' => 'YEARLY',
+                    'interval_months' => 12,
+                    'promo' => false,
                 ],
             ],
         ],
@@ -126,6 +132,7 @@ function geekhost_plans(): array
             'tagline' => 'Precisa de mais? Entre em contato!',
             'checkout_enabled' => false,
             'features' => [],
+            'specs' => [],
             'periods' => [],
         ],
     ];
@@ -138,7 +145,24 @@ function geekhost_plan(string $code): ?array
 }
 
 /**
- * @return array{plan: array, period: array, amount: float}|null
+ * Normalize legacy period codes from older links.
+ */
+function geekhost_normalize_period(string $periodCode): string
+{
+    $map = [
+        'first_month' => 'mensal',
+        'monthly' => 'mensal',
+        'semiannual' => 'semestral',
+        'annual' => 'anual',
+        'mensal' => 'mensal',
+        'semestral' => 'semestral',
+        'anual' => 'anual',
+    ];
+    return $map[strtolower($periodCode)] ?? strtolower($periodCode);
+}
+
+/**
+ * @return array{plan: array, period: array, amount: float, renew_amount: float}|null
  */
 function geekhost_resolve_checkout_selection(string $planCode, string $periodCode): ?array
 {
@@ -146,18 +170,32 @@ function geekhost_resolve_checkout_selection(string $planCode, string $periodCod
     if ($plan === null || empty($plan['checkout_enabled'])) {
         return null;
     }
+    $periodCode = geekhost_normalize_period($periodCode);
     $period = $plan['periods'][$periodCode] ?? null;
     if ($period === null || !isset($period['amount'])) {
         return null;
     }
     return [
         'plan' => $plan,
-        'period' => $period,
+        'period' => $period + ['code' => $periodCode],
         'amount' => (float) $period['amount'],
+        'renew_amount' => (float) ($period['renew_amount'] ?? $period['amount']),
     ];
 }
 
 function geekhost_format_brl(float $amount): string
 {
     return 'R$ ' . number_format($amount, 2, ',', '.');
+}
+
+function geekhost_period_end_date(string $periodCode, ?int $fromTs = null): string
+{
+    $fromTs = $fromTs ?? time();
+    $periodCode = geekhost_normalize_period($periodCode);
+    $months = match ($periodCode) {
+        'semestral' => 6,
+        'anual' => 12,
+        default => 1,
+    };
+    return gmdate('Y-m-d', strtotime('+' . $months . ' month', $fromTs));
 }

@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * Router for PHP built-in server:
- *   php -c php.ini -S 127.0.0.1:8890 -t public_html public_html/router.php
- */
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $uri = is_string($uri) ? $uri : '/';
 
@@ -18,6 +14,16 @@ $map = [
     '/api/checkout/status/' => '/api/checkout/status.php',
     '/api/webhooks/asaas' => '/api/webhooks/asaas.php',
     '/api/webhooks/asaas/' => '/api/webhooks/asaas.php',
+    '/painel' => '/painel/index.php',
+    '/painel/' => '/painel/index.php',
+    '/painel/login' => '/painel/login.php',
+    '/painel/login/' => '/painel/login.php',
+    '/painel/logout' => '/painel/logout.php',
+    '/painel/logout/' => '/painel/logout.php',
+    '/painel/faturas' => '/painel/faturas.php',
+    '/painel/faturas/' => '/painel/faturas.php',
+    '/painel/perfil' => '/painel/perfil.php',
+    '/painel/perfil/' => '/painel/perfil.php',
 ];
 
 if (isset($map[$uri])) {

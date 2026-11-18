@@ -13,3 +13,7 @@ vendor/
 .vscode/
 *.log
 public_html.zip
+
+public_html/assets/uploads/avatars/*
+!public_html/assets/uploads/avatars/.gitkeep
+

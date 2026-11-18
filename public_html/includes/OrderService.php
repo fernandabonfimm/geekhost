@@ -7,16 +7,19 @@ require_once __DIR__ . '/plans.php';
 require_once __DIR__ . '/AsaasClient.php';
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/ProvisioningStub.php';
+require_once __DIR__ . '/Auth.php';
 
 final class OrderService
 {
     private PDO $db;
     private AsaasClient $asaas;
+    private Auth $auth;
 
     public function __construct(?AsaasClient $asaas = null)
     {
         $this->db = geekhost_db();
         $this->asaas = $asaas ?? new AsaasClient();
+        $this->auth = new Auth();
     }
 
     /**
@@ -26,15 +29,18 @@ final class OrderService
     public function createCheckout(array $input): array
     {
         $planCode = (string) ($input['plan'] ?? '');
-        $periodCode = (string) ($input['period'] ?? 'first_month');
+        $periodCode = geekhost_normalize_period((string) ($input['period'] ?? 'mensal'));
         $billingType = strtoupper((string) ($input['billingType'] ?? ''));
-        $allowedBilling = ['PIX', 'BOLETO', 'CREDIT_CARD'];
-        if (!in_array($billingType, $allowedBilling, true)) {
+        $domain = strtolower(trim((string) ($input['domain'] ?? '')));
+        $domain = preg_replace('#^https?://#', '', $domain) ?? $domain;
+        $domain = preg_replace('#^www\.#', '', $domain) ?? $domain;
+        $domain = rtrim($domain, '/');
+
+        if (!in_array($billingType, ['PIX', 'BOLETO', 'CREDIT_CARD'], true)) {
             throw new InvalidArgumentException('Forma de pagamento inválida.');
         }
-        // Debit cards are not offered until Asaas account confirms support.
-        if (!empty($input['debitCard'])) {
-            throw new InvalidArgumentException('Cartão de débito não está disponível.');
+        if ($domain === '' || !preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', $domain)) {
+            throw new InvalidArgumentException('Informe um domínio válido (ex: meuscript.com.br).');
         }
 
         $selection = geekhost_resolve_checkout_selection($planCode, $periodCode);
@@ -42,9 +48,14 @@ final class OrderService
             throw new InvalidArgumentException('Plano ou período inválido.');
         }
 
+        $password = (string) ($input['password'] ?? '');
+        if (strlen($password) < 8) {
+            throw new InvalidArgumentException('Crie uma senha com pelo menos 8 caracteres para o painel.');
+        }
+
         $customerData = $this->normalizeCustomer($input);
         $idempotencyKey = (string) ($input['idempotencyKey'] ?? '');
-        if ($idempotencyKey === '' || strlen($idempotencyKey) < 16) {
+        if (strlen($idempotencyKey) < 16) {
             $idempotencyKey = bin2hex(random_bytes(16));
         }
 
@@ -54,70 +65,87 @@ final class OrderService
         }
 
         $amount = $selection['amount'];
+        $renewAmount = $selection['renew_amount'];
         $amountCents = (int) round($amount * 100);
+        $renewCents = (int) round($renewAmount * 100);
         $now = gmdate('c');
         $publicId = $this->uuid();
+        $dueDate = gmdate('Y-m-d', time() + 3 * 86400);
 
         $this->db->beginTransaction();
         try {
             $customerId = $this->upsertLocalCustomer($customerData, $now);
             $asaasCustomerId = $this->ensureAsaasCustomer($customerId, $customerData);
 
+            $user = $this->auth->registerFromCheckout($customerId, $customerData['email'], $password, $customerData);
+            $userId = (int) ($user['id'] ?? 0);
+
+            $invoiceNumber = $this->nextInvoiceNumber();
+
             $stmt = $this->db->prepare(
                 'INSERT INTO orders (
-                    public_id, customer_id, plan_code, plan_name, billing_period, amount_cents, currency,
-                    billing_type, status, idempotency_key, provisioning_status, metadata_json, created_at, updated_at
+                    public_id, invoice_number, customer_id, user_id, plan_code, plan_name, billing_period, domain,
+                    amount_cents, renew_amount_cents, currency, billing_type, status, due_date,
+                    idempotency_key, provisioning_status, metadata_json, created_at, updated_at
                 ) VALUES (
-                    :public_id, :customer_id, :plan_code, :plan_name, :billing_period, :amount_cents, :currency,
-                    :billing_type, :status, :idempotency_key, :provisioning_status, :metadata_json, :created_at, :updated_at
+                    :public_id, :inv, :customer_id, :user_id, :plan_code, :plan_name, :billing_period, :domain,
+                    :amount_cents, :renew_cents, :currency, :billing_type, :status, :due_date,
+                    :idempotency_key, :provisioning_status, :metadata_json, :created_at, :updated_at
                 )'
             );
             $stmt->execute([
                 ':public_id' => $publicId,
+                ':inv' => $invoiceNumber,
                 ':customer_id' => $customerId,
+                ':user_id' => $userId > 0 ? $userId : null,
                 ':plan_code' => $selection['plan']['code'],
                 ':plan_name' => $selection['plan']['name'],
                 ':billing_period' => $periodCode,
+                ':domain' => $domain,
                 ':amount_cents' => $amountCents,
+                ':renew_cents' => $renewCents,
                 ':currency' => 'BRL',
                 ':billing_type' => $billingType,
                 ':status' => 'awaiting_payment',
+                ':due_date' => $dueDate,
                 ':idempotency_key' => $idempotencyKey,
                 ':provisioning_status' => 'none',
                 ':metadata_json' => json_encode([
                     'period_label' => $selection['period']['label'],
+                    'asaas_cycle' => $selection['period']['cycle'],
+                    'renew_amount' => $renewAmount,
                     'asaas_env' => $this->asaas->environment(),
-                    'subscription_ready' => !empty($selection['period']['subscription_ready']),
                 ], JSON_UNESCAPED_UNICODE),
                 ':created_at' => $now,
                 ':updated_at' => $now,
             ]);
             $orderId = (int) $this->db->lastInsertId();
 
-            $dueDate = gmdate('Y-m-d', time() + 3 * 86400);
             $paymentPayload = [
                 'customer' => $asaasCustomerId,
                 'billingType' => $billingType,
                 'value' => round($amountCents / 100, 2),
                 'dueDate' => $dueDate,
-                'description' => $selection['plan']['name'] . ' — ' . $selection['period']['label'],
+                'description' => $selection['plan']['name'] . ' — ' . $selection['period']['label'] . ' — ' . $domain,
                 'externalReference' => $publicId,
             ];
 
+            $cardPayload = null;
+            $holderPayload = null;
             if ($billingType === 'CREDIT_CARD') {
                 $card = $input['creditCard'] ?? null;
                 $holder = $input['creditCardHolderInfo'] ?? null;
                 if (!is_array($card) || !is_array($holder)) {
                     throw new InvalidArgumentException('Dados do cartão incompletos.');
                 }
-                $paymentPayload['creditCard'] = [
+                $cardPayload = [
                     'holderName' => (string) ($card['holderName'] ?? ''),
                     'number' => preg_replace('/\D+/', '', (string) ($card['number'] ?? '')) ?? '',
                     'expiryMonth' => (string) ($card['expiryMonth'] ?? ''),
                     'expiryYear' => (string) ($card['expiryYear'] ?? ''),
                     'ccv' => (string) ($card['ccv'] ?? ''),
                 ];
-                $paymentPayload['creditCardHolderInfo'] = [
+                $holderPayload = [
                     'name' => (string) ($holder['name'] ?? $customerData['name']),
                     'email' => (string) ($holder['email'] ?? $customerData['email']),
                     'cpfCnpj' => (string) ($holder['cpfCnpj'] ?? $customerData['cpf_cnpj']),
@@ -126,20 +154,22 @@ final class OrderService
                     'phone' => (string) ($holder['phone'] ?? $customerData['phone']),
                     'mobilePhone' => (string) ($holder['mobilePhone'] ?? $customerData['mobile_phone']),
                 ];
+                $paymentPayload['creditCard'] = $cardPayload;
+                $paymentPayload['creditCardHolderInfo'] = $holderPayload;
                 $paymentPayload['remoteIp'] = $this->clientIp();
             }
 
             $payment = $this->asaas->createPayment($paymentPayload, $idempotencyKey);
-            // Drop card payload from memory context ASAP — never persist PAN/CVV.
             unset($paymentPayload['creditCard'], $input['creditCard']);
 
-            $status = $this->mapAsaasPaymentStatus((string) ($payment['status'] ?? 'PENDING'), false);
+            $status = $this->mapAsaasPaymentStatus((string) ($payment['status'] ?? 'PENDING'));
             $pixQr = null;
             $pixCopy = null;
             $boletoUrl = null;
             $boletoField = null;
             $cardBrand = null;
             $cardLast4 = null;
+            $creditCardToken = null;
 
             if ($billingType === 'PIX') {
                 $paymentId = (string) ($payment['id'] ?? '');
@@ -152,11 +182,7 @@ final class OrderService
                             break;
                         }
                     } catch (Throwable $e) {
-                        geekhost_log('pix_qr_fetch_failed', [
-                            'order' => $publicId,
-                            'attempt' => $attempt,
-                            'error' => $e->getMessage(),
-                        ]);
+                        geekhost_log('pix_qr_fetch_failed', ['order' => $publicId, 'attempt' => $attempt, 'error' => $e->getMessage()]);
                     }
                     if ($attempt < 4) {
                         usleep(400000 * $attempt);
@@ -172,15 +198,41 @@ final class OrderService
             if ($billingType === 'CREDIT_CARD' && isset($payment['creditCard']) && is_array($payment['creditCard'])) {
                 $cardBrand = isset($payment['creditCard']['creditCardBrand']) ? (string) $payment['creditCard']['creditCardBrand'] : null;
                 $cardLast4 = isset($payment['creditCard']['creditCardNumber']) ? substr((string) $payment['creditCard']['creditCardNumber'], -4) : null;
+                $creditCardToken = isset($payment['creditCard']['creditCardToken']) ? (string) $payment['creditCard']['creditCardToken'] : null;
             }
 
-            if (in_array($status, ['paid_pending_provisioning'], true)) {
-                // Card may confirm synchronously — still do not mark hosting active.
+            $localSubId = $this->insertLocalSubscription([
+                'customer_id' => $customerId,
+                'user_id' => $userId,
+                'plan_code' => $selection['plan']['code'],
+                'billing_period' => $periodCode,
+                'domain' => $domain,
+                'amount_cents' => $amountCents,
+                'renew_amount_cents' => $renewCents,
+                'status' => 'pending',
+                'asaas_credit_card_token' => $creditCardToken,
+            ], $now);
+
+            $asaasSubscriptionId = null;
+            if ($status === 'paid_pending_provisioning') {
+                $asaasSubscriptionId = $this->ensureAsaasSubscription(
+                    $asaasCustomerId,
+                    $selection,
+                    $periodCode,
+                    $domain,
+                    $billingType,
+                    $creditCardToken,
+                    $cardPayload,
+                    $holderPayload,
+                    $publicId
+                );
+                $this->activateLocalSubscription($localSubId, $asaasSubscriptionId, $periodCode, $now);
             }
 
             $upd = $this->db->prepare(
                 'UPDATE orders SET
                     asaas_payment_id = :pid,
+                    asaas_subscription_id = :sid,
                     status = :status,
                     asaas_invoice_url = :invoice,
                     pix_qr_code = :pix_qr,
@@ -196,6 +248,7 @@ final class OrderService
             $paidAt = $status === 'paid_pending_provisioning' ? $now : null;
             $upd->execute([
                 ':pid' => (string) ($payment['id'] ?? ''),
+                ':sid' => $asaasSubscriptionId,
                 ':status' => $status,
                 ':invoice' => isset($payment['invoiceUrl']) ? (string) $payment['invoiceUrl'] : null,
                 ':pix_qr' => $pixQr,
@@ -209,9 +262,13 @@ final class OrderService
                 ':id' => $orderId,
             ]);
 
-            // Prepare subscription row placeholder for monthly/annual (not activated until recurring API is enabled).
-            if (!empty($selection['period']['subscription_ready']) && in_array($periodCode, ['first_month', 'monthly', 'annual'], true)) {
-                $this->prepareSubscriptionPlaceholder($customerId, $selection, $periodCode, $amountCents, $now);
+            if ($userId > 0 && ($cardBrand || $cardLast4 || $creditCardToken)) {
+                $u = $this->db->prepare('UPDATE users SET card_brand = COALESCE(:b, card_brand), card_last4 = COALESCE(:l, card_last4), asaas_credit_card_token = COALESCE(:t, asaas_credit_card_token), updated_at = :u WHERE id = :id');
+                $u->execute([':b' => $cardBrand, ':l' => $cardLast4, ':t' => $creditCardToken, ':u' => $now, ':id' => $userId]);
+            }
+
+            if ($status === 'paid_pending_provisioning') {
+                $this->createServiceForOrder($orderId, $userId, $localSubId, $selection['plan']['code'], $domain, $now);
             }
 
             $this->db->commit();
@@ -223,6 +280,9 @@ final class OrderService
 
             if ($order['status'] === 'paid_pending_provisioning') {
                 ProvisioningStub::queue($order);
+                if ($userId > 0) {
+                    $this->auth->startSession($userId);
+                }
             }
 
             geekhost_log('order_created', [
@@ -230,12 +290,13 @@ final class OrderService
                 'plan' => $planCode,
                 'period' => $periodCode,
                 'billingType' => $billingType,
-                'amount_cents' => $amountCents,
-                'asaas_payment_id' => $order['asaas_payment_id'],
+                'domain' => $domain,
                 'status' => $order['status'],
             ]);
 
-            return $this->presentOrder($order);
+            $presented = $this->presentOrder($order);
+            $presented['panelLoginHint'] = $customerData['email'];
+            return $presented;
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
@@ -281,50 +342,47 @@ final class OrderService
                 ':c' => $now,
             ]);
         } catch (PDOException $e) {
-            // Duplicate event_key → already processed; idempotent success.
             geekhost_log('webhook_duplicate', ['event_key' => $eventKey, 'event' => $eventType]);
             return;
         }
 
         $relevant = [
-            'PAYMENT_CONFIRMED',
-            'PAYMENT_RECEIVED',
-            'PAYMENT_OVERDUE',
-            'PAYMENT_REFUNDED',
-            'PAYMENT_DELETED',
-            'PAYMENT_RECEIVED_IN_CASH',
+            'PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED', 'PAYMENT_OVERDUE',
+            'PAYMENT_REFUNDED', 'PAYMENT_DELETED', 'PAYMENT_RECEIVED_IN_CASH',
         ];
-        if (!in_array($eventType, $relevant, true)) {
+        if (!in_array($eventType, $relevant, true) || $paymentId === '') {
             $this->markWebhookProcessed($eventKey, $now);
             return;
         }
 
-        if ($paymentId === '') {
-            $this->markWebhookProcessed($eventKey, $now);
-            return;
-        }
-
-        // Re-fetch charge for integrity (do not trust webhook body alone).
         $fresh = $this->asaas->getPayment($paymentId);
         $order = $this->findOrderByAsaasPaymentId($paymentId);
         if (!$order && !empty($fresh['externalReference'])) {
             $order = $this->findOrderByPublicId((string) $fresh['externalReference']);
         }
+
+        // Renewal payments from subscription may not match initial order externalReference.
+        if (!$order && !empty($fresh['subscription'])) {
+            $order = $this->findLatestOrderBySubscription((string) $fresh['subscription']);
+            if ($order && in_array($eventType, ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED', 'PAYMENT_RECEIVED_IN_CASH', 'PAYMENT_OVERDUE', 'PAYMENT_REFUNDED'], true)) {
+                $order = $this->spawnRenewalInvoiceFromSubscription($order, $fresh, $now) ?? $order;
+            }
+        }
+
         if (!$order) {
             geekhost_log('webhook_order_missing', ['payment_id' => $paymentId, 'event' => $eventType]);
             $this->markWebhookProcessed($eventKey, $now);
             return;
         }
 
-        $newStatus = $this->mapAsaasPaymentStatus((string) ($fresh['status'] ?? ''), true, $eventType);
-        $paidAt = in_array($newStatus, ['paid_pending_provisioning'], true)
-            ? ($order['paid_at'] ?: $now)
-            : $order['paid_at'];
+        $newStatus = $this->mapAsaasPaymentStatus((string) ($fresh['status'] ?? ''), $eventType);
+        $paidAt = $newStatus === 'paid_pending_provisioning' ? ($order['paid_at'] ?: $now) : $order['paid_at'];
 
         $upd = $this->db->prepare(
             'UPDATE orders SET status = :s, paid_at = :p, updated_at = :u,
                 asaas_invoice_url = COALESCE(:inv, asaas_invoice_url),
-                boleto_url = COALESCE(:bol, boleto_url)
+                boleto_url = COALESCE(:bol, boleto_url),
+                asaas_payment_id = COALESCE(asaas_payment_id, :pid)
              WHERE id = :id'
         );
         $upd->execute([
@@ -333,12 +391,22 @@ final class OrderService
             ':u' => $now,
             ':inv' => isset($fresh['invoiceUrl']) ? (string) $fresh['invoiceUrl'] : null,
             ':bol' => isset($fresh['bankSlipUrl']) ? (string) $fresh['bankSlipUrl'] : null,
+            ':pid' => $paymentId,
             ':id' => $order['id'],
         ]);
 
         $updated = $this->findOrderByPublicId((string) $order['public_id']);
-        if ($updated && $updated['status'] === 'paid_pending_provisioning' && ($updated['provisioning_status'] ?? 'none') === 'none') {
-            ProvisioningStub::queue($updated);
+        if ($updated && $updated['status'] === 'paid_pending_provisioning') {
+            $this->onOrderPaid($updated, $now);
+        }
+
+        if ($updated && $updated['status'] === 'overdue') {
+            $this->markSubscriptionOverdue((string) ($updated['asaas_subscription_id'] ?? ''), (int) ($updated['user_id'] ?? 0), $now);
+            $this->enforceOverdueSuspension((int) ($updated['user_id'] ?? 0), $now);
+        }
+
+        if ($updated && $updated['status'] === 'paid_pending_provisioning') {
+            $this->clearOverdue((int) ($updated['user_id'] ?? 0), (string) ($updated['asaas_subscription_id'] ?? ''), $now);
         }
 
         geekhost_log('webhook_processed', [
@@ -351,8 +419,112 @@ final class OrderService
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @param array<string, mixed> $card
+     * @param array<string, mixed> $holder
+     * @return array<string, mixed>
      */
+    public function updateRecurringCard(int $userId, array $card, array $holder): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM subscriptions WHERE user_id = :u AND asaas_subscription_id IS NOT NULL AND status IN ('active','pending','overdue') ORDER BY id DESC LIMIT 1"
+        );
+        $stmt->execute([':u' => $userId]);
+        $sub = $stmt->fetch();
+        if (!$sub || empty($sub['asaas_subscription_id'])) {
+            throw new InvalidArgumentException('Nenhuma assinatura ativa para atualizar o cartão.');
+        }
+
+        $payload = [
+            'billingType' => 'CREDIT_CARD',
+            'creditCard' => [
+                'holderName' => (string) ($card['holderName'] ?? ''),
+                'number' => preg_replace('/\D+/', '', (string) ($card['number'] ?? '')) ?? '',
+                'expiryMonth' => (string) ($card['expiryMonth'] ?? ''),
+                'expiryYear' => (string) ($card['expiryYear'] ?? ''),
+                'ccv' => (string) ($card['ccv'] ?? ''),
+            ],
+            'creditCardHolderInfo' => [
+                'name' => (string) ($holder['name'] ?? ''),
+                'email' => (string) ($holder['email'] ?? ''),
+                'cpfCnpj' => preg_replace('/\D+/', '', (string) ($holder['cpfCnpj'] ?? '')) ?? '',
+                'postalCode' => preg_replace('/\D+/', '', (string) ($holder['postalCode'] ?? '')) ?? '',
+                'addressNumber' => (string) ($holder['addressNumber'] ?? ''),
+                'phone' => preg_replace('/\D+/', '', (string) ($holder['phone'] ?? '')) ?? '',
+                'mobilePhone' => preg_replace('/\D+/', '', (string) ($holder['mobilePhone'] ?? $holder['phone'] ?? '')) ?? '',
+            ],
+            'remoteIp' => $this->clientIp(),
+        ];
+
+        $updated = $this->asaas->updateSubscriptionCreditCard((string) $sub['asaas_subscription_id'], $payload);
+        $brand = null;
+        $last4 = null;
+        $token = null;
+        if (isset($updated['creditCard']) && is_array($updated['creditCard'])) {
+            $brand = isset($updated['creditCard']['creditCardBrand']) ? (string) $updated['creditCard']['creditCardBrand'] : null;
+            $last4 = isset($updated['creditCard']['creditCardNumber']) ? substr((string) $updated['creditCard']['creditCardNumber'], -4) : null;
+            $token = isset($updated['creditCard']['creditCardToken']) ? (string) $updated['creditCard']['creditCardToken'] : null;
+        }
+
+        $now = gmdate('c');
+        $this->db->prepare('UPDATE subscriptions SET asaas_credit_card_token = COALESCE(:t, asaas_credit_card_token), updated_at = :u WHERE id = :id')
+            ->execute([':t' => $token, ':u' => $now, ':id' => $sub['id']]);
+        $this->db->prepare('UPDATE users SET card_brand = COALESCE(:b, card_brand), card_last4 = COALESCE(:l, card_last4), asaas_credit_card_token = COALESCE(:t, asaas_credit_card_token), updated_at = :u WHERE id = :id')
+            ->execute([':b' => $brand, ':l' => $last4, ':t' => $token, ':u' => $now, ':id' => $userId]);
+
+        return ['brand' => $brand, 'last4' => $last4];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function listInvoicesForUser(int $userId, ?string $filter = null): array
+    {
+        $sql = 'SELECT * FROM orders WHERE user_id = :u';
+        $params = [':u' => $userId];
+        $map = [
+            'pago' => ['paid_pending_provisioning'],
+            'em_aberto' => ['awaiting_payment', 'overdue'],
+            'cancelado' => ['canceled'],
+            'reembolsado' => ['refunded'],
+        ];
+        if ($filter && isset($map[$filter])) {
+            $placeholders = [];
+            foreach ($map[$filter] as $i => $status) {
+                $key = ':s' . $i;
+                $placeholders[] = $key;
+                $params[$key] = $status;
+            }
+            $sql .= ' AND status IN (' . implode(',', $placeholders) . ')';
+        }
+        $sql .= ' ORDER BY id DESC';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll();
+        return array_map(fn ($row) => $this->presentOrder($row), $rows ?: []);
+    }
+
+    /** @return array<string, int> */
+    public function invoiceCounts(int $userId): array
+    {
+        $rows = $this->db->prepare('SELECT status, COUNT(*) AS c FROM orders WHERE user_id = :u GROUP BY status');
+        $rows->execute([':u' => $userId]);
+        $counts = ['pago' => 0, 'em_aberto' => 0, 'cancelado' => 0, 'reembolsado' => 0, 'total' => 0];
+        foreach ($rows->fetchAll() ?: [] as $row) {
+            $c = (int) $row['c'];
+            $counts['total'] += $c;
+            $status = (string) $row['status'];
+            if ($status === 'paid_pending_provisioning') {
+                $counts['pago'] += $c;
+            } elseif (in_array($status, ['awaiting_payment', 'overdue'], true)) {
+                $counts['em_aberto'] += $c;
+            } elseif ($status === 'canceled') {
+                $counts['cancelado'] += $c;
+            } elseif ($status === 'refunded') {
+                $counts['reembolsado'] += $c;
+            }
+        }
+        return $counts;
+    }
+
+    /** @return array<string, mixed>|null */
     public function findOrderByPublicId(string $publicId): ?array
     {
         $stmt = $this->db->prepare('SELECT * FROM orders WHERE public_id = :id LIMIT 1');
@@ -361,21 +533,61 @@ final class OrderService
         return $row ?: null;
     }
 
-    /**
-     * @param array<string, mixed> $order
-     * @return array<string, mixed>
-     */
+    /** @param array<string, mixed> $order @return array<string, mixed> */
     public function presentOrder(array $order): array
     {
+        $status = (string) $order['status'];
+        $badge = match ($status) {
+            'paid_pending_provisioning' => 'Pago',
+            'awaiting_payment' => 'Em aberto',
+            'overdue' => 'Em aberto',
+            'canceled' => 'Cancelado',
+            'refunded' => 'Reembolsado',
+            default => $status,
+        };
+        $periodCode = geekhost_normalize_period((string) ($order['billing_period'] ?? 'mensal'));
+        $selection = geekhost_resolve_checkout_selection((string) ($order['plan_code'] ?? ''), $periodCode);
+        $periodLabel = $selection['period']['label'] ?? match ($periodCode) {
+            'semestral' => 'Semestral',
+            'anual' => 'Anual',
+            default => 'Mensal',
+        };
+        $billingCycle = $selection['period']['cycle'] ?? match ($periodCode) {
+            'semestral' => 'SEMIANNUALLY',
+            'anual' => 'YEARLY',
+            default => 'MONTHLY',
+        };
+        $meta = [];
+        if (!empty($order['metadata_json'])) {
+            $decoded = json_decode((string) $order['metadata_json'], true);
+            if (is_array($decoded)) {
+                $meta = $decoded;
+                if (!empty($meta['period_label'])) {
+                    $periodLabel = (string) $meta['period_label'];
+                }
+                if (!empty($meta['asaas_cycle'])) {
+                    $billingCycle = (string) $meta['asaas_cycle'];
+                }
+            }
+        }
         return [
             'id' => $order['public_id'],
-            'status' => $order['status'],
+            'invoiceNumber' => $order['invoice_number'] ?? null,
+            'status' => $status,
+            'statusLabel' => $badge,
             'planCode' => $order['plan_code'],
             'planName' => $order['plan_name'],
-            'billingPeriod' => $order['billing_period'],
+            'billingPeriod' => $periodCode,
+            'periodLabel' => $periodLabel,
+            'billingCycle' => $billingCycle,
+            'domain' => $order['domain'] ?? null,
             'billingType' => $order['billing_type'],
             'amount' => round(((int) $order['amount_cents']) / 100, 2),
             'amountFormatted' => geekhost_format_brl(((int) $order['amount_cents']) / 100),
+            'renewAmount' => isset($order['renew_amount_cents']) ? round(((int) $order['renew_amount_cents']) / 100, 2) : null,
+            'dueDate' => $order['due_date'] ?? null,
+            'createdAt' => $order['created_at'] ?? null,
+            'paidAt' => $order['paid_at'] ?? null,
             'invoiceUrl' => $order['asaas_invoice_url'],
             'pix' => [
                 'qrCodeBase64' => $order['pix_qr_code'],
@@ -390,12 +602,289 @@ final class OrderService
                 'last4' => $order['card_last4'],
             ],
             'provisioningStatus' => $order['provisioning_status'],
-            'paidAt' => $order['paid_at'],
             'environment' => $this->asaas->environment(),
         ];
     }
 
-    private function mapAsaasPaymentStatus(string $asaasStatus, bool $fromWebhook, string $event = ''): string
+    /** @param array<string, mixed> $order */
+    private function onOrderPaid(array $order, string $now): void
+    {
+        if (($order['provisioning_status'] ?? 'none') === 'none') {
+            ProvisioningStub::queue($order);
+        }
+
+        $customerId = (int) $order['customer_id'];
+        $userId = (int) ($order['user_id'] ?? 0);
+        $periodCode = geekhost_normalize_period((string) $order['billing_period']);
+        $selection = geekhost_resolve_checkout_selection((string) $order['plan_code'], $periodCode);
+        if ($selection === null) {
+            return;
+        }
+
+        $stmt = $this->db->prepare('SELECT asaas_customer_id FROM customers WHERE id = :id');
+        $stmt->execute([':id' => $customerId]);
+        $asaasCustomerId = (string) ($stmt->fetchColumn() ?: '');
+
+        if ($asaasCustomerId !== '' && empty($order['asaas_subscription_id'])) {
+            try {
+                $subId = $this->ensureAsaasSubscription(
+                    $asaasCustomerId,
+                    $selection,
+                    $periodCode,
+                    (string) ($order['domain'] ?? ''),
+                    (string) $order['billing_type'],
+                    null,
+                    null,
+                    null,
+                    (string) $order['public_id']
+                );
+                $this->db->prepare('UPDATE orders SET asaas_subscription_id = :s, updated_at = :u WHERE id = :id')
+                    ->execute([':s' => $subId, ':u' => $now, ':id' => $order['id']]);
+
+                $local = $this->db->prepare('SELECT id FROM subscriptions WHERE user_id = :u AND plan_code = :p ORDER BY id DESC LIMIT 1');
+                $local->execute([':u' => $userId, ':p' => $order['plan_code']]);
+                $localId = (int) ($local->fetchColumn() ?: 0);
+                if ($localId > 0) {
+                    $this->activateLocalSubscription($localId, $subId, $periodCode, $now);
+                }
+            } catch (Throwable $e) {
+                geekhost_log('subscription_create_failed', ['order' => $order['public_id'], 'error' => $e->getMessage()]);
+            }
+        }
+
+        $this->createServiceForOrder((int) $order['id'], $userId, null, (string) $order['plan_code'], (string) ($order['domain'] ?? ''), $now);
+        if ($userId > 0) {
+            $this->db->prepare("UPDATE users SET hosting_status = CASE WHEN hosting_status = 'suspended' THEN hosting_status ELSE 'pending' END, updated_at = :u WHERE id = :id")
+                ->execute([':u' => $now, ':id' => $userId]);
+        }
+    }
+
+    /**
+     * @param array{plan:array,period:array,amount:float,renew_amount:float} $selection
+     * @param array<string,mixed>|null $card
+     * @param array<string,mixed>|null $holder
+     */
+    private function ensureAsaasSubscription(
+        string $asaasCustomerId,
+        array $selection,
+        string $periodCode,
+        string $domain,
+        string $billingType,
+        ?string $creditCardToken,
+        ?array $card,
+        ?array $holder,
+        string $externalReference
+    ): string {
+        $nextDue = geekhost_period_end_date($periodCode);
+        $payload = [
+            'customer' => $asaasCustomerId,
+            'billingType' => $billingType === 'CREDIT_CARD' ? 'CREDIT_CARD' : $billingType,
+            'value' => round($selection['renew_amount'], 2),
+            'nextDueDate' => $nextDue,
+            'cycle' => $selection['period']['cycle'],
+            'description' => $selection['plan']['name'] . ' renovação — ' . $domain,
+            'externalReference' => 'sub-' . $externalReference,
+        ];
+
+        if ($billingType === 'CREDIT_CARD') {
+            if ($creditCardToken) {
+                $payload['creditCardToken'] = $creditCardToken;
+            } elseif ($card && $holder) {
+                $payload['creditCard'] = $card;
+                $payload['creditCardHolderInfo'] = $holder;
+                $payload['remoteIp'] = $this->clientIp();
+            }
+        }
+
+        $created = $this->asaas->createSubscription($payload, 'sub-' . $externalReference);
+        return (string) ($created['id'] ?? '');
+    }
+
+    /** @param array<string, mixed> $data */
+    private function insertLocalSubscription(array $data, string $now): int
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO subscriptions (
+                public_id, customer_id, user_id, plan_code, billing_period, domain,
+                amount_cents, renew_amount_cents, status, asaas_credit_card_token, created_at, updated_at
+            ) VALUES (
+                :p, :c, :u, :plan, :bp, :d, :a, :r, :st, :tok, :c1, :u1
+            )'
+        );
+        $stmt->execute([
+            ':p' => $this->uuid(),
+            ':c' => $data['customer_id'],
+            ':u' => $data['user_id'] ?: null,
+            ':plan' => $data['plan_code'],
+            ':bp' => $data['billing_period'],
+            ':d' => $data['domain'],
+            ':a' => $data['amount_cents'],
+            ':r' => $data['renew_amount_cents'],
+            ':st' => $data['status'],
+            ':tok' => $data['asaas_credit_card_token'],
+            ':c1' => $now,
+            ':u1' => $now,
+        ]);
+        return (int) $this->db->lastInsertId();
+    }
+
+    private function activateLocalSubscription(int $localId, ?string $asaasId, string $periodCode, string $now): void
+    {
+        if ($localId <= 0) {
+            return;
+        }
+        $this->db->prepare(
+            'UPDATE subscriptions SET asaas_subscription_id = COALESCE(:a, asaas_subscription_id), status = :st, next_due_date = :n, updated_at = :u WHERE id = :id'
+        )->execute([
+            ':a' => $asaasId,
+            ':st' => 'active',
+            ':n' => geekhost_period_end_date($periodCode),
+            ':u' => $now,
+            ':id' => $localId,
+        ]);
+    }
+
+    private function createServiceForOrder(int $orderId, int $userId, ?int $subscriptionId, string $planCode, string $domain, string $now): void
+    {
+        if ($userId <= 0) {
+            return;
+        }
+        $check = $this->db->prepare('SELECT id FROM services WHERE order_id = :o LIMIT 1');
+        $check->execute([':o' => $orderId]);
+        if ($check->fetch()) {
+            return;
+        }
+        $this->db->prepare(
+            'INSERT INTO services (public_id, user_id, order_id, subscription_id, plan_code, domain, status, created_at, updated_at)
+             VALUES (:p, :u, :o, :s, :plan, :d, :st, :c, :up)'
+        )->execute([
+            ':p' => $this->uuid(),
+            ':u' => $userId,
+            ':o' => $orderId,
+            ':s' => $subscriptionId,
+            ':plan' => $planCode,
+            ':d' => $domain,
+            ':st' => 'paid_pending_provisioning',
+            ':c' => $now,
+            ':up' => $now,
+        ]);
+    }
+
+    private function markSubscriptionOverdue(string $asaasSubscriptionId, int $userId, string $now): void
+    {
+        if ($asaasSubscriptionId === '') {
+            return;
+        }
+        $this->db->prepare(
+            "UPDATE subscriptions SET status = 'overdue', overdue_since = COALESCE(overdue_since, :o), updated_at = :u
+             WHERE asaas_subscription_id = :id"
+        )->execute([':o' => $now, ':u' => $now, ':id' => $asaasSubscriptionId]);
+    }
+
+    private function clearOverdue(int $userId, string $asaasSubscriptionId, string $now): void
+    {
+        if ($asaasSubscriptionId !== '') {
+            $this->db->prepare("UPDATE subscriptions SET status = 'active', overdue_since = NULL, updated_at = :u WHERE asaas_subscription_id = :id")
+                ->execute([':u' => $now, ':id' => $asaasSubscriptionId]);
+        }
+    }
+
+    private function enforceOverdueSuspension(int $userId, string $now): void
+    {
+        if ($userId <= 0) {
+            return;
+        }
+        $stmt = $this->db->prepare(
+            "SELECT overdue_since FROM subscriptions WHERE user_id = :u AND status = 'overdue' AND overdue_since IS NOT NULL ORDER BY overdue_since ASC LIMIT 1"
+        );
+        $stmt->execute([':u' => $userId]);
+        $since = $stmt->fetchColumn();
+        if (!$since) {
+            return;
+        }
+        $threshold = strtotime((string) $since . ' +2 months');
+        if ($threshold === false || $threshold > time()) {
+            return;
+        }
+
+        $user = $this->auth->findById($userId);
+        if ($user && ($user['hosting_status'] ?? '') === 'suspended') {
+            return; // idempotent
+        }
+
+        $this->db->prepare(
+            "UPDATE users SET hosting_status = 'suspended', suspended_at = COALESCE(suspended_at, :s), suspend_reason = :r, updated_at = :u WHERE id = :id"
+        )->execute([
+            ':s' => $now,
+            ':r' => 'Pagamento em atraso há mais de 2 meses',
+            ':u' => $now,
+            ':id' => $userId,
+        ]);
+        $this->db->prepare(
+            "UPDATE services SET status = 'suspended', updated_at = :u WHERE user_id = :id AND status != 'canceled'"
+        )->execute([':u' => $now, ':id' => $userId]);
+        geekhost_log('hosting_suspended_overdue', ['user_id' => $userId]);
+    }
+
+    /**
+     * @param array<string, mixed> $parentOrder
+     * @param array<string, mixed> $payment
+     * @return array<string, mixed>|null
+     */
+    private function spawnRenewalInvoiceFromSubscription(array $parentOrder, array $payment, string $now): ?array
+    {
+        $paymentId = (string) ($payment['id'] ?? '');
+        if ($paymentId === '') {
+            return null;
+        }
+        $existing = $this->findOrderByAsaasPaymentId($paymentId);
+        if ($existing) {
+            return $existing;
+        }
+
+        $amount = (float) ($payment['value'] ?? 0);
+        $publicId = $this->uuid();
+        $stmt = $this->db->prepare(
+            'INSERT INTO orders (
+                public_id, invoice_number, customer_id, user_id, plan_code, plan_name, billing_period, domain,
+                amount_cents, renew_amount_cents, currency, billing_type, status, due_date,
+                asaas_payment_id, asaas_subscription_id, asaas_invoice_url, idempotency_key,
+                provisioning_status, metadata_json, created_at, updated_at
+            ) VALUES (
+                :pid, :inv, :cid, :uid, :pc, :pn, :bp, :d,
+                :ac, :rc, :cur, :bt, :st, :due,
+                :ap, :asub, :url, :idem,
+                :prov, :meta, :c, :u
+            )'
+        );
+        $stmt->execute([
+            ':pid' => $publicId,
+            ':inv' => $this->nextInvoiceNumber(),
+            ':cid' => $parentOrder['customer_id'],
+            ':uid' => $parentOrder['user_id'],
+            ':pc' => $parentOrder['plan_code'],
+            ':pn' => $parentOrder['plan_name'],
+            ':bp' => $parentOrder['billing_period'],
+            ':d' => $parentOrder['domain'],
+            ':ac' => (int) round($amount * 100),
+            ':rc' => $parentOrder['renew_amount_cents'],
+            ':cur' => 'BRL',
+            ':bt' => $payment['billingType'] ?? $parentOrder['billing_type'],
+            ':st' => 'awaiting_payment',
+            ':due' => $payment['dueDate'] ?? gmdate('Y-m-d'),
+            ':ap' => $paymentId,
+            ':asub' => $payment['subscription'] ?? $parentOrder['asaas_subscription_id'],
+            ':url' => $payment['invoiceUrl'] ?? null,
+            ':idem' => 'renew-' . $paymentId,
+            ':prov' => 'none',
+            ':meta' => json_encode(['renewal' => true], JSON_UNESCAPED_UNICODE),
+            ':c' => $now,
+            ':u' => $now,
+        ]);
+        return $this->findOrderByPublicId($publicId);
+    }
+
+    private function mapAsaasPaymentStatus(string $asaasStatus, string $event = ''): string
     {
         $asaasStatus = strtoupper($asaasStatus);
         if ($event === 'PAYMENT_REFUNDED' || $asaasStatus === 'REFUNDED') {
@@ -413,16 +902,10 @@ final class OrderService
         ) {
             return 'paid_pending_provisioning';
         }
-        if (in_array($asaasStatus, ['PENDING', 'AWAITING_RISK_ANALYSIS'], true)) {
-            return 'awaiting_payment';
-        }
-        return $fromWebhook ? 'awaiting_payment' : 'awaiting_payment';
+        return 'awaiting_payment';
     }
 
-    /**
-     * @param array<string, mixed> $input
-     * @return array<string, string>
-     */
+    /** @param array<string, mixed> $input @return array<string, string> */
     private function normalizeCustomer(array $input): array
     {
         $name = trim((string) ($input['name'] ?? ''));
@@ -465,12 +948,10 @@ final class OrderService
         ];
     }
 
-    /**
-     * @param array<string, string> $data
-     */
+    /** @param array<string, string> $data */
     private function upsertLocalCustomer(array $data, string $now): int
     {
-        $stmt = $this->db->prepare('SELECT id, asaas_customer_id FROM customers WHERE cpf_cnpj = :c LIMIT 1');
+        $stmt = $this->db->prepare('SELECT id FROM customers WHERE cpf_cnpj = :c LIMIT 1');
         $stmt->execute([':c' => $data['cpf_cnpj']]);
         $row = $stmt->fetch();
         if ($row) {
@@ -480,18 +961,10 @@ final class OrderService
                  WHERE id=:id'
             );
             $upd->execute([
-                ':e' => $data['email'],
-                ':n' => $data['name'],
-                ':p' => $data['phone'],
-                ':m' => $data['mobile_phone'],
-                ':z' => $data['postal_code'],
-                ':a' => $data['address'],
-                ':num' => $data['address_number'],
-                ':comp' => $data['complement'],
-                ':uf' => $data['province'],
-                ':city' => $data['city'],
-                ':u' => $now,
-                ':id' => $row['id'],
+                ':e' => $data['email'], ':n' => $data['name'], ':p' => $data['phone'], ':m' => $data['mobile_phone'],
+                ':z' => $data['postal_code'], ':a' => $data['address'], ':num' => $data['address_number'],
+                ':comp' => $data['complement'], ':uf' => $data['province'], ':city' => $data['city'],
+                ':u' => $now, ':id' => $row['id'],
             ]);
             return (int) $row['id'];
         }
@@ -501,26 +974,15 @@ final class OrderService
              VALUES (:e,:n,:c,:p,:m,:z,:a,:num,:comp,:uf,:city,:c1,:u)'
         );
         $ins->execute([
-            ':e' => $data['email'],
-            ':n' => $data['name'],
-            ':c' => $data['cpf_cnpj'],
-            ':p' => $data['phone'],
-            ':m' => $data['mobile_phone'],
-            ':z' => $data['postal_code'],
-            ':a' => $data['address'],
-            ':num' => $data['address_number'],
-            ':comp' => $data['complement'],
-            ':uf' => $data['province'],
-            ':city' => $data['city'],
-            ':c1' => $now,
-            ':u' => $now,
+            ':e' => $data['email'], ':n' => $data['name'], ':c' => $data['cpf_cnpj'], ':p' => $data['phone'],
+            ':m' => $data['mobile_phone'], ':z' => $data['postal_code'], ':a' => $data['address'],
+            ':num' => $data['address_number'], ':comp' => $data['complement'], ':uf' => $data['province'],
+            ':city' => $data['city'], ':c1' => $now, ':u' => $now,
         ]);
         return (int) $this->db->lastInsertId();
     }
 
-    /**
-     * @param array<string, string> $data
-     */
+    /** @param array<string, string> $data */
     private function ensureAsaasCustomer(int $customerId, array $data): string
     {
         $stmt = $this->db->prepare('SELECT asaas_customer_id FROM customers WHERE id = :id');
@@ -550,40 +1012,21 @@ final class OrderService
             ]);
             $asaasId = (string) ($created['id'] ?? '');
         }
-
         if ($asaasId === '') {
             throw new RuntimeException('Asaas não retornou ID de cliente.');
         }
-
-        $upd = $this->db->prepare('UPDATE customers SET asaas_customer_id = :a, updated_at = :u WHERE id = :id');
-        $upd->execute([':a' => $asaasId, ':u' => gmdate('c'), ':id' => $customerId]);
+        $this->db->prepare('UPDATE customers SET asaas_customer_id = :a, updated_at = :u WHERE id = :id')
+            ->execute([':a' => $asaasId, ':u' => gmdate('c'), ':id' => $customerId]);
         return $asaasId;
     }
 
-    /**
-     * @param array{plan:array, period:array, amount:float} $selection
-     */
-    private function prepareSubscriptionPlaceholder(int $customerId, array $selection, string $periodCode, int $amountCents, string $now): void
+    private function nextInvoiceNumber(): int
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO subscriptions (public_id, customer_id, plan_code, billing_period, amount_cents, status, created_at, updated_at)
-             VALUES (:p, :c, :plan, :bp, :amt, :st, :c1, :u)'
-        );
-        $stmt->execute([
-            ':p' => $this->uuid(),
-            ':c' => $customerId,
-            ':plan' => $selection['plan']['code'],
-            ':bp' => $periodCode,
-            ':amt' => $amountCents,
-            ':st' => 'prepared',
-            ':c1' => $now,
-            ':u' => $now,
-        ]);
+        $max = (int) ($this->db->query('SELECT MAX(invoice_number) FROM orders')->fetchColumn() ?: 100000);
+        return max(100000, $max) + 1;
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
+    /** @return array<string, mixed>|null */
     private function findOrderByIdempotency(string $key): ?array
     {
         $stmt = $this->db->prepare('SELECT * FROM orders WHERE idempotency_key = :k LIMIT 1');
@@ -592,9 +1035,7 @@ final class OrderService
         return $row ?: null;
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
+    /** @return array<string, mixed>|null */
     private function findOrderByAsaasPaymentId(string $paymentId): ?array
     {
         $stmt = $this->db->prepare('SELECT * FROM orders WHERE asaas_payment_id = :id LIMIT 1');
@@ -603,18 +1044,24 @@ final class OrderService
         return $row ?: null;
     }
 
+    /** @return array<string, mixed>|null */
+    private function findLatestOrderBySubscription(string $subscriptionId): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM orders WHERE asaas_subscription_id = :id ORDER BY id DESC LIMIT 1');
+        $stmt->execute([':id' => $subscriptionId]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     private function markWebhookProcessed(string $eventKey, string $now): void
     {
-        $stmt = $this->db->prepare('UPDATE webhook_events SET processed_at = :p WHERE event_key = :k');
-        $stmt->execute([':p' => $now, ':k' => $eventKey]);
+        $this->db->prepare('UPDATE webhook_events SET processed_at = :p WHERE event_key = :k')
+            ->execute([':p' => $now, ':k' => $eventKey]);
     }
 
     private function clientIp(): string
     {
-        $ip = $_SERVER['HTTP_CF_CONNECTING_IP']
-            ?? $_SERVER['HTTP_X_FORWARDED_FOR']
-            ?? $_SERVER['REMOTE_ADDR']
-            ?? '127.0.0.1';
+        $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
         if (str_contains((string) $ip, ',')) {
             $ip = trim(explode(',', (string) $ip)[0]);
         }

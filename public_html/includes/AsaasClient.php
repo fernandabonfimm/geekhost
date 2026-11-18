@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/logger.php';
 
 /**
  * Central Asaas API client. Selects URL / API key / webhook token from ASAAS_ENV only.
@@ -42,11 +43,6 @@ final class AsaasClient
     public function webhookToken(): string
     {
         return $this->webhookToken;
-    }
-
-    public function isSandbox(): bool
-    {
-        return $this->env === 'sandbox';
     }
 
     /**
@@ -119,10 +115,7 @@ final class AsaasClient
         ];
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
-     */
+    /** @param array<string, mixed> $payload @return array<string, mixed> */
     public function createCustomer(array $payload): array
     {
         $res = $this->request('POST', '/customers', $payload);
@@ -132,9 +125,7 @@ final class AsaasClient
         return $res['body'];
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
+    /** @return array<string, mixed>|null */
     public function findCustomerByCpfCnpj(string $cpfCnpj): ?array
     {
         $res = $this->request('GET', '/customers?cpfCnpj=' . rawurlencode($cpfCnpj) . '&limit=1');
@@ -149,10 +140,7 @@ final class AsaasClient
         return is_array($first) ? $first : null;
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
-     */
+    /** @param array<string, mixed> $payload @return array<string, mixed> */
     public function createPayment(array $payload, ?string $idempotencyKey = null): array
     {
         $res = $this->request('POST', '/payments', $payload, $idempotencyKey);
@@ -162,9 +150,7 @@ final class AsaasClient
         return $res['body'];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function getPayment(string $paymentId): array
     {
         $res = $this->request('GET', '/payments/' . rawurlencode($paymentId));
@@ -174,9 +160,7 @@ final class AsaasClient
         return $res['body'];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function getPixQrCode(string $paymentId): array
     {
         $res = $this->request('GET', '/payments/' . rawurlencode($paymentId) . '/pixQrCode');
@@ -186,12 +170,7 @@ final class AsaasClient
         return $res['body'];
     }
 
-    /**
-     * Prepared for future monthly/annual recurring billing.
-     *
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
-     */
+    /** @param array<string, mixed> $payload @return array<string, mixed> */
     public function createSubscription(array $payload, ?string $idempotencyKey = null): array
     {
         $res = $this->request('POST', '/subscriptions', $payload, $idempotencyKey);
@@ -201,9 +180,31 @@ final class AsaasClient
         return $res['body'];
     }
 
+    /** @return array<string, mixed> */
+    public function getSubscription(string $subscriptionId): array
+    {
+        $res = $this->request('GET', '/subscriptions/' . rawurlencode($subscriptionId));
+        if ($res['status'] >= 400 || !is_array($res['body'])) {
+            throw new RuntimeException($this->errorMessage($res, 'Assinatura não encontrada.'));
+        }
+        return $res['body'];
+    }
+
     /**
-     * @param array{status:int, body:array<string,mixed>|list<mixed>|null, raw:string} $res
+     * Update subscription credit card (tokenized via card data sent once to Asaas).
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
      */
+    public function updateSubscriptionCreditCard(string $subscriptionId, array $payload): array
+    {
+        $res = $this->request('PUT', '/subscriptions/' . rawurlencode($subscriptionId), $payload);
+        if ($res['status'] >= 400 || !is_array($res['body'])) {
+            throw new RuntimeException($this->errorMessage($res, 'Não foi possível atualizar o cartão da assinatura.'));
+        }
+        return $res['body'];
+    }
+
+    /** @param array{status:int, body:array<string,mixed>|list<mixed>|null, raw:string} $res */
     private function errorMessage(array $res, string $fallback): string
     {
         $body = $res['body'];

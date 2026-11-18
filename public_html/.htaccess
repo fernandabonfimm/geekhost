@@ -3,14 +3,18 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Pretty checkout + webhook routes (LiteSpeed / Apache / DirectAdmin)
     RewriteRule ^checkout/?$ checkout.php [L,QSA]
     RewriteRule ^api/checkout/create/?$ api/checkout/create.php [L,QSA]
     RewriteRule ^api/checkout/status/?$ api/checkout/status.php [L,QSA]
     RewriteRule ^api/webhooks/asaas/?$ api/webhooks/asaas.php [L,QSA]
+
+    RewriteRule ^painel/?$ painel/index.php [L,QSA]
+    RewriteRule ^painel/login/?$ painel/login.php [L,QSA]
+    RewriteRule ^painel/logout/?$ painel/logout.php [L,QSA]
+    RewriteRule ^painel/faturas/?$ painel/faturas.php [L,QSA]
+    RewriteRule ^painel/perfil/?$ painel/perfil.php [L,QSA]
 </IfModule>
 
-# Deny access to sensitive leftovers if any env file is ever misplaced under public_html
 <FilesMatch "^\.env">
     Require all denied
 </FilesMatch>
