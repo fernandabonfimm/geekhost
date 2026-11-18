@@ -73,7 +73,6 @@ $statusLabel = static function (string $status): array {
 <section class="panel-home">
     <div class="home-greeting-row">
         <h2 class="home-greeting">Olá, <span><?= e($firstName) ?></span>!</h2>
-        <p class="home-sub">Bem-vindo à área do cliente GeekHost. Aqui você gerencia hospedagem, domínios e cobranças com dados reais da sua conta.</p>
     </div>
 
     <article class="home-hero-banner">
