@@ -21,14 +21,17 @@ final class DomainSiteService
     {
         // hosting_status "pending" is also set at account creation before payment,
         // so require a paid order or a provisioned/queued service.
-        $any = $this->db->prepare(
-            "SELECT
-                (SELECT COUNT(*) FROM orders WHERE user_id = :u AND status = 'paid_pending_provisioning')
-              + (SELECT COUNT(*) FROM services WHERE user_id = :u)
-             AS c"
+        $paid = $this->db->prepare(
+            "SELECT COUNT(*) FROM orders
+             WHERE user_id = :u AND status = 'paid_pending_provisioning'"
         );
-        $any->execute([':u' => $userId]);
-        return (int) $any->fetchColumn() > 0;
+        $paid->execute([':u' => $userId]);
+        if ((int) $paid->fetchColumn() > 0) {
+            return true;
+        }
+        $services = $this->db->prepare('SELECT COUNT(*) FROM services WHERE user_id = :u');
+        $services->execute([':u' => $userId]);
+        return (int) $services->fetchColumn() > 0;
     }
 
     public function resolveUserPlanCode(int $userId): string
