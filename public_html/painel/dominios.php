@@ -7,7 +7,7 @@ $panelSection = 'dominios';
 $panelLead = 'Gerencie seus domínios, configurações de DNS e acompanhe a renovação.';
 ob_start();
 ?>
-<button type="button" class="gh-btn gh-btn-primary" data-modal-open="add-domain"><i data-lucide="plus"></i> Cadastrar domínio</button>
+<button type="button" class="gh-btn gh-btn-primary" data-add-domain-btn><i data-lucide="plus"></i> Cadastrar domínio</button>
 <?php
 $panelActions = ob_get_clean();
 require __DIR__ . '/_layout.php';
@@ -19,13 +19,16 @@ $planCode = $svc->resolveUserPlanCode((int) $panelUser['id']);
 $plan = geekhost_plan($planCode) ?? geekhost_plan('light');
 $maxDomains = geekhost_plan_domain_limit($planCode);
 $nameservers = geekhost_nameservers();
+$hasPaidPlan = $svc->userHasPaidPlan((int) $panelUser['id']);
 
 $message = '';
 $error = '';
+$toastType = 'ok';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_validate($_POST['csrf'] ?? null)) {
         $error = 'Sessão expirada.';
+        $toastType = 'danger';
     } else {
         try {
             $action = (string) ($_POST['action'] ?? 'add');
@@ -34,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = $domain['nsOk']
                     ? 'Nameservers GeekHost confirmados para ' . $domain['domain'] . '.'
                     : 'Ainda propagando. Confira ns1/ns2 e aguarde de 2 a 72 horas.';
+                $toastType = $domain['nsOk'] ? 'ok' : 'warn';
             } elseif ($action === 'create_site') {
                 $site = $svc->createSite((int) $panelUser['id'], (string) ($_POST['domain_id'] ?? ''));
                 header('Location: ' . url('/painel/sites?created=' . rawurlencode((string) $site['id'])));
@@ -43,20 +47,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = $domain['nsOk']
                     ? 'Domínio cadastrado e nameservers OK.'
                     : 'Domínio cadastrado. Ajuste o DNS e aguarde a propagação (2 a 72 horas).';
+                $toastType = $domain['nsOk'] ? 'ok' : 'warn';
             }
         } catch (Throwable $e) {
             $error = $e->getMessage();
+            $toastType = 'danger';
         }
     }
 }
 
 $domains = $svc->listDomains((int) $panelUser['id']);
 $used = count($domains);
-$canAdd = $used < $maxDomains;
+$canAdd = $hasPaidPlan && $used < $maxDomains;
 $pct = $maxDomains > 0 ? min(100, (int) round(($used / $maxDomains) * 100)) : 0;
 ?>
-<section class="panel-domains">
-    <?php if ($message): ?><div class="gh-alert gh-alert-ok"><i data-lucide="check-circle-2"></i><div><?= e($message) ?></div></div><?php endif; ?>
+<section
+    class="panel-domains"
+    data-domains-page
+    data-has-paid="<?= $hasPaidPlan ? '1' : '0' ?>"
+    data-domain-count="<?= (int) $used ?>"
+    <?php if ($message || $error): ?>
+        data-flash-message="<?= e($error !== '' ? $error : $message) ?>"
+        data-flash-type="<?= e($error !== '' ? 'danger' : $toastType) ?>"
+    <?php endif; ?>
+>
+    <?php if (!$hasPaidPlan): ?>
+        <div class="gh-alert gh-alert-warn">
+            <i data-lucide="circle-alert"></i>
+            <div>
+                <strong>Pagamento pendente</strong><br>
+                Conclua o pagamento do plano para liberar o cadastro de domínios.
+                <a class="gh-link" href="<?= e(url('/painel/faturas?status=em_aberto')) ?>">Ir para faturas →</a>
+            </div>
+        </div>
+    <?php endif; ?>
+    <?php if ($message): ?><div class="gh-alert gh-alert-<?= $toastType === 'warn' ? 'warn' : 'ok' ?>"><i data-lucide="<?= $toastType === 'warn' ? 'clock' : 'check-circle-2' ?>"></i><div><?= e($message) ?></div></div><?php endif; ?>
     <?php if ($error): ?><div class="gh-alert gh-alert-danger"><i data-lucide="triangle-alert"></i><div><?= e($error) ?></div></div><?php endif; ?>
 
     <article class="gh-card usage-banner">
@@ -72,13 +97,19 @@ $pct = $maxDomains > 0 ? min(100, (int) round(($used / $maxDomains) * 100)) : 0;
         </div>
     </article>
 
-    <div class="domain-toolbar" data-domain-filter>
-        <input type="search" placeholder="Buscar domínio…" aria-label="Buscar domínio">
-        <select aria-label="Filtrar status DNS">
-            <option value="">Todos os status</option>
-            <option value="ok">Propagado</option>
-            <option value="pending">Não configurado</option>
-        </select>
+    <div class="panel-filter-bar domain-toolbar" data-domain-filter>
+        <label class="panel-filter-field">
+            Buscar domínio
+            <input type="search" placeholder="Buscar domínio…" aria-label="Buscar domínio">
+        </label>
+        <label class="panel-filter-field">
+            Status DNS
+            <select aria-label="Filtrar status DNS">
+                <option value="">Todos os status</option>
+                <option value="ok">Propagado</option>
+                <option value="pending">Não configurado</option>
+            </select>
+        </label>
     </div>
 
     <div class="gh-table-wrap">
@@ -155,7 +186,14 @@ $pct = $maxDomains > 0 ? min(100, (int) round(($used / $maxDomains) * 100)) : 0;
 <div class="gh-modal" data-modal="add-domain" hidden>
     <div class="gh-modal-backdrop" data-modal-close></div>
     <div class="gh-modal-panel" role="dialog" aria-modal="true" aria-labelledby="add-domain-title">
-        <?php if ($canAdd): ?>
+        <?php if (!$hasPaidPlan): ?>
+            <h2 id="add-domain-title">Pagamento necessário</h2>
+            <p>Conclua o pagamento do plano de hospedagem para liberar o cadastro de domínios.</p>
+            <div class="gh-modal-actions">
+                <button type="button" class="gh-btn gh-btn-secondary" data-modal-close>Fechar</button>
+                <a class="gh-btn gh-btn-primary" href="<?= e(url('/painel/faturas?status=em_aberto')) ?>">Ver faturas</a>
+            </div>
+        <?php elseif ($canAdd): ?>
             <h2 id="add-domain-title">Cadastrar domínio</h2>
             <p>Informe um domínio que você já possui. Depois, aponte o DNS para a GeekHost.</p>
             <form method="post" class="gh-form">

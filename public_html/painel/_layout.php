@@ -18,10 +18,29 @@ $isAuthPage = !$requireAuth;
 
 $panelFirstName = '';
 $panelUserInitials = 'GH';
+$panelHasOpenInvoice = false;
+$panelPayUrl = url('/painel/faturas?status=em_aberto');
 if (!empty($panelUser)) {
     $panelFirstName = explode(' ', trim((string) ($panelUser['name'] ?? '')))[0] ?: 'cliente';
     $nameParts = preg_split('/\s+/', trim((string) ($panelUser['name'] ?? ''))) ?: [];
     $panelUserInitials = strtoupper(substr((string) ($nameParts[0] ?? 'G'), 0, 1) . substr((string) ($nameParts[1] ?? 'H'), 0, 1));
+    if ($requireAuth) {
+        require_once dirname(__DIR__) . '/includes/OrderService.php';
+        $panelOrders = new OrderService();
+        $panelInvoiceCounts = $panelOrders->invoiceCounts((int) $panelUser['id']);
+        $panelHasOpenInvoice = ((int) ($panelInvoiceCounts['em_aberto'] ?? 0)) > 0;
+        if ($panelHasOpenInvoice) {
+            $openInvoices = $panelOrders->listInvoicesForUser((int) $panelUser['id'], null, ['status' => 'em_aberto']);
+            $firstOpen = $openInvoices[0] ?? null;
+            if (!empty($firstOpen['invoiceUrl'])) {
+                $panelPayUrl = (string) $firstOpen['invoiceUrl'];
+            } elseif (!empty($firstOpen['boleto']['url'])) {
+                $panelPayUrl = (string) $firstOpen['boleto']['url'];
+            } elseif (!empty($firstOpen['id'])) {
+                $panelPayUrl = url('/checkout?order=' . rawurlencode((string) $firstOpen['id']));
+            }
+        }
+    }
 }
 ?>
 <!doctype html>
@@ -37,14 +56,22 @@ if (!empty($panelUser)) {
     <script src="https://unpkg.com/lucide@0.468.0" defer></script>
     <link rel="stylesheet" href="<?= e(asset('assets/css/panel.css')) ?>">
 </head>
-<body class="panel-body<?= $isAuthPage ? ' is-auth' : '' ?>" data-panel data-csrf="<?= e($csrf) ?>">
+<body
+    class="panel-body<?= $isAuthPage ? ' is-auth' : '' ?>"
+    data-panel
+    data-csrf="<?= e($csrf) ?>"
+    <?php if (!$isAuthPage && $panelHasOpenInvoice): ?>
+        data-unpaid-hosting="1"
+        data-pay-url="<?= e($panelPayUrl) ?>"
+    <?php endif; ?>
+>
 <?php if (!$isAuthPage): ?>
 <aside class="panel-sidebar" data-sidebar>
     <div class="panel-sidebar-glow" aria-hidden="true"></div>
     <div class="panel-sidebar-top">
         <a class="panel-sidebar-brand" href="<?= e(url('/painel/')) ?>" title="GeekHost">
             <img class="panel-brand-full" src="<?= e(asset('assets/images/LOGO-02.png')) ?>" alt="GeekHost" width="140" height="40">
-            <img class="panel-brand-mark" src="<?= e(asset('assets/images/favicon.png')) ?>" alt="GeekHost" width="28" height="28">
+            <img class="panel-brand-mark" src="<?= e(asset('assets/images/favicon.png')) ?>" alt="GeekHost" width="40" height="40">
         </a>
         <button type="button" class="panel-icon-btn panel-sidebar-toggle" data-sidebar-toggle aria-expanded="true" aria-controls="panel-sidebar-nav" title="Recolher menu">
             <i data-lucide="panel-left" aria-hidden="true"></i>
@@ -60,7 +87,7 @@ if (!empty($panelUser)) {
         <a href="<?= e(url('/painel/sites')) ?>" class="<?= $panelSection === 'sites' ? 'is-active' : '' ?>" data-nav-label="Meus sites" title="Meus sites">
             <i data-lucide="layers" aria-hidden="true"></i><span>Meus sites</span>
         </a>
-        <a href="<?= e(url('/painel/faturas')) ?>" class="<?= $panelSection === 'faturas' ? 'is-active' : '' ?>" data-nav-label="Faturas" title="Faturas">
+        <a href="<?= e(url('/painel/faturas')) ?>" class="<?= $panelSection === 'faturas' ? 'is-active' : '' ?><?= $panelHasOpenInvoice ? ' is-unpaid-pulse' : '' ?>" data-nav-label="Faturas" title="Faturas">
             <i data-lucide="receipt" aria-hidden="true"></i><span>Faturas</span>
         </a>
         <a href="<?= e(url('/painel/carteira')) ?>" class="<?= $panelSection === 'carteira' ? 'is-active' : '' ?>" data-nav-label="Carteira" title="Carteira">

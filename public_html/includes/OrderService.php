@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/plans.php';
 require_once __DIR__ . '/AsaasClient.php';
+require_once __DIR__ . '/NotificationService.php';
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/ProvisioningStub.php';
 require_once __DIR__ . '/Auth.php';
@@ -277,6 +278,30 @@ final class OrderService
 
             if ($order['status'] === 'paid_pending_provisioning') {
                 ProvisioningStub::queue($order);
+            }
+
+            if ($userId > 0) {
+                $notifications = new NotificationService();
+                $payLink = !empty($order['asaas_invoice_url'])
+                    ? (string) $order['asaas_invoice_url']
+                    : (function_exists('url') ? url('/painel/faturas?status=em_aberto') : '/painel/faturas?status=em_aberto');
+                if ($order['status'] === 'paid_pending_provisioning') {
+                    $notifications->notify(
+                        $userId,
+                        'payment_approved',
+                        'Pagamento aprovado',
+                        'Seu pagamento foi confirmado. Estamos preparando sua hospedagem.',
+                        function_exists('url') ? url('/painel/faturas') : '/painel/faturas'
+                    );
+                } elseif (in_array((string) $order['status'], ['awaiting_payment', 'overdue'], true)) {
+                    $notifications->notify(
+                        $userId,
+                        'payment_pending',
+                        'Pagamento pendente',
+                        'Há uma fatura em aberto. Conclua o pagamento para liberar os recursos da conta.',
+                        $payLink
+                    );
+                }
             }
 
             geekhost_log('order_created', [
@@ -695,6 +720,13 @@ final class OrderService
         if ($userId > 0) {
             $this->db->prepare("UPDATE users SET hosting_status = CASE WHEN hosting_status = 'suspended' THEN hosting_status ELSE 'pending' END, updated_at = :u WHERE id = :id")
                 ->execute([':u' => $now, ':id' => $userId]);
+            (new NotificationService())->notify(
+                $userId,
+                'payment_approved',
+                'Pagamento aprovado',
+                'Pagamento da fatura #' . ($order['invoice_number'] ?? '') . ' confirmado com sucesso.',
+                function_exists('url') ? url('/painel/faturas') : '/painel/faturas'
+            );
         }
     }
 

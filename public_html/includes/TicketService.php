@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/crypto.php';
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/NotificationService.php';
 
 final class TicketService
 {
@@ -435,42 +436,17 @@ final class TicketService
      */
     public function listNotifications(int $userId, int $limit = 20): array
     {
-        $stmt = $this->db->prepare(
-            'SELECT * FROM support_notifications WHERE user_id = :u ORDER BY id DESC LIMIT ' . max(1, min(50, $limit))
-        );
-        $stmt->execute([':u' => $userId]);
-        $out = [];
-        foreach ($stmt->fetchAll() ?: [] as $row) {
-            $out[] = [
-                'id' => $row['public_id'],
-                'type' => $row['type'],
-                'title' => $row['title'],
-                'body' => $row['body'],
-                'ticketId' => $row['ticket_public_id'],
-                'read' => (bool) ((int) $row['is_read']),
-                'createdAt' => $row['created_at'],
-            ];
-        }
-        return $out;
+        return (new NotificationService())->listForUser($userId, $limit);
     }
 
     public function unreadNotificationCount(int $userId): int
     {
-        $stmt = $this->db->prepare('SELECT COUNT(*) FROM support_notifications WHERE user_id = :u AND is_read = 0');
-        $stmt->execute([':u' => $userId]);
-        return (int) $stmt->fetchColumn();
+        return (new NotificationService())->unreadCount($userId);
     }
 
     public function markNotificationsRead(int $userId, ?string $notificationPublicId = null): void
     {
-        if ($notificationPublicId) {
-            $this->db->prepare(
-                'UPDATE support_notifications SET is_read = 1 WHERE user_id = :u AND public_id = :p'
-            )->execute([':u' => $userId, ':p' => $notificationPublicId]);
-            return;
-        }
-        $this->db->prepare('UPDATE support_notifications SET is_read = 1 WHERE user_id = :u AND is_read = 0')
-            ->execute([':u' => $userId]);
+        (new NotificationService())->markRead($userId, $notificationPublicId);
     }
 
     /**
@@ -972,20 +948,12 @@ final class TicketService
 
     private function createNotification(int $userId, string $type, string $title, string $body, ?string $ticketPublicId): void
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO support_notifications (
-                public_id, user_id, type, title, body, ticket_public_id, is_read, created_at
-            ) VALUES (:p, :u, :t, :ti, :b, :tp, 0, :c)'
-        );
-        $stmt->execute([
-            ':p' => $this->uuid(),
-            ':u' => $userId,
-            ':t' => $type,
-            ':ti' => mb_substr($title, 0, 180),
-            ':b' => $body,
-            ':tp' => $ticketPublicId,
-            ':c' => gmdate('c'),
-        ]);
+        $notifications = new NotificationService();
+        if ($ticketPublicId) {
+            $notifications->notifyTicket($userId, $type, $title, $body, $ticketPublicId);
+            return;
+        }
+        $notifications->notify($userId, $type, $title, $body, function_exists('url') ? url('/painel/suporte') : '/painel/suporte');
     }
 
     private function notifyAdmins(string $type, string $title, string $body, string $ticketPublicId, int $exceptUserId): void
@@ -998,12 +966,13 @@ final class TicketService
             static fn ($e) => strtolower(trim($e)),
             explode(',', $raw)
         ));
+        $notifications = new NotificationService();
         foreach ($emails as $email) {
             $stmt = $this->db->prepare('SELECT id FROM users WHERE email = :e LIMIT 1');
             $stmt->execute([':e' => $email]);
             $id = (int) ($stmt->fetchColumn() ?: 0);
             if ($id > 0 && $id !== $exceptUserId) {
-                $this->createNotification($id, $type, $title, $body, $ticketPublicId);
+                $notifications->notifyTicket($id, $type, $title, $body, $ticketPublicId);
             }
         }
     }

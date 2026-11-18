@@ -6,6 +6,7 @@ $panelTitle = 'Perfil';
 $panelSection = 'perfil';
 $panelLead = 'Dados da conta, endereço, segurança e preferências.';
 require __DIR__ . '/_layout.php';
+require_once dirname(__DIR__) . '/includes/NotificationService.php';
 
 $message = '';
 $error = '';
@@ -21,6 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $activeTab = 'seguranca';
                 $auth->changePassword((int) $panelUser['id'], (string) ($_POST['current_password'] ?? ''), (string) ($_POST['new_password'] ?? ''));
                 $message = 'Senha atualizada.';
+                (new NotificationService())->notify(
+                    (int) $panelUser['id'],
+                    'profile_updated',
+                    'Senha atualizada',
+                    'A senha da sua conta GeekHost foi alterada com sucesso.',
+                    url('/painel/perfil')
+                );
             } else {
                 $activeTab = (string) ($_POST['tab'] ?? 'dados');
                 if (!in_array($activeTab, ['dados', 'endereco', 'preferencias'], true)) {
@@ -56,6 +64,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'city' => (string) ($_POST['city'] ?? ''),
                 ], $photoPath);
                 $message = 'Perfil atualizado.';
+                (new NotificationService())->notify(
+                    (int) $panelUser['id'],
+                    'profile_updated',
+                    'Perfil atualizado',
+                    'Seus dados de perfil foram salvos com sucesso.',
+                    url('/painel/perfil')
+                );
             }
         } catch (Throwable $e) {
             $error = $e->getMessage();

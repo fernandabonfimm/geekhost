@@ -33,15 +33,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $sites = $svc->listSites((int) $panelUser['id']);
+$domains = $svc->listDomains((int) $panelUser['id']);
 $used = count($sites);
 $pct = $maxSites > 0 ? min(100, (int) round(($used / $maxSites) * 100)) : 0;
 $created = isset($_GET['created']) ? (string) $_GET['created'] : '';
 $hostingStatus = (string) ($panelUser['hostingStatus'] ?? 'pending');
+$hasDomain = $domains !== [];
 ?>
-<section class="panel-sites">
+<section
+    class="panel-sites"
+    data-sites-page
+    data-has-domain="<?= $hasDomain ? '1' : '0' ?>"
+>
     <div class="panel-page-actions" style="margin-bottom:16px;justify-content:flex-end">
-        <a class="gh-btn gh-btn-primary" href="<?= e(url('/painel/dominios')) ?>"><i data-lucide="plus"></i> Novo site</a>
+        <button type="button" class="gh-btn gh-btn-primary" data-new-site-btn><i data-lucide="plus"></i> Novo site</button>
     </div>
+    <?php if (!$hasDomain): ?>
+        <div class="gh-alert gh-alert-warn">
+            <i data-lucide="circle-alert"></i>
+            <div>
+                <strong>Cadastre um domínio primeiro</strong><br>
+                Para criar um site, você precisa ter pelo menos um domínio cadastrado e com DNS apontado.
+                <a class="gh-link" href="<?= e(url('/painel/dominios')) ?>">Ir para Domínios →</a>
+            </div>
+        </div>
+    <?php endif; ?>
     <?php if ($created !== ''): ?>
         <div class="gh-alert gh-alert-ok"><i data-lucide="check-circle-2"></i><div>Site criado. Agora você pode instalar o WordPress quando estiver pronto.</div></div>
     <?php endif; ?>

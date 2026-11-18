@@ -162,7 +162,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 }
 .panel-sidebar-brand img { width: auto; display: block; }
 .panel-brand-full { height: 32px; max-width: 148px; object-fit: contain; }
-.panel-brand-mark { display: none; height: 28px; width: 28px; object-fit: contain; }
+.panel-brand-mark { display: none !important; height: 40px; width: 40px; object-fit: contain; }
 .panel-sidebar-toggle { color: #fff; border-color: rgba(255,255,255,.12); }
 
 .panel-sidebar-nav {
@@ -213,8 +213,8 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .panel-body.is-collapsed .panel-sidebar-nav a,
 .panel-body.is-collapsed .panel-sidebar-link { justify-content: center; padding-inline: 0; }
 .panel-body.is-collapsed .panel-sidebar-brand { padding: 6px; width: 100%; justify-content: center; }
-.panel-body.is-collapsed .panel-brand-full { display: none; }
-.panel-body.is-collapsed .panel-brand-mark { display: block; height: 28px; width: 28px; }
+.panel-body.is-collapsed .panel-brand-full { display: none !important; }
+.panel-body.is-collapsed .panel-brand-mark { display: block !important; height: 40px; width: 40px; }
 
 .panel-sidebar-backdrop {
     position: fixed;
@@ -628,10 +628,34 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     border-radius: 12px;
     box-shadow: var(--gh-shadow-lg);
     animation: gh-toast-in .2s ease;
+    cursor: default;
+    color: var(--gh-ink);
 }
+.gh-toast svg { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; }
+.gh-toast.is-ok,
+.gh-toast.gh-alert-ok { background: var(--gh-ok-soft); border-color: #bbf7d0; color: var(--gh-ok); }
+.gh-toast.is-warn,
+.gh-toast.gh-alert-warn { background: var(--gh-warn-soft); border-color: #fed7aa; color: #9a3412; }
+.gh-toast.is-danger,
+.gh-toast.gh-alert-danger { background: var(--gh-danger-soft); border-color: #fecaca; color: #991b1b; }
+.gh-toast.is-clickable { cursor: pointer; }
+.gh-toast strong { display: block; margin-bottom: 2px; }
 @keyframes gh-toast-in {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
+}
+
+.panel-sidebar-nav a.is-unpaid-pulse {
+    color: #fecaca !important;
+    animation: gh-unpaid-pulse 1.4s ease-in-out infinite;
+}
+.panel-sidebar-nav a.is-unpaid-pulse.is-active {
+    background: rgba(220, 38, 38, .18) !important;
+    color: #fff !important;
+}
+@keyframes gh-unpaid-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, .0); }
+    50% { box-shadow: 0 0 0 4px rgba(220, 38, 38, .22); background: rgba(220, 38, 38, .12); }
 }
 
 /* Auth */
@@ -859,16 +883,9 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     width: 120px;
     justify-self: end;
 }
-.domain-toolbar {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-}
-.domain-toolbar .panel-search,
-.domain-toolbar input {
-    flex: 1;
-    min-width: 200px;
+.domain-toolbar.panel-filter-bar {
+    grid-template-columns: minmax(0, 1.6fr) minmax(180px, .8fr);
+    margin-bottom: 16px;
 }
 .ns-card {
     display: grid;
@@ -1214,8 +1231,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .panel-body.is-collapsed .panel-sidebar-link span { display: inline; }
     .panel-body.is-collapsed .panel-sidebar-nav a,
     .panel-body.is-collapsed .panel-sidebar-link { justify-content: flex-start; padding-inline: 14px; }
-    .panel-body.is-collapsed .panel-brand-full { display: block; height: 32px; max-width: 148px; }
-    .panel-body.is-collapsed .panel-brand-mark { display: none; }
+    .panel-body.is-collapsed .panel-brand-full { display: block !important; height: 32px; max-width: 148px; }
+    .panel-body.is-collapsed .panel-brand-mark { display: none !important; }
+    .panel-body.is-sidebar-open .panel-brand-full { display: block !important; }
+    .panel-body.is-sidebar-open .panel-brand-mark { display: none !important; }
     .panel-shell,
     .panel-body.is-collapsed .panel-shell { margin-left: 0; }
     .panel-mobile-toggle { display: inline-grid; }

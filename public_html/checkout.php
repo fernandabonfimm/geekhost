@@ -105,11 +105,6 @@ require __DIR__ . '/includes/header.php';
                             <strong>Já tenho um domínio</strong>
                             <small>Use um domínio que você já possui</small>
                         </button>
-                        <button type="button" class="co-choice is-disabled" data-domain-mode="register" disabled aria-disabled="true">
-                            <span class="co-badge-soon">Em breve</span>
-                            <strong>Registrar novo domínio</strong>
-                            <small>Disponível quando a integração estiver pronta</small>
-                        </button>
                     </div>
 
                     <label class="co-field">
@@ -121,17 +116,6 @@ require __DIR__ . '/includes/header.php';
                         </div>
                         <span class="co-field-error" data-domain-error hidden></span>
                     </label>
-
-                    <div class="co-dns-box">
-                        <div class="co-dns-box-head"><i data-lucide="info"></i> Apontamento DNS</div>
-                        <p>Após o pagamento, aponte o domínio para:</p>
-                        <ul>
-                            <?php foreach ($nameservers as $ns): ?>
-                                <li><code><?= e($ns) ?></code></li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <p class="co-dns-note">A propagação pode levar de 2 a 72 horas. Não é necessário estar propagado para contratar.</p>
-                    </div>
 
                     <div class="co-actions">
                         <button type="button" class="co-btn co-btn-primary" data-next-step="2">Continuar <i data-lucide="arrow-right"></i></button>

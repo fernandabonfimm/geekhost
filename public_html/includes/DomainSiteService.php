@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/plans.php';
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/NotificationService.php';
 
 final class DomainSiteService
 {
@@ -14,6 +15,20 @@ final class DomainSiteService
     {
         $this->db = geekhost_db();
         $this->ensureTables();
+    }
+
+    public function userHasPaidPlan(int $userId): bool
+    {
+        // hosting_status "pending" is also set at account creation before payment,
+        // so require a paid order or a provisioned/queued service.
+        $any = $this->db->prepare(
+            "SELECT
+                (SELECT COUNT(*) FROM orders WHERE user_id = :u AND status = 'paid_pending_provisioning')
+              + (SELECT COUNT(*) FROM services WHERE user_id = :u)
+             AS c"
+        );
+        $any->execute([':u' => $userId]);
+        return (int) $any->fetchColumn() > 0;
     }
 
     public function resolveUserPlanCode(int $userId): string
@@ -60,6 +75,11 @@ final class DomainSiteService
 
     public function addDomain(int $userId, string $domain): array
     {
+        if (!$this->userHasPaidPlan($userId)) {
+            throw new InvalidArgumentException(
+                'Conclua o pagamento do plano de hospedagem antes de cadastrar um domínio.'
+            );
+        }
         $domain = $this->normalizeDomain($domain);
         $planCode = $this->resolveUserPlanCode($userId);
         $limit = geekhost_plan_domain_limit($planCode);
@@ -101,6 +121,24 @@ final class DomainSiteService
             ':up' => $now,
         ]);
 
+        $notifications = new NotificationService();
+        $notifications->notify(
+            $userId,
+            'domain_registered',
+            'Domínio cadastrado',
+            'O domínio ' . $domain . ' foi adicionado à sua conta.',
+            function_exists('url') ? url('/painel/dominios') : '/painel/dominios'
+        );
+        if ($check['ok']) {
+            $notifications->notify(
+                $userId,
+                'domain_configured',
+                'Domínio configurado',
+                'Nameservers GeekHost confirmados para ' . $domain . '.',
+                function_exists('url') ? url('/painel/dominios') : '/painel/dominios'
+            );
+        }
+
         $row = $this->findDomainByPublicId($publicId);
         return $this->presentDomain($row ?? []);
     }
@@ -111,6 +149,7 @@ final class DomainSiteService
         if (!$row) {
             throw new InvalidArgumentException('Domínio não encontrado.');
         }
+        $wasOk = (int) ($row['ns_ok'] ?? 0) === 1;
         $check = $this->checkNameservers((string) $row['domain']);
         $now = gmdate('c');
         $stmt = $this->db->prepare(
@@ -124,11 +163,25 @@ final class DomainSiteService
             ':u' => $now,
             ':id' => $row['id'],
         ]);
+        if (!$wasOk && $check['ok']) {
+            (new NotificationService())->notify(
+                $userId,
+                'domain_configured',
+                'Domínio configurado',
+                'Nameservers GeekHost confirmados para ' . $row['domain'] . '.',
+                function_exists('url') ? url('/painel/dominios') : '/painel/dominios'
+            );
+        }
         return $this->presentDomain($this->findDomainByPublicId($publicId) ?? []);
     }
 
     public function createSite(int $userId, string $domainPublicId, string $label = ''): array
     {
+        if ($this->countDomains($userId) < 1) {
+            throw new InvalidArgumentException(
+                'Cadastre um domínio antes de criar um site.'
+            );
+        }
         $domain = $this->findDomainForUser($userId, $domainPublicId);
         if (!$domain) {
             throw new InvalidArgumentException('Domínio não encontrado.');
@@ -175,6 +228,14 @@ final class DomainSiteService
             ':c' => $now,
             ':up' => $now,
         ]);
+
+        (new NotificationService())->notify(
+            $userId,
+            'site_created',
+            'Site criado',
+            'O site ' . $title . ' foi criado com sucesso.',
+            function_exists('url') ? url('/painel/sites') : '/painel/sites'
+        );
 
         return $this->presentSite($this->findSiteByPublicId($publicId) ?? []);
     }
