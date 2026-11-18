@@ -171,7 +171,8 @@ final class OrderService
 
             if ($billingType === 'PIX') {
                 $paymentId = (string) ($payment['id'] ?? '');
-                for ($attempt = 1; $attempt <= 4; $attempt++) {
+                // Keep create fast: a couple of quick tries; status endpoint can fill later.
+                for ($attempt = 1; $attempt <= 2; $attempt++) {
                     try {
                         $pix = $this->asaas->getPixQrCode($paymentId);
                         $pixQr = isset($pix['encodedImage']) ? (string) $pix['encodedImage'] : null;
@@ -182,8 +183,8 @@ final class OrderService
                     } catch (Throwable $e) {
                         geekhost_log('pix_qr_fetch_failed', ['order' => $publicId, 'attempt' => $attempt, 'error' => $e->getMessage()]);
                     }
-                    if ($attempt < 4) {
-                        usleep(400000 * $attempt);
+                    if ($attempt < 2) {
+                        usleep(250000);
                     }
                 }
             }
@@ -281,26 +282,30 @@ final class OrderService
             }
 
             if ($userId > 0) {
-                $notifications = new NotificationService();
-                $payLink = !empty($order['asaas_invoice_url'])
-                    ? (string) $order['asaas_invoice_url']
-                    : (function_exists('url') ? url('/painel/faturas?status=em_aberto') : '/painel/faturas?status=em_aberto');
-                if ($order['status'] === 'paid_pending_provisioning') {
-                    $notifications->notify(
-                        $userId,
-                        'payment_approved',
-                        'Pagamento aprovado',
-                        'Seu pagamento foi confirmado. Estamos preparando sua hospedagem.',
-                        function_exists('url') ? url('/painel/faturas') : '/painel/faturas'
-                    );
-                } elseif (in_array((string) $order['status'], ['awaiting_payment', 'overdue'], true)) {
-                    $notifications->notify(
-                        $userId,
-                        'payment_pending',
-                        'Pagamento pendente',
-                        'Há uma fatura em aberto. Conclua o pagamento para liberar os recursos da conta.',
-                        $payLink
-                    );
+                try {
+                    $notifications = new NotificationService();
+                    $payLink = !empty($order['asaas_invoice_url'])
+                        ? (string) $order['asaas_invoice_url']
+                        : (function_exists('url') ? url('/painel/faturas?status=em_aberto') : '/painel/faturas?status=em_aberto');
+                    if ($order['status'] === 'paid_pending_provisioning') {
+                        $notifications->notify(
+                            $userId,
+                            'payment_approved',
+                            'Pagamento aprovado',
+                            'Seu pagamento foi confirmado. Estamos preparando sua hospedagem.',
+                            function_exists('url') ? url('/painel/faturas') : '/painel/faturas'
+                        );
+                    } elseif (in_array((string) $order['status'], ['awaiting_payment', 'overdue'], true)) {
+                        $notifications->notify(
+                            $userId,
+                            'payment_pending',
+                            'Pagamento pendente',
+                            'Há uma fatura em aberto. Conclua o pagamento para liberar os recursos da conta.',
+                            $payLink
+                        );
+                    }
+                } catch (Throwable $e) {
+                    geekhost_log('order_notify_failed', ['order' => $publicId, 'error' => $e->getMessage()]);
                 }
             }
 
@@ -595,6 +600,52 @@ final class OrderService
         $stmt->execute([':id' => $publicId]);
         $row = $stmt->fetch();
         return $row ?: null;
+    }
+
+    /**
+     * Ensure PIX QR/copy are available for an existing order (best-effort).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function refreshPixForOrder(string $publicId): ?array
+    {
+        $order = $this->findOrderByPublicId($publicId);
+        if (!$order) {
+            return null;
+        }
+        if ((string) ($order['billing_type'] ?? '') !== 'PIX') {
+            return $order;
+        }
+        if (!empty($order['pix_qr_code']) && !empty($order['pix_copy_paste'])) {
+            return $order;
+        }
+        $paymentId = (string) ($order['asaas_payment_id'] ?? '');
+        if ($paymentId === '') {
+            return $order;
+        }
+        try {
+            $pix = $this->asaas->getPixQrCode($paymentId);
+            $pixQr = isset($pix['encodedImage']) ? (string) $pix['encodedImage'] : null;
+            $pixCopy = isset($pix['payload']) ? (string) $pix['payload'] : null;
+            if ($pixQr || $pixCopy) {
+                $this->db->prepare(
+                    'UPDATE orders SET
+                        pix_qr_code = COALESCE(:qr, pix_qr_code),
+                        pix_copy_paste = COALESCE(:cp, pix_copy_paste),
+                        updated_at = :u
+                     WHERE id = :id'
+                )->execute([
+                    ':qr' => $pixQr,
+                    ':cp' => $pixCopy,
+                    ':u' => gmdate('c'),
+                    ':id' => $order['id'],
+                ]);
+                return $this->findOrderByPublicId($publicId) ?? $order;
+            }
+        } catch (Throwable $e) {
+            geekhost_log('pix_qr_refresh_failed', ['order' => $publicId, 'error' => $e->getMessage()]);
+        }
+        return $order;
     }
 
     /** @param array<string, mixed> $order @return array<string, mixed> */

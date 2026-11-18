@@ -212,7 +212,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .panel-body.is-collapsed .panel-sidebar-link span { display: none; }
 .panel-body.is-collapsed .panel-sidebar-nav a,
 .panel-body.is-collapsed .panel-sidebar-link { justify-content: center; padding-inline: 0; }
-.panel-body.is-collapsed .panel-sidebar-brand { padding: 6px; width: 100%; justify-content: center; }
+.panel-body.is-collapsed .panel-sidebar-brand { padding: 0; width: 100%; justify-content: center; }
 .panel-body.is-collapsed .panel-brand-full { display: none !important; }
 .panel-body.is-collapsed .panel-brand-mark { display: block !important; height: 40px; width: 40px; }
 

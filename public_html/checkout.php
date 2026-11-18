@@ -81,7 +81,7 @@ require __DIR__ . '/includes/header.php';
                 <li class="is-active" data-step-indicator="1"><span class="co-step-dot" data-step-dot>1</span><span class="co-step-label">Domínio</span></li>
                 <li data-step-indicator="2"><span class="co-step-dot" data-step-dot>2</span><span class="co-step-label">Configurar</span></li>
                 <li data-step-indicator="3"><span class="co-step-dot" data-step-dot>3</span><span class="co-step-label">Pagamento</span></li>
-                <li data-step-indicator="4"><span class="co-step-dot" data-step-dot>4</span><span class="co-step-label">Confirmação</span></li>
+                <li data-step-indicator="4"><span class="co-step-dot" data-step-dot>4</span><span class="co-step-label">Pagar / concluir</span></li>
             </ol>
         </div>
     </div>
@@ -280,7 +280,7 @@ require __DIR__ . '/includes/header.php';
                 </section>
             </form>
 
-            <!-- Step 4: Confirmation -->
+            <!-- Step 4: Pay / confirmation -->
             <section class="co-card co-confirm co-step" data-step="4" data-result hidden>
                 <div class="co-confirm-grid">
                     <img class="co-confirm-art" src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="280" height="220">
@@ -290,24 +290,36 @@ require __DIR__ . '/includes/header.php';
                         <p data-result-status></p>
                         <p class="co-hint">Pedido: <code data-order-id></code></p>
 
-                        <div data-result-pix hidden class="co-result-box">
-                            <p>Escaneie o QR Code Pix ou copie o código:</p>
-                            <img data-pix-image alt="QR Code Pix" width="200" height="200">
-                            <textarea data-pix-copy readonly rows="3"></textarea>
-                            <button type="button" class="co-btn co-btn-ghost" data-copy-pix>Copiar código Pix</button>
+                        <div data-result-pix hidden class="co-result-box co-pix-box">
+                            <strong class="co-pix-title"><i data-lucide="qr-code"></i> Pague com Pix para liberar sua hospedagem</strong>
+                            <p>Escaneie o QR Code ou copie o código Pix abaixo. Esta página atualiza sozinha quando o pagamento for confirmado.</p>
+                            <div class="co-pix-layout">
+                                <img data-pix-image alt="QR Code Pix" width="220" height="220">
+                                <div class="co-pix-copy-wrap">
+                                    <label class="co-field">
+                                        <span>Pix copia e cola</span>
+                                        <textarea data-pix-copy readonly rows="5" placeholder="Gerando código Pix…"></textarea>
+                                    </label>
+                                    <button type="button" class="co-btn co-btn-primary" data-copy-pix>
+                                        <i data-lucide="copy"></i> Copiar código Pix
+                                    </button>
+                                    <p class="co-hint" data-pix-waiting hidden>Ainda gerando o QR Code… aguarde alguns segundos.</p>
+                                </div>
+                            </div>
                         </div>
                         <div data-result-boleto hidden class="co-result-box">
+                            <strong>Boleto gerado</strong>
+                            <p>Abra o boleto para pagar. A liberação ocorre após a compensação bancária.</p>
                             <a class="co-btn co-btn-primary" data-boleto-link href="#" target="_blank" rel="noopener noreferrer">Abrir boleto</a>
                             <p data-boleto-line></p>
                         </div>
                         <div data-result-card hidden class="co-result-box"><p data-card-msg></p></div>
 
                         <div class="co-actions co-actions-split" style="margin-top:18px">
-                            <a class="co-btn co-btn-primary" data-panel-cta href="<?= e(url('/painel/login')) ?>">Acessar minha área do cliente</a>
-                            <a class="co-btn co-btn-ghost" data-setup-link hidden href="#">Criar senha do painel</a>
-                            <button type="button" class="co-btn co-btn-ghost" data-order-details hidden>Ver detalhes do pedido</button>
+                            <a class="co-btn co-btn-primary" data-setup-link hidden href="#">Criar senha do painel</a>
+                            <a class="co-btn co-btn-ghost" data-panel-cta href="<?= e(url('/painel/login')) ?>">Acessar área do cliente</a>
                         </div>
-                        <p class="co-hint" data-setup-hint hidden>Após a confirmação do pagamento, use o link para criar a senha do painel.</p>
+                        <p class="co-hint" data-setup-hint hidden>Depois do pagamento, use “Criar senha do painel” para definir o acesso.</p>
                     </div>
                 </div>
             </section>

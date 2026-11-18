@@ -17,7 +17,7 @@ if ($id === '' || !preg_match('/^[a-f0-9-]{36}$/i', $id)) {
 
 try {
     $service = new OrderService();
-    $order = $service->findOrderByPublicId($id);
+    $order = $service->refreshPixForOrder($id);
     if (!$order) {
         http_response_code(404);
         echo json_encode(['ok' => false, 'error' => 'Pedido não encontrado']);
