@@ -19,9 +19,9 @@ $serviceRows = $services->fetchAll() ?: [];
     <h1>Olá, <?= e(explode(' ', (string) $panelUser['name'])[0] ?: 'cliente') ?></h1>
     <p class="panel-lead">Status da hospedagem: <strong><?= e((string) $panelUser['hostingStatus']) ?></strong></p>
     <div class="panel-cards">
-        <a class="panel-card" href="/painel/faturas"><strong><?= (int) $counts['em_aberto'] ?></strong><span>Faturas em aberto</span></a>
-        <a class="panel-card" href="/painel/faturas?status=pago"><strong><?= (int) $counts['pago'] ?></strong><span>Faturas pagas</span></a>
-        <a class="panel-card" href="/painel/perfil"><strong>Perfil</strong><span>Dados e cartão recorrente</span></a>
+        <a class="panel-card" href="<?= e(url('/painel/faturas')) ?>"><strong><?= (int) $counts['em_aberto'] ?></strong><span>Faturas em aberto</span></a>
+        <a class="panel-card" href="<?= e(url('/painel/faturas?status=pago')) ?>"><strong><?= (int) $counts['pago'] ?></strong><span>Faturas pagas</span></a>
+        <a class="panel-card" href="<?= e(url('/painel/perfil')) ?>"><strong>Perfil</strong><span>Dados e cartão recorrente</span></a>
     </div>
     <h2>Serviços</h2>
     <?php if ($serviceRows === []): ?>

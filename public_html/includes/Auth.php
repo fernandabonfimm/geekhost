@@ -132,7 +132,7 @@ final class Auth
     {
         $user = $this->user();
         if (!$user) {
-            header('Location: /painel/login');
+            header('Location: ' . (function_exists('url') ? url('/painel/login') : '/painel/login'));
             exit;
         }
         return $user;

@@ -11,7 +11,7 @@ $periodCode = geekhost_normalize_period(isset($_GET['period']) ? (string) $_GET[
 $selection = geekhost_resolve_checkout_selection($planCode, $periodCode);
 
 if ($selection === null) {
-    header('Location: /planos.php');
+    header('Location: ' . url('/planos.php'));
     exit;
 }
 
@@ -34,8 +34,8 @@ require __DIR__ . '/includes/header.php';
     data-amount="<?= e((string) $selection['amount']) ?>"
     data-renew="<?= e((string) $selection['renew_amount']) ?>"
     data-csrf="<?= e($csrf) ?>"
-    data-create-url="/api/checkout/create"
-    data-status-url="/api/checkout/status"
+    data-create-url="<?= e(url('/api/checkout/create')) ?>"
+    data-status-url="<?= e(url('/api/checkout/status')) ?>"
     data-periods='<?= e((string) $periodsJson) ?>'>
 
     <div class="checkout-heading">
@@ -130,7 +130,7 @@ require __DIR__ . '/includes/header.php';
                             </div>
                         </div>
                         <p class="checkout-note">Cartão e CVV são enviados ao Asaas e não ficam armazenados na GeekHost. Débito não está disponível.</p>
-                        <label class="checkout-terms"><input type="checkbox" name="terms" required> Li e concordo com os <a href="/termos-de-uso.php" target="_blank" rel="noopener">Termos de Uso</a>.</label>
+                        <label class="checkout-terms"><input type="checkbox" name="terms" required> Li e concordo com os <a href="<?= e(url('/termos-de-uso.php')) ?>" target="_blank" rel="noopener">Termos de Uso</a>.</label>
                     </fieldset>
                     <div class="checkout-step-actions">
                         <button type="button" class="button button-outline-dark" data-prev-step="2">Voltar</button>
@@ -155,7 +155,7 @@ require __DIR__ . '/includes/header.php';
                 </div>
                 <div data-result-card hidden><p data-card-msg></p></div>
                 <p class="checkout-result-id">Pedido: <code data-order-id></code></p>
-                <a class="button button-dark" href="/painel/faturas">Ir para o painel →</a>
+                <a class="button button-dark" href="<?= e(url('/painel/faturas')) ?>">Ir para o painel →</a>
             </div>
         </div>
 

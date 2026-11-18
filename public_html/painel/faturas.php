@@ -44,7 +44,7 @@ $fmtDate = static function (?string $iso): string {
             'reembolsado' => ['Reembolsado', $counts['reembolsado']],
         ];
         foreach ($tabs as $key => [$label, $count]):
-            $href = $key === '' ? '/painel/faturas' : '/painel/faturas?status=' . urlencode($key);
+            $href = $key === '' ? url('/painel/faturas') : url('/painel/faturas?status=' . urlencode($key));
             $active = ($filter ?? '') === $key;
             ?>
             <a class="panel-filter <?= $active ? 'is-active' : '' ?>" href="<?= e($href) ?>"><?= e($label) ?> (<?= (int) $count ?>)</a>

@@ -2,7 +2,7 @@
 <footer class="panel-footer">
     <div class="page-width panel-footer-inner">
         <p>GeekHost · Área do cliente · sessão expira em 7 horas</p>
-        <a href="/">Voltar ao site</a>
+        <a href="<?= e(url('/')) ?>">Voltar ao site</a>
     </div>
 </footer>
 <?php if (!empty($companyWhatsapp)): ?>

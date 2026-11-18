@@ -7,7 +7,7 @@ $panelTitle = 'Entrar';
 require __DIR__ . '/_layout.php';
 
 if ($panelUser) {
-    header('Location: /painel/');
+    header('Location: ' . url('/painel/'));
     exit;
 }
 
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $user = $auth->attempt((string) ($_POST['email'] ?? ''), (string) ($_POST['password'] ?? ''));
         if ($user) {
-            header('Location: /painel/faturas');
+            header('Location: ' . url('/painel/faturas'));
             exit;
         }
         $error = 'E-mail ou senha inválidos.';

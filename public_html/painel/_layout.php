@@ -10,7 +10,7 @@ $auth = new Auth();
 $panelUser = $auth->user();
 $requireAuth = $requireAuth ?? true;
 if ($requireAuth && !$panelUser) {
-    header('Location: /painel/login');
+    header('Location: ' . url('/painel/login'));
     exit;
 }
 $csrf = csrf_token();
@@ -30,16 +30,16 @@ $panelTitle = $panelTitle ?? 'Painel';
 <body class="panel-body">
 <header class="panel-header">
     <div class="panel-header-inner page-width">
-        <a class="brand" href="/painel/"><img class="header-logo" src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="160" height="56"></a>
+        <a class="brand" href="<?= e(url('/painel/')) ?>"><img class="header-logo" src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="160" height="56"></a>
         <?php if ($panelUser): ?>
             <nav class="panel-nav" aria-label="Painel">
-                <a href="/painel/">Início</a>
-                <a href="/painel/faturas" <?= ($panelSection ?? '') === 'faturas' ? 'aria-current="page"' : '' ?>>Faturamento</a>
-                <a href="/painel/perfil" <?= ($panelSection ?? '') === 'perfil' ? 'aria-current="page"' : '' ?>>Perfil</a>
+                <a href="<?= e(url('/painel/')) ?>">Início</a>
+                <a href="<?= e(url('/painel/faturas')) ?>" <?= ($panelSection ?? '') === 'faturas' ? 'aria-current="page"' : '' ?>>Faturamento</a>
+                <a href="<?= e(url('/painel/perfil')) ?>" <?= ($panelSection ?? '') === 'perfil' ? 'aria-current="page"' : '' ?>>Perfil</a>
             </nav>
             <div class="panel-user">
                 <span>Olá, <?= e(explode(' ', (string) $panelUser['name'])[0] ?: 'cliente') ?>!</span>
-                <a class="text-link" href="/painel/logout">Sair</a>
+                <a class="text-link" href="<?= e(url('/painel/logout')) ?>">Sair</a>
             </div>
         <?php endif; ?>
     </div>

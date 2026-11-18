@@ -16,12 +16,58 @@ function e(string $value): string
 }
 
 /**
+ * App base path when public_html is not the Apache DocumentRoot
+ * (e.g. XAMPP junction → /geekhost/public_html). Empty string when DocumentRoot is public_html.
+ */
+function geekhost_base_path(): string
+{
+    static $resolved = false;
+    static $base = '';
+    if ($resolved) {
+        return $base;
+    }
+    $resolved = true;
+
+    $configured = trim((string) env('GEEKHOST_BASE_PATH', ''), "/ \t");
+    if ($configured !== '') {
+        $base = '/' . str_replace('\\', '/', $configured);
+        return $base;
+    }
+
+    $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (preg_match('#^(.*?)/public_html(?:/|$)#', $script, $m) === 1) {
+        $prefix = rtrim((string) $m[1], '/');
+        $base = ($prefix === '' ? '' : $prefix) . '/public_html';
+        return $base;
+    }
+
+    $base = '';
+    return $base;
+}
+
+/**
+ * Site-absolute path (includes optional base path). Use for redirects and internal links.
+ */
+function url(string $path = '/'): string
+{
+    $base = geekhost_base_path();
+    $path = str_replace('\\', '/', $path);
+    if ($path === '' || $path === '/') {
+        return $base === '' ? '/' : $base . '/';
+    }
+    if (!str_starts_with($path, '/')) {
+        $path = '/' . $path;
+    }
+    return $base . $path;
+}
+
+/**
  * Root-absolute URL for a file under public_html (e.g. assets/images/logo.png).
- * Survives pretty URLs and DirectAdmin document-root deploys; local php -S -t public_html too.
+ * Survives pretty URLs, XAMPP subfolders, and DirectAdmin document-root deploys.
  */
 function asset(string $path): string
 {
-    return '/' . ltrim(str_replace('\\', '/', $path), '/');
+    return url(ltrim(str_replace('\\', '/', $path), '/'));
 }
 
 function geekhost_public_url(string $path = ''): string
@@ -31,10 +77,10 @@ function geekhost_public_url(string $path = ''): string
     if ($base === '') {
         $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $base = ($https ? 'https://' : 'http://') . $host;
+        $base = ($https ? 'https://' : 'http://') . $host . geekhost_base_path();
     }
     if ($path === '') {
         return $base;
     }
-    return $base . '/' . ltrim($path, '/');
+    return rtrim($base, '/') . '/' . ltrim($path, '/');
 }

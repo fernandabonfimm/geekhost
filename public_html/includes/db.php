@@ -65,11 +65,23 @@ function geekhost_migrate(PDO $pdo): void
 
     if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
         $sql = str_replace('INTEGER PRIMARY KEY AUTOINCREMENT', 'BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY', $sql);
+        // Keep FK column types aligned with MySQL BIGINT UNSIGNED PKs.
+        $sql = preg_replace(
+            '/\b(customer_id|user_id|order_id|subscription_id)\s+INTEGER\b/',
+            '$1 BIGINT UNSIGNED',
+            $sql
+        ) ?? $sql;
         $sql = preg_replace('/^CREATE UNIQUE INDEX IF NOT EXISTS .*?;$/m', '', $sql) ?? $sql;
         $sql = preg_replace('/^CREATE INDEX IF NOT EXISTS .*?;$/m', '', $sql) ?? $sql;
+        $pdo->exec('SET FOREIGN_KEY_CHECKS=0');
     }
 
     $pdo->exec($sql);
+
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+        $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+    }
+
     geekhost_ensure_columns($pdo);
 
     if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
