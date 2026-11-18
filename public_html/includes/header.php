@@ -26,11 +26,11 @@ $pageDocumentTitle = $pageDocumentTitle ?? 'Hospedagem de Sites: Rápida e Segur
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?= e(asset('assets/css/site.css')) ?>">
 </head>
-<body>
+<body class="<?= e(trim((string) ($bodyClass ?? ''))) ?>">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
-<header class="site-header">
+<header class="site-header<?= !empty($checkoutHeader) ? ' site-header-checkout' : '' ?>">
     <div class="header-inner page-width">
-        <a class="brand" href="index.php" aria-label="GeekHost, página inicial">
+        <a class="brand" href="<?= e(url('/')) ?>" aria-label="GeekHost, página inicial">
             <img class="header-logo" src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="200" height="70">
         </a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation">
