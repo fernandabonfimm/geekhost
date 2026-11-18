@@ -475,8 +475,17 @@ final class OrderService
     }
 
     /** @return list<array<string, mixed>> */
-    public function listInvoicesForUser(int $userId, ?string $filter = null): array
+    /**
+     * @param array{status?:?string,q?:?string,from?:?string,to?:?string}|null $filters
+     * @return list<array<string, mixed>>
+     */
+    public function listInvoicesForUser(int $userId, ?string $filter = null, ?array $filters = null): array
     {
+        $filters = $filters ?? [];
+        if ($filter !== null && $filter !== '' && empty($filters['status'])) {
+            $filters['status'] = $filter;
+        }
+
         $sql = 'SELECT * FROM orders WHERE user_id = :u';
         $params = [':u' => $userId];
         $map = [
@@ -485,15 +494,45 @@ final class OrderService
             'cancelado' => ['canceled'],
             'reembolsado' => ['refunded'],
         ];
-        if ($filter && isset($map[$filter])) {
+        $status = isset($filters['status']) ? (string) $filters['status'] : '';
+        if ($status !== '' && isset($map[$status])) {
             $placeholders = [];
-            foreach ($map[$filter] as $i => $status) {
+            foreach ($map[$status] as $i => $st) {
                 $key = ':s' . $i;
                 $placeholders[] = $key;
-                $params[$key] = $status;
+                $params[$key] = $st;
             }
             $sql .= ' AND status IN (' . implode(',', $placeholders) . ')';
         }
+
+        $q = trim((string) ($filters['q'] ?? ''));
+        if ($q !== '') {
+            $sql .= ' AND (
+                CAST(invoice_number AS CHAR) LIKE :q
+                OR plan_name LIKE :q
+                OR domain LIKE :q
+                OR billing_type LIKE :q
+                OR public_id LIKE :q
+            )';
+            $params[':q'] = '%' . $q . '%';
+        }
+
+        $dateExpr = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql'
+            ? 'COALESCE(due_date, DATE(created_at))'
+            : "COALESCE(due_date, substr(created_at, 1, 10))";
+
+        $from = trim((string) ($filters['from'] ?? ''));
+        if ($from !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) === 1) {
+            $sql .= ' AND (' . $dateExpr . ' >= :from)';
+            $params[':from'] = $from;
+        }
+
+        $to = trim((string) ($filters['to'] ?? ''));
+        if ($to !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $to) === 1) {
+            $sql .= ' AND (' . $dateExpr . ' <= :to)';
+            $params[':to'] = $to;
+        }
+
         $sql .= ' ORDER BY id DESC';
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);

@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <section class="panel-auth">
     <h1>Entrar no painel</h1>
-    <p>Use o e-mail e a senha criados no checkout. A sessão dura 7 horas.</p>
+    <p>Use o e-mail e a senha criados no checkout.</p>
     <?php if ($error): ?><p class="panel-alert panel-alert-danger"><?= e($error) ?></p><?php endif; ?>
     <form method="post" class="panel-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">

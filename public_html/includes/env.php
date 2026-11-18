@@ -73,3 +73,35 @@ function env(string $key, ?string $default = null): ?string
     }
     return (string) $value;
 }
+
+/**
+ * Asaas environment: production only on HTTPS + geekhost.com.br / www.
+ * Everywhere else (XAMPP, php -S, tunnels) uses sandbox.
+ */
+function geekhost_resolve_asaas_env(?string $forceEnv = null): string
+{
+    if ($forceEnv !== null) {
+        $forced = strtolower($forceEnv);
+        if (!in_array($forced, ['sandbox', 'production'], true)) {
+            throw new InvalidArgumentException('ASAAS_ENV must be sandbox or production.');
+        }
+        return $forced;
+    }
+
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || ((string) ($_SERVER['SERVER_PORT'] ?? '') === '443')
+        || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    $host = preg_replace('/:\\d+$/', '', $host) ?? $host;
+
+    if ($https && ($host === 'geekhost.com.br' || $host === 'www.geekhost.com.br')) {
+        return 'production';
+    }
+
+    $explicit = strtolower((string) env('ASAAS_ENV', 'sandbox'));
+    if ($explicit === 'production' && env('ASAAS_ALLOW_PROD_LOCAL') === '1') {
+        return 'production';
+    }
+
+    return 'sandbox';
+}

@@ -15,6 +15,9 @@ if ($requireAuth && !$panelUser) {
 }
 $csrf = csrf_token();
 $panelTitle = $panelTitle ?? 'Painel';
+$panelSection = $panelSection ?? '';
+$isAuthPage = empty($panelUser);
+$year = (int) date('Y');
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -27,24 +30,56 @@ $panelTitle = $panelTitle ?? 'Painel';
     <link rel="stylesheet" href="<?= e(asset('assets/css/site.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset('assets/css/panel.css')) ?>">
 </head>
-<body class="panel-body">
-<header class="panel-header">
-    <div class="panel-header-inner page-width">
-        <a class="brand" href="<?= e(url('/painel/')) ?>"><img class="header-logo" src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="160" height="56"></a>
-        <?php if ($panelUser): ?>
-            <nav class="panel-nav" aria-label="Painel">
-                <a href="<?= e(url('/painel/')) ?>">Início</a>
-                <a href="<?= e(url('/painel/faturas')) ?>" <?= ($panelSection ?? '') === 'faturas' ? 'aria-current="page"' : '' ?>>Faturamento</a>
-                <a href="<?= e(url('/painel/perfil')) ?>" <?= ($panelSection ?? '') === 'perfil' ? 'aria-current="page"' : '' ?>>Perfil</a>
-            </nav>
-            <div class="panel-user">
-                <span>Olá, <?= e(explode(' ', (string) $panelUser['name'])[0] ?: 'cliente') ?>!</span>
-                <a class="text-link" href="<?= e(url('/painel/logout')) ?>">Sair</a>
-            </div>
-        <?php endif; ?>
+<body class="panel-body<?= $isAuthPage ? ' is-auth' : '' ?>" data-panel>
+<?php if (!$isAuthPage): ?>
+<aside class="panel-sidebar" data-sidebar>
+    <div class="panel-sidebar-top">
+        <a class="panel-sidebar-brand" href="<?= e(url('/painel/')) ?>" title="GeekHost">
+            <img src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="140" height="48">
+        </a>
+        <button type="button" class="panel-sidebar-toggle" data-sidebar-toggle aria-expanded="true" aria-controls="panel-sidebar-nav" title="Abrir ou fechar menu">
+            <i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i>
+        </button>
     </div>
-</header>
-<main class="panel-main page-width">
-    <?php if ($panelUser && ($panelUser['hostingStatus'] ?? '') === 'suspended'): ?>
-        <div class="panel-alert panel-alert-danger">Serviço suspenso por atraso superior a 2 meses. Regularize as faturas em aberto.</div>
-    <?php endif; ?>
+    <nav id="panel-sidebar-nav" class="panel-sidebar-nav" aria-label="Painel">
+        <a href="<?= e(url('/painel/')) ?>" class="<?= $panelSection === 'inicio' ? 'is-active' : '' ?>" title="Início">
+            <i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Início</span>
+        </a>
+        <a href="<?= e(url('/painel/faturas')) ?>" class="<?= $panelSection === 'faturas' ? 'is-active' : '' ?>" title="Faturas">
+            <i class="bi bi-receipt" aria-hidden="true"></i><span>Faturas</span>
+        </a>
+        <a href="<?= e(url('/painel/carteira')) ?>" class="<?= $panelSection === 'carteira' ? 'is-active' : '' ?>" title="Carteira">
+            <i class="bi bi-credit-card-2-front" aria-hidden="true"></i><span>Carteira</span>
+        </a>
+        <a href="<?= e(url('/painel/perfil')) ?>" class="<?= $panelSection === 'perfil' ? 'is-active' : '' ?>" title="Perfil">
+            <i class="bi bi-person" aria-hidden="true"></i><span>Perfil</span>
+        </a>
+    </nav>
+    <div class="panel-sidebar-bottom">
+        <p class="panel-sidebar-user" title="<?= e((string) ($panelUser['email'] ?? '')) ?>">
+            <i class="bi bi-person-circle" aria-hidden="true"></i>
+            <span><?= e(explode(' ', (string) ($panelUser['name'] ?? 'cliente'))[0] ?: 'cliente') ?></span>
+        </p>
+        <a class="panel-sidebar-logout" href="<?= e(url('/painel/logout')) ?>" title="Sair">
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Sair</span>
+        </a>
+    </div>
+</aside>
+<div class="panel-shell">
+    <header class="panel-topbar">
+        <button type="button" class="panel-mobile-toggle" data-sidebar-open aria-label="Abrir menu">
+            <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+        <div class="panel-topbar-title">
+            <p class="eyebrow">Área do cliente</p>
+            <h1><?= e($panelTitle) ?></h1>
+        </div>
+        <a class="panel-topbar-site" href="<?= e(url('/')) ?>">Voltar ao site</a>
+    </header>
+    <main class="panel-main">
+        <?php if (($panelUser['hostingStatus'] ?? '') === 'suspended'): ?>
+            <div class="panel-alert panel-alert-danger">Serviço suspenso por atraso superior a 2 meses. Regularize as faturas em aberto.</div>
+        <?php endif; ?>
+<?php else: ?>
+<main class="panel-main panel-main-auth">
+<?php endif; ?>

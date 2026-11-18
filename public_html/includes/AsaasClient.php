@@ -19,11 +19,7 @@ final class AsaasClient
     public function __construct(?string $forceEnv = null)
     {
         geekhost_load_env();
-        $env = strtolower($forceEnv ?? (string) env('ASAAS_ENV', 'sandbox'));
-        if (!in_array($env, ['sandbox', 'production'], true)) {
-            throw new InvalidArgumentException('ASAAS_ENV must be sandbox or production.');
-        }
-        $this->env = $env;
+        $this->env = geekhost_resolve_asaas_env($forceEnv);
         $prefix = $env === 'production' ? 'ASAAS_PRODUCTION' : 'ASAAS_SANDBOX';
         $this->baseUrl = rtrim((string) env($prefix . '_URL', ''), '/');
         $this->apiKey = (string) env($prefix . '_API_KEY', '');

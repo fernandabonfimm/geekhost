@@ -13,6 +13,7 @@ Options -Indexes
     RewriteRule ^painel/logout/?$ painel/logout.php [L,QSA]
     RewriteRule ^painel/faturas/?$ painel/faturas.php [L,QSA]
     RewriteRule ^painel/perfil/?$ painel/perfil.php [L,QSA]
+    RewriteRule ^painel/carteira/?$ painel/carteira.php [L,QSA]
 </IfModule>
 
 <FilesMatch "^\.env">

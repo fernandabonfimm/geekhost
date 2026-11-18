@@ -24,6 +24,8 @@ $map = [
     '/painel/faturas/' => '/painel/faturas.php',
     '/painel/perfil' => '/painel/perfil.php',
     '/painel/perfil/' => '/painel/perfil.php',
+    '/painel/carteira' => '/painel/carteira.php',
+    '/painel/carteira/' => '/painel/carteira.php',
 ];
 
 if (isset($map[$uri])) {
