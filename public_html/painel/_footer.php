@@ -1,5 +1,5 @@
 </main>
-<?php if (!empty($panelUser)): ?>
+<?php if (!empty($panelUser) && empty($isAuthPage)): ?>
     <footer class="panel-footer">
         <p>&copy; <?= (int) date('Y') ?> GeekHost. Todos os direitos reservados.</p>
     </footer>
@@ -10,13 +10,9 @@
         <p>&copy; <?= (int) date('Y') ?> GeekHost. Todos os direitos reservados.</p>
     </footer>
 <?php endif; ?>
-<?php if (!empty($companyWhatsapp)): ?>
-    <a class="whatsapp-float" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp GeekHost">
-        <i class="bi bi-whatsapp" aria-hidden="true"></i>
-    </a>
-<?php endif; ?>
-<button class="scroll-top" type="button" data-scroll-top aria-label="Voltar ao topo" hidden><span aria-hidden="true">↑</span></button>
-<script src="<?= e(asset('assets/js/site.js')) ?>" defer></script>
+
+<div class="gh-toast-host" data-toast-host aria-live="polite" aria-relevant="additions"></div>
+
 <script src="<?= e(asset('assets/js/panel.js')) ?>" defer></script>
 <?php if (!empty($panelScripts)): foreach ((array) $panelScripts as $src): ?>
 <script src="<?= e(asset($src)) ?>" defer></script>

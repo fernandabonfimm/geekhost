@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (string) ($_POST['password'] ?? ''),
                 (string) ($_POST['password_confirm'] ?? '')
             );
-            header('Location: ' . url('/painel/faturas'));
+            header('Location: ' . url('/painel/'));
             exit;
         } catch (Throwable $e) {
             $error = $e->getMessage();
@@ -32,29 +32,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<section class="panel-auth max-w-md mx-auto border border-[var(--panel-line)] bg-white p-7 shadow-[0_18px_40px_rgba(26,30,36,.08)]">
-    <p class="eyebrow !text-[11px] !tracking-[.08em]">GeekHost</p>
-    <h1 class="!mt-1 !mb-2 text-[28px] font-extrabold text-[var(--panel-grey)]">Criar senha do painel</h1>
+<section class="panel-auth">
+    <img src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="140" height="40" style="margin-bottom:18px">
+    <p class="panel-eyebrow">GeekHost</p>
+    <h1>Criar senha do painel</h1>
     <?php if (!$authUser): ?>
-        <p class="panel-alert panel-alert-danger">Link inválido ou expirado. Conclua um novo checkout ou fale com o suporte.</p>
-        <a class="button button-lime mt-3 inline-flex" href="<?= e(url('/painel/login')) ?>">Ir para login</a>
+        <div class="gh-alert gh-alert-danger"><div>Link inválido ou expirado. Conclua um novo checkout ou fale com o suporte.</div></div>
+        <a class="gh-btn gh-btn-primary" href="<?= e(url('/painel/login')) ?>">Ir para login</a>
     <?php elseif (!$paid): ?>
-        <p class="panel-lead">Conta encontrada: <strong><?= e((string) $authUser['email']) ?></strong></p>
-        <p class="panel-alert panel-alert-danger">Aguardando confirmação do pagamento. Assim que o Pix/boleto/cartão for confirmado, volte neste link para criar a senha.</p>
-        <meta http-equiv="refresh" content="12">
+        <div class="gh-alert gh-alert-warn"><div>Aguarde a confirmação do pagamento para liberar a criação de senha.</div></div>
     <?php else: ?>
-        <p class="panel-lead">Pagamento confirmado. Defina a senha de acesso para <strong><?= e((string) $authUser['email']) ?></strong>.</p>
-        <?php if ($error): ?><p class="panel-alert panel-alert-danger"><?= e($error) ?></p><?php endif; ?>
-        <form method="post" class="mt-4 grid gap-3">
+        <p>Defina a senha de acesso à área do cliente.</p>
+        <?php if ($error): ?><div class="gh-alert gh-alert-danger"><div><?= e($error) ?></div></div><?php endif; ?>
+        <form method="post" class="panel-form" style="padding:0;border:0;box-shadow:none;background:transparent;max-width:none">
             <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
             <input type="hidden" name="token" value="<?= e($token) ?>">
-            <label class="grid gap-1 text-sm font-bold">Senha
-                <input class="min-h-11 border border-[var(--panel-line)] px-3" type="password" name="password" required minlength="8" autocomplete="new-password">
-            </label>
-            <label class="grid gap-1 text-sm font-bold">Confirmar senha
-                <input class="min-h-11 border border-[var(--panel-line)] px-3" type="password" name="password_confirm" required minlength="8" autocomplete="new-password">
-            </label>
-            <button class="button button-lime" type="submit">Salvar senha e entrar</button>
+            <label>Nova senha<input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+            <label>Confirmar senha<input type="password" name="password_confirm" required minlength="8" autocomplete="new-password"></label>
+            <button class="gh-btn gh-btn-primary" type="submit">Criar senha</button>
         </form>
     <?php endif; ?>
 </section>

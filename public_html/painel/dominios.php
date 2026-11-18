@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 $panelTitle = 'Domínios';
 $panelSection = 'dominios';
+$panelLead = 'Gerencie seus domínios, configurações de DNS e acompanhe a renovação.';
+ob_start();
+?>
+<button type="button" class="gh-btn gh-btn-primary" data-modal-open="add-domain"><i data-lucide="plus"></i> Cadastrar domínio</button>
+<?php
+$panelActions = ob_get_clean();
 require __DIR__ . '/_layout.php';
 require_once dirname(__DIR__) . '/includes/DomainSiteService.php';
 require_once dirname(__DIR__) . '/includes/plans.php';
@@ -45,82 +51,133 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $domains = $svc->listDomains((int) $panelUser['id']);
-$canAdd = count($domains) < $maxDomains;
+$used = count($domains);
+$canAdd = $used < $maxDomains;
+$pct = $maxDomains > 0 ? min(100, (int) round(($used / $maxDomains) * 100)) : 0;
 ?>
 <section class="panel-domains">
-    <p class="panel-lead">
-        Plano atual: <strong><?= e((string) ($plan['name'] ?? $planCode)) ?></strong>
-        · limite de <strong><?= (int) $maxDomains ?></strong> domínio<?= $maxDomains === 1 ? '' : 's' ?>.
-        Light = 1 domínio; Empresa até 3; Premium até 10.
-    </p>
+    <?php if ($message): ?><div class="gh-alert gh-alert-ok"><i data-lucide="check-circle-2"></i><div><?= e($message) ?></div></div><?php endif; ?>
+    <?php if ($error): ?><div class="gh-alert gh-alert-danger"><i data-lucide="triangle-alert"></i><div><?= e($error) ?></div></div><?php endif; ?>
 
-    <article class="home-card domain-ns-card">
-        <div class="home-card-head"><h3>Apontamento DNS obrigatório</h3></div>
-        <p class="panel-lead">Para a GeekHost publicar seu site, o domínio precisa apontar para:</p>
-        <ul class="domain-ns-list">
-            <?php foreach ($nameservers as $ns): ?>
-                <li><code><?= e($ns) ?></code></li>
-            <?php endforeach; ?>
-        </ul>
-        <p class="panel-alert panel-alert-ok">
-            Depois de alterar os nameservers no registro.br (ou no seu registrador), a propagação DNS pode levar de <strong>2 a 72 horas</strong>.
-            Use “Verificar DNS” para checar quando estiver pronto.
-        </p>
+    <article class="gh-card usage-banner">
+        <div class="usage-block">
+            <span class="usage-block-label"><i data-lucide="globe-2"></i> Uso do plano</span>
+            <strong><?= (int) $used ?> de <?= (int) $maxDomains ?> domínio<?= $maxDomains === 1 ? '' : 's' ?></strong>
+            <div class="gh-progress"><span style="width:<?= (int) $pct ?>%"></span></div>
+        </div>
+        <div class="usage-block">
+            <span class="usage-block-label">Plano atual</span>
+            <strong><?= e((string) ($plan['name'] ?? $planCode)) ?> <span class="gh-badge gh-badge-ok">Conta</span></strong>
+            <a class="gh-link" href="<?= e(url('/planos.php')) ?>">Ver detalhes do plano →</a>
+        </div>
+        <img class="usage-art" src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="120" height="90">
     </article>
 
-    <?php if ($message): ?><p class="panel-alert panel-alert-ok"><?= e($message) ?></p><?php endif; ?>
-    <?php if ($error): ?><p class="panel-alert panel-alert-danger"><?= e($error) ?></p><?php endif; ?>
-
-    <?php if ($canAdd): ?>
-        <form method="post" class="panel-form panel-form-wide domain-add-form">
-            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-            <input type="hidden" name="action" value="add">
-            <h2>Cadastrar domínio</h2>
-            <label>Domínio
-                <input name="domain" type="text" placeholder="meusite.com.br" required maxlength="180">
-            </label>
-            <button class="button button-lime" type="submit">Adicionar domínio</button>
-        </form>
-    <?php else: ?>
-        <p class="panel-alert panel-alert-danger">Você atingiu o limite de domínios do seu plano.</p>
-    <?php endif; ?>
-
-    <div class="domain-list">
-        <?php if ($domains === []): ?>
-            <article class="home-card"><p class="panel-lead">Nenhum domínio cadastrado ainda.</p></article>
-        <?php else: foreach ($domains as $domain): ?>
-            <article class="home-card domain-item">
-                <div class="home-card-head">
-                    <h3><?= e((string) $domain['domain']) ?></h3>
-                    <span class="panel-badge panel-badge-<?= $domain['nsOk'] ? 'pago' : 'em_aberto' ?>">
-                        <?= $domain['nsOk'] ? 'DNS OK' : 'Aguardando DNS' ?>
-                    </span>
-                </div>
-                <p class="panel-lead"><?= e((string) ($domain['nsMessage'] ?: 'Verifique os nameservers GeekHost.')) ?></p>
-                <?php if (!empty($domain['nsFound'])): ?>
-                    <p class="domain-found">NS atuais: <code><?= e(implode(', ', $domain['nsFound'])) ?></code></p>
-                <?php endif; ?>
-                <div class="domain-actions">
-                    <form method="post">
-                        <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-                        <input type="hidden" name="action" value="refresh">
-                        <input type="hidden" name="domain_id" value="<?= e((string) $domain['id']) ?>">
-                        <button class="button button-outline-dark" type="submit">Verificar DNS</button>
-                    </form>
-                    <?php if ($domain['nsOk']): ?>
-                        <form method="post">
-                            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-                            <input type="hidden" name="action" value="create_site">
-                            <input type="hidden" name="domain_id" value="<?= e((string) $domain['id']) ?>">
-                            <button class="button button-lime" type="submit">Criar meu site</button>
-                        </form>
-                    <?php else: ?>
-                        <button class="button button-lime" type="button" disabled title="Aguarde o DNS">Criar meu site</button>
-                    <?php endif; ?>
-                    <a class="button button-outline-dark" href="<?= e(url('/painel/sites')) ?>">Meus sites</a>
-                </div>
-            </article>
-        <?php endforeach; endif; ?>
+    <div class="domain-toolbar" data-domain-filter>
+        <input type="search" placeholder="Buscar domínio…" aria-label="Buscar domínio">
+        <select aria-label="Filtrar status DNS">
+            <option value="">Todos os status</option>
+            <option value="ok">Propagado</option>
+            <option value="pending">Não configurado</option>
+        </select>
     </div>
+
+    <div class="gh-table-wrap">
+        <table class="gh-table">
+            <thead>
+            <tr>
+                <th>Domínio</th>
+                <th>Status DNS</th>
+                <th>Plano</th>
+                <th>Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php if ($domains === []): ?>
+                <tr><td colspan="4">Nenhum domínio cadastrado ainda. Use “Cadastrar domínio” para começar.</td></tr>
+            <?php else: foreach ($domains as $domain):
+                $dnsOk = !empty($domain['nsOk']);
+                ?>
+                <tr data-domain-row data-domain="<?= e((string) $domain['domain']) ?>" data-dns="<?= $dnsOk ? 'ok' : 'pending' ?>">
+                    <td><strong><?= e((string) $domain['domain']) ?></strong></td>
+                    <td>
+                        <span class="gh-badge gh-badge-<?= $dnsOk ? 'ok' : 'danger' ?> gh-badge-dot">
+                            <?= $dnsOk ? 'Propagado' : 'Não configurado' ?>
+                        </span>
+                    </td>
+                    <td><?= e((string) ($plan['name'] ?? $planCode)) ?></td>
+                    <td>
+                        <div class="domain-actions-inline">
+                            <form method="post">
+                                <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                                <input type="hidden" name="action" value="refresh">
+                                <input type="hidden" name="domain_id" value="<?= e((string) $domain['id']) ?>">
+                                <button class="gh-btn gh-btn-secondary gh-btn-sm" type="submit">Verificar DNS</button>
+                            </form>
+                            <?php if ($dnsOk): ?>
+                                <form method="post">
+                                    <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                                    <input type="hidden" name="action" value="create_site">
+                                    <input type="hidden" name="domain_id" value="<?= e((string) $domain['id']) ?>">
+                                    <button class="gh-btn gh-btn-primary gh-btn-sm" type="submit">Criar meu site</button>
+                                </form>
+                            <?php else: ?>
+                                <button class="gh-btn gh-btn-primary gh-btn-sm" type="button" disabled title="Aguarde o DNS">Criar meu site</button>
+                            <?php endif; ?>
+                        </div>
+                    </td>
+                </tr>
+            <?php endforeach; endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <article class="ns-card">
+        <div>
+            <h3 style="margin:0 0 4px;font-size:16px">Apontamento DNS (Nameservers)</h3>
+            <p class="panel-page-lead" style="padding:0;margin:0">Aponte o domínio para os nameservers GeekHost no seu registrador:</p>
+            <div class="ns-list">
+                <?php foreach ($nameservers as $ns): ?>
+                    <div class="ns-item">
+                        <code><?= e($ns) ?></code>
+                        <button type="button" class="gh-btn gh-btn-secondary gh-btn-sm" data-copy="<?= e($ns) ?>">Copiar</button>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <div class="ns-note">
+            <h3>Importante</h3>
+            <p>Após alterar os nameservers, a propagação DNS pode levar de <strong>2 a 72 horas</strong>. Use “Verificar DNS” para checar quando estiver pronto.</p>
+            <p style="margin:0;color:var(--gh-muted);font-size:13px">Este fluxo cadastra um domínio que você já possui. Não é registro/compra de domínio.</p>
+        </div>
+    </article>
 </section>
+
+<div class="gh-modal" data-modal="add-domain" hidden>
+    <div class="gh-modal-backdrop" data-modal-close></div>
+    <div class="gh-modal-panel" role="dialog" aria-modal="true" aria-labelledby="add-domain-title">
+        <?php if ($canAdd): ?>
+            <h2 id="add-domain-title">Cadastrar domínio</h2>
+            <p>Informe um domínio que você já possui. Depois, aponte o DNS para a GeekHost.</p>
+            <form method="post" class="gh-form">
+                <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                <input type="hidden" name="action" value="add">
+                <label>Domínio
+                    <input name="domain" type="text" placeholder="meusite.com.br" required maxlength="180">
+                </label>
+                <div class="gh-modal-actions">
+                    <button type="button" class="gh-btn gh-btn-secondary" data-modal-close>Cancelar</button>
+                    <button class="gh-btn gh-btn-primary" type="submit">Adicionar</button>
+                </div>
+            </form>
+        <?php else: ?>
+            <h2 id="add-domain-title">Limite do plano</h2>
+            <p>Você atingiu o limite de <?= (int) $maxDomains ?> domínio<?= $maxDomains === 1 ? '' : 's' ?> do <?= e((string) ($plan['name'] ?? $planCode)) ?>.</p>
+            <div class="gh-modal-actions">
+                <button type="button" class="gh-btn gh-btn-secondary" data-modal-close>Fechar</button>
+                <a class="gh-btn gh-btn-primary" href="<?= e(url('/planos.php')) ?>">Ver planos</a>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
 <?php require __DIR__ . '/_footer.php'; ?>

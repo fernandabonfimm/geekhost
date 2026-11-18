@@ -4,120 +4,230 @@ declare(strict_types=1);
 
 $panelTitle = 'Início';
 $panelSection = 'inicio';
+$panelLead = 'Acompanhe seus serviços, domínios e faturas em um só lugar.';
 require __DIR__ . '/_layout.php';
 require_once dirname(__DIR__) . '/includes/OrderService.php';
+require_once dirname(__DIR__) . '/includes/DomainSiteService.php';
+require_once dirname(__DIR__) . '/includes/plans.php';
 require_once dirname(__DIR__) . '/includes/db.php';
 
 $orders = new OrderService();
-$counts = $orders->invoiceCounts((int) $panelUser['id']);
+$domainSvc = new DomainSiteService();
+$userId = (int) $panelUser['id'];
+$counts = $orders->invoiceCounts($userId);
+$allInvoices = $orders->listInvoicesForUser($userId);
+$openAmount = 0.0;
+$paidAmount = 0.0;
+$overdueAmount = 0.0;
+foreach ($allInvoices as $inv) {
+    $amount = (float) ($inv['amount'] ?? 0);
+    $status = (string) ($inv['status'] ?? '');
+    if (in_array($status, ['awaiting_payment', 'overdue'], true)) {
+        $openAmount += $amount;
+        if ($status === 'overdue') {
+            $overdueAmount += $amount;
+        }
+    }
+    if ($status === 'paid_pending_provisioning') {
+        $paidAmount += $amount;
+    }
+}
+
+$domains = $domainSvc->listDomains($userId);
+$sites = $domainSvc->listSites($userId);
+$planCode = $domainSvc->resolveUserPlanCode($userId);
+$plan = geekhost_plan($planCode) ?? geekhost_plan('light');
+
 $pdo = geekhost_db();
-$services = $pdo->prepare('SELECT * FROM services WHERE user_id = :u ORDER BY id DESC LIMIT 8');
-$services->execute([':u' => $panelUser['id']]);
+$services = $pdo->prepare('SELECT * FROM services WHERE user_id = :u ORDER BY id DESC LIMIT 12');
+$services->execute([':u' => $userId]);
 $serviceRows = $services->fetchAll() ?: [];
+
 $firstName = explode(' ', (string) $panelUser['name'])[0] ?: 'cliente';
-$hostingLabel = match ((string) ($panelUser['hostingStatus'] ?? 'pending')) {
-    'active' => 'Ativo',
-    'suspended' => 'Suspenso',
-    default => 'Pendente',
+$hostingStatus = (string) ($panelUser['hostingStatus'] ?? 'pending');
+$hasCard = !empty($panelUser['cardLast4']);
+$pendingProvisioning = false;
+foreach ($serviceRows as $service) {
+    if ((string) ($service['status'] ?? '') === 'paid_pending_provisioning') {
+        $pendingProvisioning = true;
+        break;
+    }
+}
+if ($hostingStatus === 'pending' && $counts['pago'] > 0) {
+    $pendingProvisioning = true;
+}
+
+$fmtMoney = static function (float $n): string {
+    return 'R$ ' . number_format($n, 2, ',', '.');
 };
-$hostingClass = match ((string) ($panelUser['hostingStatus'] ?? 'pending')) {
-    'active' => 'is-ok',
-    'suspended' => 'is-bad',
-    default => 'is-warn',
+
+$statusLabel = static function (string $status): array {
+    return match ($status) {
+        'active', 'ready' => ['Ativo', 'ok'],
+        'paid_pending_provisioning' => ['Provisionando', 'warn'],
+        'suspended' => ['Suspenso', 'danger'],
+        default => ['Pendente', 'warn'],
+    };
 };
 ?>
 <section class="panel-home">
-    <div class="home-hero">
-        <div>
-            <p class="home-breadcrumb">Portal / Área do cliente</p>
-            <h2 class="home-greeting">Olá, <?= e($firstName) ?>!</h2>
-            <div class="home-stats">
-                <div><strong><?= count($serviceRows) ?></strong><span>Serviços</span></div>
-                <div><strong><?= (int) $counts['em_aberto'] ?></strong><span>Faturas abertas</span></div>
-                <div><strong><?= (int) $counts['pago'] ?></strong><span>Faturas pagas</span></div>
-                <div><strong class="home-status-pill <?= e($hostingClass) ?>"><?= e($hostingLabel) ?></strong><span>Hospedagem</span></div>
-            </div>
-        </div>
-        <div class="home-hero-actions">
-            <a class="button button-lime" href="<?= e(url('/planos.php')) ?>">+ Contratar</a>
-            <a class="button button-outline-dark" href="<?= e(url('/painel/faturas')) ?>">Ver faturas</a>
-        </div>
+    <div class="home-greeting-row">
+        <h2 class="home-greeting">Olá, <span><?= e($firstName) ?></span>!</h2>
+        <p class="home-sub">Bem-vindo à área do cliente GeekHost. Aqui você gerencia hospedagem, domínios e cobranças com dados reais da sua conta.</p>
     </div>
 
-    <div class="home-banner">
+    <article class="home-hero-banner">
         <div>
-            <p class="eyebrow">GeekHost</p>
-            <h3>Seu painel, do checkout à renovação</h3>
-            <ul>
-                <li>Faturas com filtros e detalhes</li>
-                <li>Carteira com cartão de renovação Asaas</li>
-                <li>Status real — sem ativar hospedagem fictícia</li>
+            <h2>Sua ideia no ar.<br><em>Seu projeto em crescimento.</em></h2>
+            <ul class="home-hero-pills">
+                <li><i data-lucide="server"></i> Hospedagem de alta performance</li>
+                <li><i data-lucide="shield-check"></i> Segurança e estabilidade</li>
+                <li><i data-lucide="zap"></i> Suporte especializado</li>
             </ul>
         </div>
-        <a class="button button-lime" href="<?= e(url('/painel/carteira')) ?>">Configurar carteira</a>
+        <img class="home-hero-art" src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="260" height="200">
+    </article>
+
+    <div class="home-kpi-grid">
+        <article class="gh-card home-kpi">
+            <div class="home-kpi-icon"><i data-lucide="layers"></i></div>
+            <p class="home-kpi-label">Sites hospedados</p>
+            <p class="home-kpi-value"><?= count($sites) ?></p>
+            <a class="home-kpi-action" href="<?= e(url('/painel/sites')) ?>">Gerenciar sites →</a>
+        </article>
+        <article class="gh-card home-kpi">
+            <div class="home-kpi-icon"><i data-lucide="globe-2"></i></div>
+            <p class="home-kpi-label">Domínios</p>
+            <p class="home-kpi-value"><?= count($domains) ?></p>
+            <a class="home-kpi-action" href="<?= e(url('/painel/dominios')) ?>">Gerenciar domínios →</a>
+        </article>
+        <article class="gh-card home-kpi">
+            <div class="home-kpi-icon"><i data-lucide="file-text"></i></div>
+            <p class="home-kpi-label">Faturas em aberto</p>
+            <p class="home-kpi-value"><?= e($fmtMoney($openAmount)) ?></p>
+            <a class="home-kpi-action" href="<?= e(url('/painel/faturas?status=em_aberto')) ?>">Ver faturas →</a>
+        </article>
+        <article class="gh-card home-kpi">
+            <div class="home-kpi-icon"><i data-lucide="credit-card"></i></div>
+            <p class="home-kpi-label">Cartão de renovação</p>
+            <p class="home-kpi-value" style="font-size:22px">
+                <?= $hasCard ? '•••• ' . e((string) $panelUser['cardLast4']) : 'Não cadastrado' ?>
+            </p>
+            <a class="home-kpi-action" href="<?= e(url('/painel/carteira')) ?>">
+                <?= $hasCard ? 'Gerenciar cartão →' : 'Adicionar cartão →' ?>
+            </a>
+        </article>
     </div>
 
-    <div class="home-grid">
-        <div class="home-col-main">
-            <article class="home-card">
-                <div class="home-card-head">
-                    <h3>Meus serviços</h3>
-                    <a href="<?= e(url('/planos.php')) ?>">Contratar</a>
+    <div class="home-split">
+        <article class="gh-card gh-card-pad">
+            <div class="gh-card-head">
+                <h3>Meus serviços</h3>
+                <a class="gh-link" href="<?= e(url('/planos.php')) ?>">Ver todos →</a>
+            </div>
+            <?php if ($serviceRows === [] && $sites === []): ?>
+                <div class="home-empty">
+                    <strong>Nenhum serviço provisionado</strong>
+                    <p>Após o pagamento, o pedido fica em fila até o provisionamento real. Nada é marcado como ativo antes disso.</p>
+                    <a class="gh-btn gh-btn-primary" href="<?= e(url('/planos.php')) ?>">Contratar hospedagem</a>
                 </div>
-                <?php if ($serviceRows === []): ?>
-                    <div class="home-empty">
-                        <p>Nenhum serviço provisionado ainda.</p>
-                        <p class="panel-lead">Após o pagamento, o pedido fica em fila (<code>paid_pending_provisioning</code>) até o provisionamento real.</p>
-                        <a class="button button-lime" href="<?= e(url('/planos.php')) ?>">Ver planos</a>
-                    </div>
-                <?php else: ?>
-                    <ul class="home-service-list">
-                        <?php foreach ($serviceRows as $service): ?>
-                            <li>
-                                <div>
-                                    <strong><?= e((string) $service['domain']) ?></strong>
-                                    <span><?= e((string) $service['plan_code']) ?></span>
-                                </div>
-                                <span class="panel-badge panel-badge-<?= e((string) $service['status'] === 'paid_pending_provisioning' ? 'em_aberto' : 'pago') ?>">
-                                    <?= e((string) $service['status']) ?>
-                                </span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-            </article>
+            <?php else: ?>
+                <div class="gh-table-wrap" style="box-shadow:none;border:0">
+                    <table class="gh-table" style="min-width:560px">
+                        <thead>
+                        <tr>
+                            <th>Serviço</th>
+                            <th>Plano</th>
+                            <th>Domínio</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php if ($serviceRows !== []): foreach ($serviceRows as $service):
+                            [$label, $tone] = $statusLabel((string) ($service['status'] ?? ''));
+                            $planName = geekhost_plan((string) $service['plan_code'])['name'] ?? (string) $service['plan_code'];
+                            ?>
+                            <tr>
+                                <td>
+                                    <div class="home-service-cell">
+                                        <span class="home-service-icon"><i data-lucide="server"></i></span>
+                                        <strong>Hospedagem</strong>
+                                    </div>
+                                </td>
+                                <td><?= e((string) $planName) ?></td>
+                                <td><?= e((string) ($service['domain'] ?: '—')) ?></td>
+                                <td><span class="gh-badge gh-badge-<?= e($tone) ?> gh-badge-dot"><?= e($label) ?></span></td>
+                                <td>
+                                    <?php if ((string) $service['status'] === 'paid_pending_provisioning'): ?>
+                                        <a class="gh-btn gh-btn-secondary gh-btn-sm" href="<?= e(url('/painel/faturas')) ?>">Acompanhar</a>
+                                    <?php else: ?>
+                                        <a class="gh-btn gh-btn-secondary gh-btn-sm" href="<?= e(url('/painel/sites')) ?>">Gerenciar</a>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; else: foreach ($sites as $site): ?>
+                            <tr>
+                                <td>
+                                    <div class="home-service-cell">
+                                        <span class="home-service-icon"><i data-lucide="layers"></i></span>
+                                        <strong>Site</strong>
+                                    </div>
+                                </td>
+                                <td><?= e((string) ($plan['name'] ?? $planCode)) ?></td>
+                                <td><?= e((string) $site['domain']) ?></td>
+                                <td><span class="gh-badge gh-badge-ok gh-badge-dot">Cadastrado</span></td>
+                                <td><a class="gh-btn gh-btn-secondary gh-btn-sm" href="<?= e(url('/painel/sites')) ?>">Gerenciar</a></td>
+                            </tr>
+                        <?php endforeach; endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </article>
 
-            <article class="home-card">
-                <div class="home-card-head">
-                    <h3>Atalhos rápidos</h3>
-                </div>
-                <div class="home-resources">
-                    <a href="<?= e(url('/painel/dominios')) ?>"><i class="bi bi-globe2"></i><strong>Domínios</strong><span>DNS ns1/ns2 GeekHost</span></a>
-                    <a href="<?= e(url('/painel/sites')) ?>"><i class="bi bi-window"></i><strong>Meus sites</strong><span>WordPress e admin</span></a>
-                    <a href="<?= e(url('/painel/faturas')) ?>"><i class="bi bi-receipt"></i><strong>Faturas</strong><span>Pagamentos e histórico</span></a>
-                    <a href="<?= e(url('/painel/carteira')) ?>"><i class="bi bi-credit-card-2-front"></i><strong>Carteira</strong><span>Cartão de renovação</span></a>
-                </div>
-            </article>
-        </div>
-
-        <aside class="home-col-side">
-            <article class="home-card">
-                <div class="home-card-head"><h3>Resumo financeiro</h3></div>
-                <ul class="home-mini-stats">
-                    <li><span>Em aberto</span><strong><?= (int) $counts['em_aberto'] ?></strong></li>
-                    <li><span>Pagas</span><strong><?= (int) $counts['pago'] ?></strong></li>
-                    <li><span>Total</span><strong><?= (int) $counts['total'] ?></strong></li>
-                </ul>
-                <a class="button button-outline-dark home-card-btn" href="<?= e(url('/painel/faturas')) ?>">Abrir faturamento</a>
-            </article>
-            <article class="home-card">
-                <div class="home-card-head"><h3>Suporte</h3></div>
-                <p class="panel-lead">Fale com a GeekHost pelo WhatsApp para dúvidas de conta, domínio ou provisionamento.</p>
+        <article class="gh-card gh-card-pad">
+            <div class="gh-card-head"><h3>Ações rápidas</h3></div>
+            <div class="home-quick">
+                <a href="<?= e(url('/planos.php')) ?>">
+                    <span class="home-quick-icon"><i data-lucide="plus"></i></span>
+                    <strong>Contratar hospedagem</strong>
+                </a>
+                <a href="<?= e(url('/painel/dominios')) ?>">
+                    <span class="home-quick-icon"><i data-lucide="globe-2"></i></span>
+                    <strong>Cadastrar domínio</strong>
+                </a>
+                <a href="<?= e(url('/painel/sites')) ?>">
+                    <span class="home-quick-icon"><i data-lucide="layers"></i></span>
+                    <strong>Criar novo site</strong>
+                </a>
                 <?php if (!empty($companyWhatsapp)): ?>
-                    <a class="button button-lime home-card-btn" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                    <a href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer">
+                        <span class="home-quick-icon"><i data-lucide="headset"></i></span>
+                        <strong>Abrir suporte</strong>
+                    </a>
+                <?php else: ?>
+                    <a href="<?= e(url('/')) ?>">
+                        <span class="home-quick-icon"><i data-lucide="headset"></i></span>
+                        <strong>Abrir suporte</strong>
+                    </a>
                 <?php endif; ?>
-            </article>
-        </aside>
+            </div>
+        </article>
     </div>
+
+    <?php if ($pendingProvisioning): ?>
+        <article class="gh-card home-provision">
+            <div class="home-provision-icon"><i data-lucide="loader-circle"></i></div>
+            <div class="home-provision-copy">
+                <strong>Provisionamento em andamento</strong>
+                <span>Seu serviço está sendo configurado. O processo pode levar alguns minutos — o status muda só após a confirmação real.</span>
+            </div>
+            <div class="home-provision-bar">
+                <div class="gh-progress" style="width:100%"><span style="width:60%"></span></div>
+                <small>Em fila</small>
+            </div>
+        </article>
+    <?php endif; ?>
 </section>
 <?php require __DIR__ . '/_footer.php'; ?>

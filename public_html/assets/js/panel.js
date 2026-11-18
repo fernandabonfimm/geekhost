@@ -2,20 +2,32 @@
     const body = document.body;
     if (!body || !body.hasAttribute('data-panel')) return;
 
+    const refreshIcons = () => {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refreshIcons);
+    } else {
+        refreshIcons();
+    }
+    window.addEventListener('load', refreshIcons);
+
+    const toastHost = document.querySelector('[data-toast-host]');
+    const toast = (message, type = 'ok') => {
+        if (!toastHost) return;
+        const el = document.createElement('div');
+        el.className = `gh-toast gh-alert gh-alert-${type === 'danger' ? 'danger' : 'ok'}`;
+        el.innerHTML = `<div>${message}</div>`;
+        toastHost.appendChild(el);
+        setTimeout(() => el.remove(), 4200);
+    };
+    window.ghToast = toast;
+
     const sidebar = document.querySelector('[data-sidebar]');
     const backdrop = document.querySelector('[data-sidebar-close]');
     const storageKey = 'gh_panel_sidebar_collapsed';
-    const themeKey = 'gh_panel_theme';
-
-    const setTheme = (theme) => {
-        const dark = theme === 'dark';
-        document.documentElement.classList.toggle('panel-theme-dark', dark);
-        try { localStorage.setItem(themeKey, dark ? 'dark' : 'light'); } catch (_) { /* ignore */ }
-    };
-    document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
-        const next = document.documentElement.classList.contains('panel-theme-dark') ? 'light' : 'dark';
-        setTheme(next);
-    });
 
     const setCollapsed = (collapsed) => {
         body.classList.toggle('is-collapsed', collapsed);
@@ -48,6 +60,122 @@
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeMobile();
         });
+    }
+
+    const account = document.querySelector('[data-account-menu]');
+    if (account) {
+        const btn = account.querySelector('[data-account-toggle]');
+        const menu = account.querySelector('[data-account-dropdown]');
+        btn?.addEventListener('click', () => {
+            const open = menu?.hidden === false;
+            if (menu) menu.hidden = open;
+            btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+        });
+        document.addEventListener('click', (e) => {
+            if (!account.contains(e.target) && menu) {
+                menu.hidden = true;
+                btn?.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    const searchForm = document.querySelector('[data-panel-search]');
+    if (searchForm) {
+        const input = searchForm.querySelector('input');
+        const results = searchForm.querySelector('[data-search-results]');
+        const links = Array.from(document.querySelectorAll('.panel-sidebar-nav a')).map((a) => ({
+            href: a.getAttribute('href'),
+            label: a.getAttribute('data-nav-label') || a.textContent.trim(),
+        }));
+        const render = (q) => {
+            if (!results) return;
+            const query = q.trim().toLowerCase();
+            if (!query) {
+                results.hidden = true;
+                results.innerHTML = '';
+                return;
+            }
+            const hits = links.filter((l) => l.label.toLowerCase().includes(query));
+            results.innerHTML = hits.length
+                ? hits.map((h) => `<a href="${h.href}">${h.label}</a>`).join('')
+                : '<a href="#">Nenhum resultado</a>';
+            results.hidden = false;
+            refreshIcons();
+        };
+        input?.addEventListener('input', () => render(input.value));
+        input?.addEventListener('focus', () => render(input.value));
+        document.addEventListener('click', (e) => {
+            if (!searchForm.contains(e.target) && results) results.hidden = true;
+        });
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const first = results?.querySelector('a[href]:not([href="#"])');
+            if (first) window.location.href = first.getAttribute('href');
+        });
+    }
+
+    document.querySelector('[data-toast-demo]')?.addEventListener('click', () => {
+        toast('Sem novas notificações no momento.');
+    });
+
+    document.querySelectorAll('[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const value = btn.getAttribute('data-copy') || '';
+            try {
+                await navigator.clipboard.writeText(value);
+                toast(`Copiado: ${value}`);
+            } catch (_) {
+                toast('Não foi possível copiar.', 'danger');
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-modal-open]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-modal-open');
+            const modal = document.querySelector(`[data-modal="${id}"]`);
+            if (modal) modal.hidden = false;
+        });
+    });
+    document.querySelectorAll('[data-modal-close]').forEach((el) => {
+        el.addEventListener('click', () => {
+            const modal = el.closest('[data-modal]');
+            if (modal) modal.hidden = true;
+        });
+    });
+
+    document.querySelectorAll('[data-profile-tabs]').forEach((root) => {
+        const tabs = root.querySelectorAll('[data-profile-tab]');
+        const panels = root.querySelectorAll('[data-profile-panel]');
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-profile-tab');
+                tabs.forEach((t) => t.classList.toggle('is-active', t === tab));
+                panels.forEach((p) => {
+                    p.hidden = p.getAttribute('data-profile-panel') !== target;
+                });
+            });
+        });
+    });
+
+    const domainFilter = document.querySelector('[data-domain-filter]');
+    if (domainFilter) {
+        const input = domainFilter.querySelector('input[type="search"]');
+        const status = domainFilter.querySelector('select');
+        const rows = Array.from(document.querySelectorAll('[data-domain-row]'));
+        const apply = () => {
+            const q = (input?.value || '').trim().toLowerCase();
+            const st = status?.value || '';
+            rows.forEach((row) => {
+                const domain = (row.getAttribute('data-domain') || '').toLowerCase();
+                const dns = row.getAttribute('data-dns') || '';
+                const matchQ = !q || domain.includes(q);
+                const matchS = !st || dns === st;
+                row.hidden = !(matchQ && matchS);
+            });
+        };
+        input?.addEventListener('input', apply);
+        status?.addEventListener('change', apply);
     }
 
     const root = document.querySelector('[data-invoices]');
@@ -84,12 +212,13 @@
                     <div><dt>Pago em</dt><dd>${invoice.paidAtLabel || invoice.paidAt || '—'}</dd></div>
                 </dl>
             </section>
-            ${invoice.invoiceUrl ? `<section class="invoice-section"><a class="button button-lime" href="${invoice.invoiceUrl}" target="_blank" rel="noopener noreferrer">Abrir fatura Asaas</a></section>` : ''}
-            ${invoice.boleto?.url ? `<section class="invoice-section"><a class="button button-outline-dark" href="${invoice.boleto.url}" target="_blank" rel="noopener noreferrer">Abrir boleto</a></section>` : ''}
-            ${invoice.pix?.copyPaste ? `<section class="invoice-section"><h3>Pix copia e cola</h3><textarea readonly rows="4" style="width:100%;border:1px solid #dfe2e5;padding:12px">${invoice.pix.copyPaste}</textarea></section>` : ''}
+            ${invoice.invoiceUrl ? `<section class="invoice-section"><a class="gh-btn gh-btn-primary" href="${invoice.invoiceUrl}" target="_blank" rel="noopener noreferrer">Abrir fatura Asaas</a></section>` : ''}
+            ${invoice.boleto?.url ? `<section class="invoice-section"><a class="gh-btn gh-btn-secondary" href="${invoice.boleto.url}" target="_blank" rel="noopener noreferrer">Abrir boleto</a></section>` : ''}
+            ${invoice.pix?.copyPaste ? `<section class="invoice-section"><h3>Pix copia e cola</h3><textarea readonly rows="4" style="width:100%;border:1px solid #e5e9ef;border-radius:10px;padding:12px">${invoice.pix.copyPaste}</textarea></section>` : ''}
         `;
         drawer.hidden = false;
         document.body.style.overflow = 'hidden';
+        refreshIcons();
     };
 
     const close = () => {

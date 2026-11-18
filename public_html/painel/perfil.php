@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 $panelTitle = 'Perfil';
 $panelSection = 'perfil';
+$panelLead = 'Dados da conta, endereço, segurança e preferências.';
 require __DIR__ . '/_layout.php';
 
 $message = '';
 $error = '';
+$activeTab = 'dados';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_validate($_POST['csrf'] ?? null)) {
@@ -16,9 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $action = (string) ($_POST['action'] ?? 'profile');
             if ($action === 'password') {
+                $activeTab = 'seguranca';
                 $auth->changePassword((int) $panelUser['id'], (string) ($_POST['current_password'] ?? ''), (string) ($_POST['new_password'] ?? ''));
                 $message = 'Senha atualizada.';
             } else {
+                $activeTab = (string) ($_POST['tab'] ?? 'dados');
+                if (!in_array($activeTab, ['dados', 'endereco', 'preferencias'], true)) {
+                    $activeTab = 'dados';
+                }
                 $photoPath = $panelUser['photoPath'] ?? null;
                 if (!empty($_FILES['photo']['tmp_name']) && is_uploaded_file($_FILES['photo']['tmp_name'])) {
                     $ext = strtolower(pathinfo((string) $_FILES['photo']['name'], PATHINFO_EXTENSION));
@@ -55,53 +62,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$nameParts = preg_split('/\s+/', trim((string) ($panelUser['name'] ?? ''))) ?: [];
+$initials = strtoupper(substr((string) ($nameParts[0] ?? 'G'), 0, 1) . substr((string) ($nameParts[1] ?? 'H'), 0, 1));
 ?>
-<section class="panel-profile">
-    <p class="panel-lead">Dados da conta. Cartão de renovação fica em <a href="<?= e(url('/painel/carteira')) ?>">Carteira</a>.</p>
-    <?php if ($message): ?><p class="panel-alert panel-alert-ok"><?= e($message) ?></p><?php endif; ?>
-    <?php if ($error): ?><p class="panel-alert panel-alert-danger"><?= e($error) ?></p><?php endif; ?>
+<section class="panel-profile" data-profile-tabs>
+    <?php if ($message): ?><div class="gh-alert gh-alert-ok"><i data-lucide="check-circle-2"></i><div><?= e($message) ?></div></div><?php endif; ?>
+    <?php if ($error): ?><div class="gh-alert gh-alert-danger"><i data-lucide="triangle-alert"></i><div><?= e($error) ?></div></div><?php endif; ?>
 
-    <div class="panel-profile-grid">
-        <form method="post" enctype="multipart/form-data" class="panel-form panel-form-wide">
-            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-            <input type="hidden" name="action" value="profile">
-            <h2>Dados pessoais</h2>
+    <div class="profile-tabs" role="tablist">
+        <button type="button" class="profile-tab <?= $activeTab === 'dados' ? 'is-active' : '' ?>" data-profile-tab="dados">Dados pessoais</button>
+        <button type="button" class="profile-tab <?= $activeTab === 'endereco' ? 'is-active' : '' ?>" data-profile-tab="endereco">Endereço</button>
+        <button type="button" class="profile-tab <?= $activeTab === 'seguranca' ? 'is-active' : '' ?>" data-profile-tab="seguranca">Segurança</button>
+        <button type="button" class="profile-tab <?= $activeTab === 'preferencias' ? 'is-active' : '' ?>" data-profile-tab="preferencias">Preferências</button>
+    </div>
+
+    <div class="profile-layout">
+        <aside class="gh-card profile-summary">
             <?php if (!empty($panelUser['photoPath'])): ?>
-                <img class="panel-avatar" src="<?= e(asset((string) $panelUser['photoPath'])) ?>" alt="" width="88" height="88">
+                <img class="profile-avatar" src="<?= e(asset((string) $panelUser['photoPath'])) ?>" alt="" width="96" height="96">
+            <?php else: ?>
+                <span class="profile-avatar-fallback"><?= e($initials) ?></span>
             <?php endif; ?>
-            <label>Foto<input type="file" name="photo" accept="image/png,image/jpeg,image/webp"></label>
-            <div class="checkout-grid-2">
-                <label>Nome<input name="name" value="<?= e((string) $panelUser['name']) ?>" required></label>
-                <label>E-mail<input type="email" name="email" value="<?= e((string) $panelUser['email']) ?>" required></label>
-            </div>
-            <div class="checkout-grid-2">
-                <label>Telefone<input name="phone" value="<?= e((string) $panelUser['phone']) ?>"></label>
-                <label>Celular<input name="mobilePhone" value="<?= e((string) $panelUser['mobilePhone']) ?>"></label>
-            </div>
-            <hr class="panel-divider">
-            <h2>Endereço</h2>
-            <div class="checkout-grid-2">
-                <label>CEP<input name="postalCode" value="<?= e((string) $panelUser['postalCode']) ?>"></label>
-                <label>Número<input name="addressNumber" value="<?= e((string) $panelUser['addressNumber']) ?>"></label>
-            </div>
-            <label>Endereço<input name="address" value="<?= e((string) $panelUser['address']) ?>"></label>
-            <label>Complemento<input name="complement" value="<?= e((string) $panelUser['complement']) ?>"></label>
-            <div class="checkout-grid-2">
-                <label>Cidade<input name="city" value="<?= e((string) $panelUser['city']) ?>"></label>
-                <label>UF<input name="province" value="<?= e((string) $panelUser['province']) ?>" maxlength="2"></label>
-            </div>
-            <button class="button button-lime" type="submit">Salvar perfil</button>
-        </form>
+            <strong><?= e((string) ($panelUser['name'] ?: 'Cliente')) ?></strong>
+            <span style="color:var(--gh-muted);font-size:13px"><?= e((string) $panelUser['email']) ?></span>
+            <span class="gh-badge gh-badge-ok">Cliente GeekHost</span>
+            <a class="gh-link" href="<?= e(url('/painel/carteira')) ?>">Ir para carteira →</a>
+        </aside>
 
-        <form method="post" class="panel-form">
-            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-            <input type="hidden" name="action" value="password">
-            <h2>Senha</h2>
-            <label>Senha atual<input type="password" name="current_password" required></label>
-            <label>Nova senha<input type="password" name="new_password" required minlength="8"></label>
-            <button class="button button-dark" type="submit">Atualizar senha</button>
-            <a class="button button-outline-dark" href="<?= e(url('/painel/carteira')) ?>">Ir para carteira</a>
-        </form>
+        <div>
+            <form method="post" enctype="multipart/form-data" class="gh-card profile-panel" data-profile-panel="dados" <?= $activeTab === 'dados' ? '' : 'hidden' ?>>
+                <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                <input type="hidden" name="action" value="profile">
+                <input type="hidden" name="tab" value="dados">
+                <h2 style="margin:0 0 14px;font-size:16px">Informações pessoais</h2>
+                <div class="gh-form">
+                    <label>Foto de perfil<input type="file" name="photo" accept="image/png,image/jpeg,image/webp"></label>
+                    <div class="checkout-grid-2">
+                        <label>Nome completo<input name="name" value="<?= e((string) $panelUser['name']) ?>" required></label>
+                        <label>E-mail<input type="email" name="email" value="<?= e((string) $panelUser['email']) ?>" required></label>
+                    </div>
+                    <div class="checkout-grid-2">
+                        <label>Telefone<input name="phone" value="<?= e((string) $panelUser['phone']) ?>"></label>
+                        <label>Celular<input name="mobilePhone" value="<?= e((string) $panelUser['mobilePhone']) ?>"></label>
+                    </div>
+                    <div class="profile-panel-actions">
+                        <button class="gh-btn gh-btn-primary" type="submit"><i data-lucide="check"></i> Salvar alterações</button>
+                    </div>
+                </div>
+            </form>
+
+            <form method="post" enctype="multipart/form-data" class="gh-card profile-panel" data-profile-panel="endereco" <?= $activeTab === 'endereco' ? '' : 'hidden' ?>>
+                <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                <input type="hidden" name="action" value="profile">
+                <input type="hidden" name="tab" value="endereco">
+                <input type="hidden" name="name" value="<?= e((string) $panelUser['name']) ?>">
+                <input type="hidden" name="email" value="<?= e((string) $panelUser['email']) ?>">
+                <input type="hidden" name="phone" value="<?= e((string) $panelUser['phone']) ?>">
+                <input type="hidden" name="mobilePhone" value="<?= e((string) $panelUser['mobilePhone']) ?>">
+                <h2 style="margin:0 0 14px;font-size:16px">Endereço</h2>
+                <div class="gh-form">
+                    <div class="checkout-grid-2">
+                        <label>CEP<input name="postalCode" value="<?= e((string) $panelUser['postalCode']) ?>"></label>
+                        <label>Número<input name="addressNumber" value="<?= e((string) $panelUser['addressNumber']) ?>"></label>
+                    </div>
+                    <label>Endereço<input name="address" value="<?= e((string) $panelUser['address']) ?>"></label>
+                    <label>Complemento<input name="complement" value="<?= e((string) $panelUser['complement']) ?>"></label>
+                    <div class="checkout-grid-2">
+                        <label>Cidade<input name="city" value="<?= e((string) $panelUser['city']) ?>"></label>
+                        <label>UF<input name="province" value="<?= e((string) $panelUser['province']) ?>" maxlength="2"></label>
+                    </div>
+                    <div class="profile-panel-actions">
+                        <button class="gh-btn gh-btn-primary" type="submit"><i data-lucide="check"></i> Salvar endereço</button>
+                    </div>
+                </div>
+            </form>
+
+            <form method="post" class="gh-card profile-panel" data-profile-panel="seguranca" <?= $activeTab === 'seguranca' ? '' : 'hidden' ?>>
+                <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                <input type="hidden" name="action" value="password">
+                <h2 style="margin:0 0 14px;font-size:16px">Segurança</h2>
+                <div class="gh-form">
+                    <label>Senha atual<input type="password" name="current_password" required autocomplete="current-password"></label>
+                    <label>Nova senha<input type="password" name="new_password" required minlength="8" autocomplete="new-password"></label>
+                    <p style="margin:0;color:var(--gh-muted);font-size:13px">Use pelo menos 8 caracteres. O cartão de renovação fica em Carteira.</p>
+                    <div class="profile-panel-actions">
+                        <button class="gh-btn gh-btn-dark" type="submit">Atualizar senha</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="gh-card profile-panel" data-profile-panel="preferencias" <?= $activeTab === 'preferencias' ? '' : 'hidden' ?>>
+                <h2 style="margin:0 0 14px;font-size:16px">Preferências</h2>
+                <p style="margin:0 0 12px;color:var(--gh-muted);font-size:14px;line-height:1.5">
+                    Preferências avançadas de notificação serão liberadas quando o backend correspondente estiver disponível.
+                    Por enquanto, use o menu da conta e o WhatsApp de suporte.
+                </p>
+                <?php if (!empty($companyWhatsapp)): ?>
+                    <a class="gh-btn gh-btn-primary" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer">Falar com suporte</a>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </section>
 <?php require __DIR__ . '/_footer.php'; ?>
