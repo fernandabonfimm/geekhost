@@ -123,7 +123,6 @@
         const hasFilters = state.filters.q || state.filters.status || state.filters.category;
         return `
             <div class="support-empty">
-                <img src="${esc(root.querySelector('.support-hero-mascots')?.src || '')}" alt="" width="180" height="130">
                 <strong>${hasFilters ? 'Nenhum resultado encontrado' : 'Você ainda não abriu nenhum chamado'}</strong>
                 <p>${hasFilters ? 'Ajuste a busca ou os filtros e tente novamente.' : 'Nossa equipe está pronta para ajudar!'}</p>
                 ${hasFilters ? '' : '<button type="button" class="gh-btn gh-btn-primary" data-open-create>Abrir meu primeiro ticket</button>'}
