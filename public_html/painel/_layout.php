@@ -40,6 +40,15 @@ $isAuthPage = !$requireAuth;
     <link rel="stylesheet" href="<?= e(asset('assets/css/site.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset('assets/css/panel.css')) ?>">
 </head>
+<script>
+(() => {
+    try {
+        if (localStorage.getItem('gh_panel_theme') === 'dark') {
+            document.documentElement.classList.add('panel-theme-dark');
+        }
+    } catch (_) {}
+})();
+</script>
 <body class="panel-body<?= $isAuthPage ? ' is-auth' : '' ?>" data-panel>
 <?php if (!$isAuthPage): ?>
 <aside class="panel-sidebar" data-sidebar>
@@ -84,7 +93,13 @@ $isAuthPage = !$requireAuth;
             <p class="eyebrow">Área do cliente</p>
             <h1><?= e($panelTitle) ?></h1>
         </div>
-        <!-- <a class="panel-topbar-site" href="<?= e(url('/')) ?>">Voltar ao site</a> -->
+        <div class="panel-topbar-actions">
+            <a class="panel-topbar-site" href="<?= e(url('/')) ?>">Site</a>
+            <button type="button" class="panel-theme-toggle" data-theme-toggle aria-label="Alternar tema claro ou escuro" title="Tema">
+                <i class="bi bi-moon-stars panel-theme-icon-moon" aria-hidden="true"></i>
+                <i class="bi bi-sun panel-theme-icon-sun" aria-hidden="true"></i>
+            </button>
+        </div>
     </header>
     <main class="panel-main">
         <?php if (($panelUser['hostingStatus'] ?? '') === 'suspended'): ?>

@@ -5,6 +5,17 @@
     const sidebar = document.querySelector('[data-sidebar]');
     const backdrop = document.querySelector('[data-sidebar-close]');
     const storageKey = 'gh_panel_sidebar_collapsed';
+    const themeKey = 'gh_panel_theme';
+
+    const setTheme = (theme) => {
+        const dark = theme === 'dark';
+        document.documentElement.classList.toggle('panel-theme-dark', dark);
+        try { localStorage.setItem(themeKey, dark ? 'dark' : 'light'); } catch (_) { /* ignore */ }
+    };
+    document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+        const next = document.documentElement.classList.contains('panel-theme-dark') ? 'light' : 'dark';
+        setTheme(next);
+    });
 
     const setCollapsed = (collapsed) => {
         body.classList.toggle('is-collapsed', collapsed);
