@@ -46,6 +46,8 @@
     const showStep = (n, { completedUntil = null } = {}) => {
         step = n;
         maxReached = Math.max(maxReached, n);
+        if (form) form.hidden = n === 4;
+        if (result) result.hidden = n !== 4;
         root.querySelectorAll('[data-step]').forEach((el) => {
             el.hidden = Number(el.getAttribute('data-step')) !== n;
         });
@@ -65,6 +67,29 @@
         });
         refreshIcons();
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const resetSubmit = () => {
+        submitting = false;
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitLabel) submitLabel.textContent = 'Finalizar pedido';
+    };
+
+    const rememberOrder = (orderId) => {
+        if (!orderId) return;
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('order', orderId);
+            window.history.replaceState({}, '', url.toString());
+        } catch (_) { /* ignore */ }
+    };
+
+    let pollTimer = null;
+    const stopPoll = () => {
+        if (pollTimer) {
+            window.clearInterval(pollTimer);
+            pollTimer = null;
+        }
     };
 
     const syncSummary = () => {
@@ -211,8 +236,8 @@
     };
 
     const renderResult = (order) => {
-        form.hidden = true;
-        result.hidden = false;
+        if (!order || !result) return;
+        rememberOrder(order.id);
         showStep(4, { completedUntil: order.status === 'paid_pending_provisioning' ? 4 : 3 });
 
         const paid = order.status === 'paid_pending_provisioning';
@@ -220,12 +245,13 @@
         const refused = ['canceled', 'refunded'].includes(order.status);
 
         setHero(
-            paid ? 'Pedido concluído!' : pending ? 'Pedido recebido' : refused ? 'Pagamento não confirmado' : 'Pedido criado',
-            paid ? 'Sua hospedagem foi contratada com sucesso.' : 'Acompanhe o status real do pagamento.',
+            paid ? 'Pedido concluído!' : order.billingType === 'PIX' ? 'Pague com Pix' : pending ? 'Pedido recebido' : refused ? 'Pagamento não confirmado' : 'Pedido criado',
+            paid ? 'Sua hospedagem foi contratada com sucesso.' : 'Conclua o pagamento nesta etapa para liberar o painel.',
             'Checkout GeekHost'
         );
 
-        result.querySelector('[data-order-id]').textContent = order.id;
+        const orderIdEl = result.querySelector('[data-order-id]');
+        if (orderIdEl) orderIdEl.textContent = order.id || '—';
         const title = result.querySelector('[data-result-title]');
         const status = result.querySelector('[data-result-status]');
         const panelCta = result.querySelector('[data-panel-cta]');
@@ -235,11 +261,11 @@
 
         if (paid) {
             setConfirmVisual('ok');
-            title.textContent = 'Pagamento aprovado!';
-            status.textContent = 'Estamos preparando sua hospedagem. O provisionamento real pode levar alguns minutos — o painel não marca o serviço como ativo antes disso.';
+            if (title) title.textContent = 'Pagamento aprovado!';
+            if (status) status.textContent = 'Estamos preparando sua hospedagem. Agora crie a senha do painel para acessar sua conta.';
             if (panelCta) {
                 panelCta.href = root.dataset.panelUrl || root.dataset.loginUrl;
-                panelCta.textContent = 'Acessar minha área do cliente';
+                panelCta.textContent = 'Ir para o painel';
             }
             if (paidBox) {
                 paidBox.hidden = false;
@@ -248,65 +274,122 @@
             }
         } else if (pending) {
             setConfirmVisual('warn');
-            title.textContent = 'Aguardando confirmação do pagamento';
-            status.textContent = 'Seu pedido foi recebido. Estamos aguardando a confirmação do pagamento.';
+            if (title) {
+                title.textContent = order.billingType === 'PIX'
+                    ? 'Quase lá — finalize o Pix'
+                    : order.billingType === 'BOLETO'
+                        ? 'Boleto gerado'
+                        : 'Aguardando confirmação do pagamento';
+            }
+            if (status) {
+                status.textContent = order.billingType === 'PIX'
+                    ? 'Use o QR Code ou o código copia e cola abaixo. Assim que o Pix for confirmado, liberamos a criação da senha.'
+                    : 'Seu pedido foi recebido. Estamos aguardando a confirmação do pagamento.';
+            }
             if (panelCta) {
                 panelCta.href = root.dataset.loginUrl;
-                panelCta.textContent = 'Ir para o login do painel';
+                panelCta.textContent = 'Já tenho senha — ir ao login';
             }
         } else if (refused) {
             setConfirmVisual('danger');
-            title.textContent = 'Não foi possível confirmar seu pagamento';
-            status.textContent = `Status: ${order.statusLabel || order.status}. Você pode iniciar um novo checkout com o mesmo plano.`;
+            if (title) title.textContent = 'Não foi possível confirmar seu pagamento';
+            if (status) status.textContent = `Status: ${order.statusLabel || order.status}. Você pode iniciar um novo checkout com o mesmo plano.`;
             if (panelCta) {
-                panelCta.href = window.location.pathname + window.location.search;
+                const url = new URL(window.location.href);
+                url.searchParams.delete('order');
+                panelCta.href = url.pathname + url.search;
                 panelCta.textContent = 'Tentar novamente';
             }
         } else {
             setConfirmVisual('warn');
-            title.textContent = 'Pedido criado';
-            status.textContent = `Status: ${order.statusLabel || order.status}`;
+            if (title) title.textContent = 'Pedido criado';
+            if (status) status.textContent = `Status: ${order.statusLabel || order.status}`;
         }
 
         const pixBox = result.querySelector('[data-result-pix]');
         const boletoBox = result.querySelector('[data-result-boleto]');
         const cardBox = result.querySelector('[data-result-card]');
-        pixBox.hidden = true; boletoBox.hidden = true; cardBox.hidden = true;
+        if (pixBox) pixBox.hidden = true;
+        if (boletoBox) boletoBox.hidden = true;
+        if (cardBox) cardBox.hidden = true;
 
         if (order.passwordSetupUrl) setupUrl = order.passwordSetupUrl;
-        if (setupLink && setupUrl) {
-            setupLink.href = setupUrl;
-            setupLink.hidden = !paid;
+        if (setupLink) {
+            if (setupUrl) {
+                setupLink.href = setupUrl;
+                setupLink.hidden = !paid;
+                setupLink.className = paid ? 'co-btn co-btn-primary' : 'co-btn co-btn-ghost';
+                if (panelCta) panelCta.className = paid ? 'co-btn co-btn-ghost' : 'co-btn co-btn-ghost';
+            } else {
+                setupLink.hidden = true;
+            }
         }
         if (setupHint) {
             setupHint.hidden = !(setupUrl && !paid);
         }
 
-        if (order.billingType === 'PIX' && !paid) {
+        if (order.billingType === 'PIX' && !paid && pixBox) {
             pixBox.hidden = false;
             const img = result.querySelector('[data-pix-image]');
-            if (order.pix?.qrCodeBase64) {
-                img.src = `data:image/png;base64,${order.pix.qrCodeBase64}`;
-                img.hidden = false;
-            } else img.hidden = true;
-            result.querySelector('[data-pix-copy]').value = order.pix?.copyPaste || '';
+            const copy = result.querySelector('[data-pix-copy]');
+            const waiting = result.querySelector('[data-pix-waiting]');
+            const hasQr = Boolean(order.pix?.qrCodeBase64);
+            const hasCopy = Boolean(order.pix?.copyPaste);
+            if (img) {
+                if (hasQr) {
+                    img.src = `data:image/png;base64,${order.pix.qrCodeBase64}`;
+                    img.hidden = false;
+                } else {
+                    img.hidden = true;
+                }
+            }
+            if (copy) copy.value = order.pix?.copyPaste || '';
+            if (waiting) waiting.hidden = hasQr || hasCopy;
         }
-        if (order.billingType === 'BOLETO' && !paid) {
+        if (order.billingType === 'BOLETO' && !paid && boletoBox) {
             boletoBox.hidden = false;
-            result.querySelector('[data-boleto-link]').href = order.boleto?.url || order.invoiceUrl || '#';
-            result.querySelector('[data-boleto-line]').textContent = order.boleto?.identificationField || '';
+            const link = result.querySelector('[data-boleto-link]');
+            const line = result.querySelector('[data-boleto-line]');
+            if (link) link.href = order.boleto?.url || order.invoiceUrl || '#';
+            if (line) line.textContent = order.boleto?.identificationField || '';
         }
-        if (order.billingType === 'CREDIT_CARD') {
+        if (order.billingType === 'CREDIT_CARD' && cardBox) {
             cardBox.hidden = false;
-            result.querySelector('[data-card-msg]').textContent = paid
-                ? 'Pagamento confirmado. Crie sua senha para acessar o painel.'
-                : 'Pagamento em análise.';
+            const msg = result.querySelector('[data-card-msg]');
+            if (msg) {
+                msg.textContent = paid
+                    ? 'Pagamento confirmado. Vamos te levar para criar a senha do painel.'
+                    : 'Pagamento em análise. Assim que confirmar, você poderá criar a senha.';
+            }
         }
 
         if (paid && setupUrl) {
-            window.setTimeout(() => { window.location.href = setupUrl; }, 1600);
+            window.setTimeout(() => { window.location.href = setupUrl; }, 1200);
         }
         refreshIcons();
+    };
+
+    const startPaymentPoll = (orderId) => {
+        stopPoll();
+        if (!orderId) return;
+        let ticks = 0;
+        pollTimer = window.setInterval(async () => {
+            ticks += 1;
+            if (ticks > 180) {
+                stopPoll();
+                return;
+            }
+            try {
+                const st = await fetch(`${root.dataset.statusUrl}?id=${encodeURIComponent(orderId)}`, { credentials: 'same-origin' });
+                const body = await st.json();
+                if (!body.ok || !body.order) return;
+                if (setupUrl) body.order.passwordSetupUrl = setupUrl;
+                renderResult(body.order);
+                if (body.order.status === 'paid_pending_provisioning') {
+                    stopPoll();
+                }
+            } catch (_) { /* keep polling */ }
+        }, 4000);
     };
 
     result.querySelector('[data-copy-pix]')?.addEventListener('click', async () => {
@@ -378,45 +461,69 @@
             };
         }
 
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller ? window.setTimeout(() => controller.abort(), 45000) : null;
+
         try {
             const response = await fetch(root.dataset.createUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 body: JSON.stringify(payload),
                 credentials: 'same-origin',
+                signal: controller?.signal,
             });
-            const data = await response.json();
-            if (!response.ok || !data.ok) throw new Error(data.error || 'Não foi possível concluir o checkout.');
-            form.cardNumber.value = '';
-            form.cardCcv.value = '';
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (_) {
+                throw new Error('Resposta inválida do servidor. Recarregue e tente novamente.');
+            }
+            if (!response.ok || !data?.ok || !data.order) {
+                throw new Error(data?.error || 'Não foi possível concluir o checkout.');
+            }
+            if (form.cardNumber) form.cardNumber.value = '';
+            if (form.cardCcv) form.cardCcv.value = '';
             if (data.order.passwordSetupUrl) setupUrl = data.order.passwordSetupUrl;
             toast('Pedido criado com sucesso.');
             renderResult(data.order);
-            if (data.order.billingType === 'PIX' || data.order.billingType === 'BOLETO') {
-                const poll = window.setInterval(async () => {
-                    try {
-                        const st = await fetch(`${root.dataset.statusUrl}?id=${encodeURIComponent(data.order.id)}`, { credentials: 'same-origin' });
-                        const body = await st.json();
-                        if (body.ok && body.order?.status === 'paid_pending_provisioning') {
-                            window.clearInterval(poll);
-                            if (setupUrl) body.order.passwordSetupUrl = setupUrl;
-                            renderResult(body.order);
-                        }
-                    } catch (_) { /* ignore */ }
-                }, 5000);
-                window.setTimeout(() => window.clearInterval(poll), 15 * 60 * 1000);
+            if (data.order.billingType === 'PIX' || data.order.billingType === 'BOLETO' || data.order.status !== 'paid_pending_provisioning') {
+                startPaymentPoll(data.order.id);
             }
         } catch (error) {
-            showError(error.message || 'Erro inesperado.');
-            toast(error.message || 'Erro no checkout.', 'danger');
-            submitting = false;
-            submitBtn.disabled = false;
-            if (submitLabel) submitLabel.textContent = 'Finalizar pedido';
+            const message = error?.name === 'AbortError'
+                ? 'O pagamento está demorando. Se o Pix foi gerado, recarregue a página em alguns segundos.'
+                : (error.message || 'Erro inesperado.');
+            showError(message);
+            toast(message, 'danger');
+            showStep(3);
+        } finally {
+            if (timeoutId) window.clearTimeout(timeoutId);
+            resetSubmit();
         }
     });
 
     syncSummary();
     syncPayDetail();
-    showStep(1);
+
+    // Resume confirmation step when returning with ?order=
+    const resumeOrder = new URLSearchParams(window.location.search).get('order');
+    if (resumeOrder && /^[a-f0-9-]{36}$/i.test(resumeOrder)) {
+        (async () => {
+            try {
+                const st = await fetch(`${root.dataset.statusUrl}?id=${encodeURIComponent(resumeOrder)}`, { credentials: 'same-origin' });
+                const body = await st.json();
+                if (body.ok && body.order) {
+                    renderResult(body.order);
+                    if (body.order.status !== 'paid_pending_provisioning') {
+                        startPaymentPoll(body.order.id);
+                    }
+                    return;
+                }
+            } catch (_) { /* fall through */ }
+            showStep(1);
+        })();
+    } else {
+        showStep(1);
+    }
     refreshIcons();
 })();
