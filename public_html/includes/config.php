@@ -17,7 +17,11 @@ function e(string $value): string
 
 /**
  * App base path when public_html is not the Apache DocumentRoot
- * (e.g. XAMPP junction → /geekhost/public_html). Empty string when DocumentRoot is public_html.
+ * (e.g. XAMPP junction → /geekhost/public_html). Empty when DocumentRoot is public_html
+ * (php -S -t public_html, or geekhost.test vhost).
+ *
+ * Live HTTP requests always win over GEEKHOST_BASE_PATH so the same .env works for
+ * both XAMPP subfolder and php -S on :8890.
  */
 function geekhost_base_path(): string
 {
@@ -28,16 +32,21 @@ function geekhost_base_path(): string
     }
     $resolved = true;
 
-    $configured = trim((string) env('GEEKHOST_BASE_PATH', ''), "/ \t");
-    if ($configured !== '') {
-        $base = '/' . str_replace('\\', '/', $configured);
+    $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    if ($script !== '') {
+        if (preg_match('#^(.*?)/public_html(?:/|$)#', $script, $m) === 1) {
+            $prefix = rtrim((string) $m[1], '/');
+            $base = ($prefix === '' ? '' : $prefix) . '/public_html';
+            return $base;
+        }
+        // DocumentRoot === public_html
+        $base = '';
         return $base;
     }
 
-    $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-    if (preg_match('#^(.*?)/public_html(?:/|$)#', $script, $m) === 1) {
-        $prefix = rtrim((string) $m[1], '/');
-        $base = ($prefix === '' ? '' : $prefix) . '/public_html';
+    $configured = trim((string) env('GEEKHOST_BASE_PATH', ''), "/ \t");
+    if ($configured !== '') {
+        $base = '/' . str_replace('\\', '/', $configured);
         return $base;
     }
 
