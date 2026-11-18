@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/crypto.php';
 require_once __DIR__ . '/logger.php';
 
 final class TicketService
@@ -673,11 +674,16 @@ final class TicketService
         $size = (int) ($file['size'] ?? 0);
         $tmp = (string) ($file['tmp'] ?? '');
         $name = basename((string) ($file['name'] ?? 'arquivo'));
-        if ($tmp === '' || !is_uploaded_file($tmp) && !is_file($tmp)) {
+        if ($tmp === '' || (!is_uploaded_file($tmp) && !is_file($tmp))) {
             throw new InvalidArgumentException('Arquivo inválido.');
         }
         if ($size <= 0 || $size > self::MAX_BYTES) {
             throw new InvalidArgumentException('Cada anexo deve ter no máximo 5 MB.');
+        }
+        $blockedExt = ['php', 'phtml', 'phar', 'exe', 'bat', 'cmd', 'sh', 'js', 'html', 'htm', 'svg'];
+        $origExt = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        if (in_array($origExt, $blockedExt, true)) {
+            throw new InvalidArgumentException('Extensão de arquivo não permitida.');
         }
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime = (string) ($finfo->file($tmp) ?: ($file['type'] ?? ''));
@@ -691,7 +697,8 @@ final class TicketService
             throw new RuntimeException('Não foi possível salvar o anexo.');
         }
         $dest = $root . DIRECTORY_SEPARATOR . $stored;
-        if (!rename($tmp, $dest) && !copy($tmp, $dest)) {
+        $moved = is_uploaded_file($tmp) ? @move_uploaded_file($tmp, $dest) : (@rename($tmp, $dest) || @copy($tmp, $dest));
+        if (!$moved || !is_file($dest)) {
             throw new RuntimeException('Falha ao armazenar anexo.');
         }
         @chmod($dest, 0640);
@@ -749,21 +756,37 @@ final class TicketService
         $unread = 0;
         if ($viewerUserId !== null) {
             $lastRead = (string) ($row['client_last_read_at'] ?? '');
-            $stmt = $this->db->prepare(
-                "SELECT COUNT(*) FROM support_messages
-                 WHERE ticket_id = :t AND is_internal = 0 AND author_role = 'staff'
-                 AND (:r = '' OR created_at > :r)"
-            );
-            $stmt->execute([':t' => $row['id'], ':r' => $lastRead]);
+            if ($lastRead === '') {
+                $stmt = $this->db->prepare(
+                    "SELECT COUNT(*) FROM support_messages
+                     WHERE ticket_id = :t AND is_internal = 0 AND author_role = 'staff'"
+                );
+                $stmt->execute([':t' => $row['id']]);
+            } else {
+                $stmt = $this->db->prepare(
+                    "SELECT COUNT(*) FROM support_messages
+                     WHERE ticket_id = :t AND is_internal = 0 AND author_role = 'staff'
+                     AND created_at > :r"
+                );
+                $stmt->execute([':t' => $row['id'], ':r' => $lastRead]);
+            }
             $unread = (int) $stmt->fetchColumn();
         } elseif ($admin) {
             $lastRead = (string) ($row['staff_last_read_at'] ?? '');
-            $stmt = $this->db->prepare(
-                "SELECT COUNT(*) FROM support_messages
-                 WHERE ticket_id = :t AND is_internal = 0 AND author_role = 'client'
-                 AND (:r = '' OR created_at > :r)"
-            );
-            $stmt->execute([':t' => $row['id'], ':r' => $lastRead]);
+            if ($lastRead === '') {
+                $stmt = $this->db->prepare(
+                    "SELECT COUNT(*) FROM support_messages
+                     WHERE ticket_id = :t AND is_internal = 0 AND author_role = 'client'"
+                );
+                $stmt->execute([':t' => $row['id']]);
+            } else {
+                $stmt = $this->db->prepare(
+                    "SELECT COUNT(*) FROM support_messages
+                     WHERE ticket_id = :t AND is_internal = 0 AND author_role = 'client'
+                     AND created_at > :r"
+                );
+                $stmt->execute([':t' => $row['id'], ':r' => $lastRead]);
+            }
             $unread = (int) $stmt->fetchColumn();
         }
 
@@ -790,7 +813,9 @@ final class TicketService
             'userEmail' => $row['user_email'] ?? null,
             'userName' => $name,
             'userPhoto' => $row['user_photo'] ?? null,
-            'messages' => $admin || $viewerUserId !== null
+            'assigneeId' => isset($row['assignee_id']) ? (int) $row['assignee_id'] : null,
+            'serviceId' => isset($row['service_id']) ? (int) $row['service_id'] : null,
+            'messages' => $includeMessages && ($admin || $viewerUserId !== null)
                 ? $this->listMessages((int) $row['id'], $admin)
                 : [],
         ];
@@ -903,6 +928,19 @@ final class TicketService
                 created_at TEXT NOT NULL
             )"
         );
+        $this->db->exec(
+            "CREATE TABLE IF NOT EXISTS support_notifications (
+                id {$id},
+                public_id VARCHAR(36) NOT NULL,
+                user_id {$int} NOT NULL,
+                type VARCHAR(60) NOT NULL,
+                title VARCHAR(190) NOT NULL,
+                body TEXT NOT NULL,
+                ticket_public_id VARCHAR(36) DEFAULT NULL,
+                is_read INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL
+            )"
+        );
 
         foreach ([
             'CREATE UNIQUE INDEX idx_support_tickets_public ON support_tickets (public_id)',
@@ -913,6 +951,8 @@ final class TicketService
             'CREATE INDEX idx_support_messages_ticket ON support_messages (ticket_id)',
             'CREATE UNIQUE INDEX idx_support_attachments_public ON support_attachments (public_id)',
             'CREATE INDEX idx_support_attachments_message ON support_attachments (message_id)',
+            'CREATE UNIQUE INDEX idx_support_notifications_public ON support_notifications (public_id)',
+            'CREATE INDEX idx_support_notifications_user ON support_notifications (user_id)',
         ] as $sql) {
             try {
                 $this->db->exec($sql);
@@ -927,6 +967,62 @@ final class TicketService
         }
         if (!is_file($gitignore)) {
             @file_put_contents($gitignore, "*\n!.gitignore\n");
+        }
+    }
+
+    private function createNotification(int $userId, string $type, string $title, string $body, ?string $ticketPublicId): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO support_notifications (
+                public_id, user_id, type, title, body, ticket_public_id, is_read, created_at
+            ) VALUES (:p, :u, :t, :ti, :b, :tp, 0, :c)'
+        );
+        $stmt->execute([
+            ':p' => $this->uuid(),
+            ':u' => $userId,
+            ':t' => $type,
+            ':ti' => mb_substr($title, 0, 180),
+            ':b' => $body,
+            ':tp' => $ticketPublicId,
+            ':c' => gmdate('c'),
+        ]);
+    }
+
+    private function notifyAdmins(string $type, string $title, string $body, string $ticketPublicId, int $exceptUserId): void
+    {
+        $raw = (string) (function_exists('env') ? env('GEEKHOST_ADMIN_EMAILS', '') : '');
+        if ($raw === '') {
+            $raw = 'diretoria@geekhost.com.br';
+        }
+        $emails = array_filter(array_map(
+            static fn ($e) => strtolower(trim($e)),
+            explode(',', $raw)
+        ));
+        foreach ($emails as $email) {
+            $stmt = $this->db->prepare('SELECT id FROM users WHERE email = :e LIMIT 1');
+            $stmt->execute([':e' => $email]);
+            $id = (int) ($stmt->fetchColumn() ?: 0);
+            if ($id > 0 && $id !== $exceptUserId) {
+                $this->createNotification($id, $type, $title, $body, $ticketPublicId);
+            }
+        }
+    }
+
+    private function maybeEmailUser(int $userId, string $subject, string $body): void
+    {
+        $stmt = $this->db->prepare('SELECT email FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $userId]);
+        $email = (string) ($stmt->fetchColumn() ?: '');
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+        $link = function_exists('url') ? url('/painel/suporte') : '/painel/suporte';
+        $message = $body . "\n\nAcesse: " . $link . "\n\n— GeekHost";
+        $headers = "From: GeekHost <noreply@geekhost.com.br>\r\nContent-Type: text/plain; charset=UTF-8\r\n";
+        try {
+            @mail($email, $subject, $message, $headers);
+        } catch (Throwable $e) {
+            // optional channel
         }
     }
 

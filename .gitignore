@@ -6,6 +6,8 @@ storage/*.sqlite-journal
 storage/cacert.pem
 storage/logs/*
 !storage/logs/.gitkeep
+storage/tickets/*
+!storage/tickets/.gitignore
 !storage/.gitkeep
 tmp-*.php
 vendor/

@@ -114,9 +114,65 @@
         });
     }
 
-    document.querySelector('[data-toast-demo]')?.addEventListener('click', () => {
-        toast('Sem novas notificações no momento.');
-    });
+    const notifyBtn = document.querySelector('[data-notify-toggle]');
+    const notifyMenu = document.querySelector('[data-notify-menu]');
+    const notifyList = document.querySelector('[data-notify-list]');
+    const notifyDot = document.querySelector('[data-notify-dot]');
+    const csrfToken = body.dataset.csrf || document.querySelector('[data-csrf]')?.dataset?.csrf || '';
+
+    const loadNotifications = async () => {
+        if (!notifyList) return;
+        try {
+            const res = await fetch('/api/painel/notifications', { credentials: 'same-origin' });
+            const data = await res.json();
+            if (!res.ok || !data.ok) throw new Error(data.error || 'Falha');
+            if (notifyDot) notifyDot.hidden = !(data.unread > 0);
+            if (!data.items?.length) {
+                notifyList.innerHTML = '<div class="panel-notify-item"><span>Sem novas notificações no momento.</span></div>';
+                return;
+            }
+            notifyList.innerHTML = data.items.map((n) => `
+                <a class="panel-notify-item ${n.read ? '' : 'is-unread'}" href="${n.ticketId ? `/painel/suporte?ticket=${encodeURIComponent(n.ticketId)}` : '/painel/suporte'}">
+                    <strong>${n.title}</strong>
+                    <span>${n.body}</span>
+                </a>
+            `).join('');
+        } catch (_) {
+            notifyList.innerHTML = '<div class="panel-notify-item"><span>Não foi possível carregar notificações.</span></div>';
+        }
+    };
+
+    if (notifyBtn && notifyMenu) {
+        notifyBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const open = notifyMenu.hidden === false;
+            notifyMenu.hidden = open;
+            notifyBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+            if (!open) await loadNotifications();
+        });
+        document.addEventListener('click', (e) => {
+            if (!notifyMenu.contains(e.target) && e.target !== notifyBtn && !notifyBtn.contains(e.target)) {
+                notifyMenu.hidden = true;
+                notifyBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        document.querySelector('[data-notify-read-all]')?.addEventListener('click', async () => {
+            try {
+                await fetch('/api/painel/notifications', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ csrfToken }),
+                });
+                if (notifyDot) notifyDot.hidden = true;
+                await loadNotifications();
+            } catch (_) {
+                toast('Não foi possível marcar como lidas.', 'danger');
+            }
+        });
+        loadNotifications();
+        setInterval(loadNotifications, 30000);
+    }
 
     document.querySelectorAll('[data-copy]').forEach((btn) => {
         btn.addEventListener('click', async () => {

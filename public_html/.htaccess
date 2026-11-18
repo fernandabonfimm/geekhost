@@ -16,9 +16,15 @@ Options -Indexes
     RewriteRule ^painel/carteira/?$ painel/carteira.php [L,QSA]
     RewriteRule ^painel/dominios/?$ painel/dominios.php [L,QSA]
     RewriteRule ^painel/sites/?$ painel/sites.php [L,QSA]
+    RewriteRule ^painel/suporte/?$ painel/suporte.php [L,QSA]
+    RewriteRule ^painel/admin/tickets/?$ painel/admin/tickets.php [L,QSA]
     RewriteRule ^painel/criar-senha/?$ painel/criar-senha.php [L,QSA]
     RewriteRule ^api/painel/me/?$ api/painel/me.php [L,QSA]
     RewriteRule ^api/painel/faturas/?$ api/painel/faturas.php [L,QSA]
+    RewriteRule ^api/painel/tickets/?$ api/painel/tickets.php [L,QSA]
+    RewriteRule ^api/painel/tickets-attachment/?$ api/painel/tickets-attachment.php [L,QSA]
+    RewriteRule ^api/painel/notifications/?$ api/painel/notifications.php [L,QSA]
+    RewriteRule ^api/admin/tickets/?$ api/admin/tickets.php [L,QSA]
 </IfModule>
 
 <FilesMatch "^\.env">

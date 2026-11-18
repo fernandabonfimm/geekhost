@@ -37,7 +37,7 @@ if (!empty($panelUser)) {
     <script src="https://unpkg.com/lucide@0.468.0" defer></script>
     <link rel="stylesheet" href="<?= e(asset('assets/css/panel.css')) ?>">
 </head>
-<body class="panel-body<?= $isAuthPage ? ' is-auth' : '' ?>" data-panel>
+<body class="panel-body<?= $isAuthPage ? ' is-auth' : '' ?>" data-panel data-csrf="<?= e($csrf) ?>">
 <?php if (!$isAuthPage): ?>
 <aside class="panel-sidebar" data-sidebar>
     <div class="panel-sidebar-glow" aria-hidden="true"></div>
@@ -69,15 +69,14 @@ if (!empty($panelUser)) {
         <a href="<?= e(url('/painel/perfil')) ?>" class="<?= $panelSection === 'perfil' ? 'is-active' : '' ?>" data-nav-label="Perfil" title="Perfil">
             <i data-lucide="user-round" aria-hidden="true"></i><span>Perfil</span>
         </a>
+        <a href="<?= e(url('/painel/suporte')) ?>" class="<?= $panelSection === 'suporte' || $panelSection === 'admin-tickets' ? 'is-active' : '' ?>" data-nav-label="Suporte" title="Suporte">
+            <i data-lucide="headset" aria-hidden="true"></i><span>Suporte</span>
+        </a>
     </nav>
     <div class="panel-sidebar-bottom">
         <?php if (!empty($companyWhatsapp)): ?>
-            <a class="panel-sidebar-link" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer" title="Suporte">
-                <i data-lucide="headset" aria-hidden="true"></i><span>Suporte</span>
-            </a>
-        <?php else: ?>
-            <a class="panel-sidebar-link" href="<?= e(url('/')) ?>" title="Suporte">
-                <i data-lucide="headset" aria-hidden="true"></i><span>Suporte</span>
+            <a class="panel-sidebar-link" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer" title="WhatsApp">
+                <i data-lucide="message-circle" aria-hidden="true"></i><span>WhatsApp</span>
             </a>
         <?php endif; ?>
         <a class="panel-sidebar-link" href="<?= e(url('/painel/logout')) ?>" title="Sair">
@@ -99,12 +98,19 @@ if (!empty($panelUser)) {
         </form>
 
         <div class="panel-topbar-end">
-            <button type="button" class="panel-icon-btn panel-notify" data-toast-demo aria-label="Notificações" title="Notificações">
+            <button type="button" class="panel-icon-btn panel-notify" data-notify-toggle aria-label="Notificações" title="Notificações" aria-expanded="false">
                 <i data-lucide="bell" aria-hidden="true"></i>
-                <?php if (($panelUser['hostingStatus'] ?? '') === 'suspended' || ($panelUser['hostingStatus'] ?? '') === 'pending'): ?>
-                    <span class="panel-notify-dot" aria-hidden="true"></span>
-                <?php endif; ?>
+                <span class="panel-notify-dot" data-notify-dot hidden aria-hidden="true"></span>
             </button>
+            <div class="panel-notify-menu" data-notify-menu hidden>
+                <header>
+                    <span>Notificações</span>
+                    <button type="button" class="gh-link" data-notify-read-all>Marcar lidas</button>
+                </header>
+                <div class="panel-notify-list" data-notify-list>
+                    <div class="panel-notify-item"><span>Carregando…</span></div>
+                </div>
+            </div>
 
             <div class="panel-account" data-account-menu>
                 <button type="button" class="panel-account-btn" data-account-toggle aria-expanded="false" aria-haspopup="true">
@@ -123,6 +129,7 @@ if (!empty($panelUser)) {
                     <a href="<?= e(url('/painel/perfil')) ?>"><i data-lucide="user-round" aria-hidden="true"></i> Perfil</a>
                     <a href="<?= e(url('/painel/carteira')) ?>"><i data-lucide="wallet" aria-hidden="true"></i> Carteira</a>
                     <a href="<?= e(url('/painel/faturas')) ?>"><i data-lucide="receipt" aria-hidden="true"></i> Faturas</a>
+                    <a href="<?= e(url('/painel/suporte')) ?>"><i data-lucide="headset" aria-hidden="true"></i> Suporte</a>
                     <a href="<?= e(url('/painel/logout')) ?>" class="is-danger"><i data-lucide="log-out" aria-hidden="true"></i> Sair</a>
                 </div>
             </div>
