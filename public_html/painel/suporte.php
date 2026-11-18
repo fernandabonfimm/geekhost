@@ -41,7 +41,6 @@ $openTicketId = trim((string) ($_GET['ticket'] ?? ''));
             role="img"
             aria-label="Banner Suporte Técnico GeekHost"
         ></div>
-        <img class="support-hero-mascots" src="<?= e(asset('assets/images/mascotes-suporte.png')) ?>" alt="" width="420" height="280">
     </article>
 
     <?php if ($isStaff): ?>
@@ -96,7 +95,6 @@ $openTicketId = trim((string) ($_GET['ticket'] ?? ''));
 
             <section class="support-chat-col" data-chat-col>
                 <div class="support-chat-empty" data-chat-empty>
-                    <img src="<?= e(asset('assets/images/mascotes-suporte.png')) ?>" alt="" width="220" height="160">
                     <strong>Selecione um ticket</strong>
                     <p>Escolha um chamado à esquerda para ver o histórico e responder.</p>
                 </div>
