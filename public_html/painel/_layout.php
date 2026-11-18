@@ -43,7 +43,8 @@ if (!empty($panelUser)) {
     <div class="panel-sidebar-glow" aria-hidden="true"></div>
     <div class="panel-sidebar-top">
         <a class="panel-sidebar-brand" href="<?= e(url('/painel/')) ?>" title="GeekHost">
-            <img src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="132" height="40">
+            <img class="panel-brand-full" src="<?= e(asset('assets/images/LOGO-02.png')) ?>" alt="GeekHost" width="140" height="40">
+            <img class="panel-brand-mark" src="<?= e(asset('assets/images/favicon.png')) ?>" alt="GeekHost" width="28" height="28">
         </a>
         <button type="button" class="panel-icon-btn panel-sidebar-toggle" data-sidebar-toggle aria-expanded="true" aria-controls="panel-sidebar-nav" title="Recolher menu">
             <i data-lucide="panel-left" aria-hidden="true"></i>

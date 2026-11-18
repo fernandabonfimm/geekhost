@@ -155,11 +155,14 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .panel-sidebar-brand {
     display: inline-flex;
     align-items: center;
-    padding: 8px 10px;
-    border-radius: 12px;
-    background: #fff;
+    justify-content: center;
+    padding: 4px 2px;
+    border-radius: 0;
+    background: transparent;
 }
-.panel-sidebar-brand img { height: 28px; width: auto; }
+.panel-sidebar-brand img { width: auto; display: block; }
+.panel-brand-full { height: 32px; max-width: 148px; object-fit: contain; }
+.panel-brand-mark { display: none; height: 28px; width: 28px; object-fit: contain; }
 .panel-sidebar-toggle { color: #fff; border-color: rgba(255,255,255,.12); }
 
 .panel-sidebar-nav {
@@ -209,8 +212,9 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .panel-body.is-collapsed .panel-sidebar-link span { display: none; }
 .panel-body.is-collapsed .panel-sidebar-nav a,
 .panel-body.is-collapsed .panel-sidebar-link { justify-content: center; padding-inline: 0; }
-.panel-body.is-collapsed .panel-sidebar-brand { padding: 8px; }
-.panel-body.is-collapsed .panel-sidebar-brand img { height: 22px; }
+.panel-body.is-collapsed .panel-sidebar-brand { padding: 6px; width: 100%; justify-content: center; }
+.panel-body.is-collapsed .panel-brand-full { display: none; }
+.panel-body.is-collapsed .panel-brand-mark { display: block; height: 28px; width: 28px; }
 
 .panel-sidebar-backdrop {
     position: fixed;
@@ -658,9 +662,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     min-height: clamp(180px, 28vw, 280px);
     margin-bottom: 18px;
     border-radius: 18px;
-    color: #fff;
+    color: var(--gh-ink);
     overflow: hidden;
-    background: #0b2a1c;
+    background: #eaf8ef;
+    border: 1px solid var(--gh-line);
     box-shadow: var(--gh-shadow);
 }
 .home-hero-banner-img {
@@ -677,18 +682,18 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     z-index: 1;
     max-width: min(520px, 58%);
     padding: 28px 32px;
-    background: linear-gradient(90deg, rgba(11, 24, 18, .72) 0%, rgba(11, 24, 18, .35) 70%, transparent 100%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, .88) 0%, rgba(255, 255, 255, .55) 65%, transparent 100%);
 }
 .home-hero-banner h2 {
     margin: 0 0 12px;
     font-size: clamp(22px, 3vw, 30px);
     line-height: 1.2;
     letter-spacing: -.02em;
-    text-shadow: 0 2px 18px rgba(0, 0, 0, .35);
+    color: var(--gh-ink);
 }
 .home-hero-banner h2 em {
     font-style: normal;
-    color: var(--gh-green);
+    color: var(--gh-green-dark);
 }
 .home-hero-pills {
     display: flex;
@@ -704,13 +709,14 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     gap: 8px;
     padding: 8px 12px;
     border-radius: 999px;
-    background: rgba(0, 0, 0, .35);
-    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255, 255, 255, .75);
+    border: 1px solid var(--gh-line);
     backdrop-filter: blur(6px);
     font-size: 12px;
     font-weight: 600;
+    color: var(--gh-ink);
 }
-.home-hero-pills svg { width: 14px; height: 14px; color: var(--gh-green); }
+.home-hero-pills svg { width: 14px; height: 14px; color: var(--gh-green-dark); }
 
 .home-kpi-grid {
     display: grid;
@@ -1190,7 +1196,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .home-hero-copy {
         max-width: 100%;
         padding: 22px 18px 120px;
-        background: linear-gradient(180deg, rgba(11, 24, 18, .55) 0%, rgba(11, 24, 18, .15) 55%, transparent 100%);
+        background: linear-gradient(180deg, rgba(255, 255, 255, .9) 0%, rgba(255, 255, 255, .4) 60%, transparent 100%);
     }
     .usage-art { justify-self: center; max-width: 200px; }
     .invoice-kpi-grid { grid-template-columns: 1fr; }
@@ -1208,6 +1214,8 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .panel-body.is-collapsed .panel-sidebar-link span { display: inline; }
     .panel-body.is-collapsed .panel-sidebar-nav a,
     .panel-body.is-collapsed .panel-sidebar-link { justify-content: flex-start; padding-inline: 14px; }
+    .panel-body.is-collapsed .panel-brand-full { display: block; height: 32px; max-width: 148px; }
+    .panel-body.is-collapsed .panel-brand-mark { display: none; }
     .panel-shell,
     .panel-body.is-collapsed .panel-shell { margin-left: 0; }
     .panel-mobile-toggle { display: inline-grid; }
