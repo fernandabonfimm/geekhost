@@ -20,14 +20,14 @@ final class AsaasClient
     {
         geekhost_load_env();
         $this->env = geekhost_resolve_asaas_env($forceEnv);
-        $prefix = $env === 'production' ? 'ASAAS_PRODUCTION' : 'ASAAS_SANDBOX';
+        $prefix = $this->env === 'production' ? 'ASAAS_PRODUCTION' : 'ASAAS_SANDBOX';
         $this->baseUrl = rtrim((string) env($prefix . '_URL', ''), '/');
         $this->apiKey = (string) env($prefix . '_API_KEY', '');
         $this->webhookToken = (string) env($prefix . '_WEBHOOK_TOKEN', '');
         $this->timeout = 30;
 
         if ($this->baseUrl === '' || $this->apiKey === '') {
-            throw new RuntimeException('Asaas credentials missing for environment: ' . $env);
+            throw new RuntimeException('Asaas credentials missing for environment: ' . $this->env);
         }
     }
 

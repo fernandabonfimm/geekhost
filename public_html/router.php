@@ -26,6 +26,12 @@ $map = [
     '/painel/perfil/' => '/painel/perfil.php',
     '/painel/carteira' => '/painel/carteira.php',
     '/painel/carteira/' => '/painel/carteira.php',
+    '/painel/criar-senha' => '/painel/criar-senha.php',
+    '/painel/criar-senha/' => '/painel/criar-senha.php',
+    '/api/painel/me' => '/api/painel/me.php',
+    '/api/painel/me/' => '/api/painel/me.php',
+    '/api/painel/faturas' => '/api/painel/faturas.php',
+    '/api/painel/faturas/' => '/api/painel/faturas.php',
 ];
 
 if (isset($map[$uri])) {

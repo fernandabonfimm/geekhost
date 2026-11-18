@@ -105,6 +105,12 @@
         errorEl.textContent = message || '';
     };
 
+    let setupUrl = '';
+
+    const goToPasswordSetup = () => {
+        if (setupUrl) window.location.href = setupUrl;
+    };
+
     const renderResult = (order) => {
         form.hidden = true;
         root.querySelector('.checkout-summary').hidden = true;
@@ -114,7 +120,18 @@
         const pixBox = result.querySelector('[data-result-pix]');
         const boletoBox = result.querySelector('[data-result-boleto]');
         const cardBox = result.querySelector('[data-result-card]');
+        const setupLink = result.querySelector('[data-setup-link]');
+        const setupHint = result.querySelector('[data-setup-hint]');
         pixBox.hidden = true; boletoBox.hidden = true; cardBox.hidden = true;
+
+        if (order.passwordSetupUrl) setupUrl = order.passwordSetupUrl;
+        if (setupLink && setupUrl) {
+            setupLink.href = setupUrl;
+            setupLink.hidden = order.status !== 'paid_pending_provisioning';
+        }
+        if (setupHint) {
+            setupHint.hidden = !(setupUrl && order.status !== 'paid_pending_provisioning');
+        }
 
         if (order.billingType === 'PIX') {
             pixBox.hidden = false;
@@ -138,11 +155,14 @@
         if (order.billingType === 'CREDIT_CARD') {
             cardBox.hidden = false;
             result.querySelector('[data-card-msg]').textContent = order.status === 'paid_pending_provisioning'
-                ? 'Pagamento confirmado. Conta do painel criada; hospedagem em fila de provisionamento.'
-                : 'Pagamento em análise. Acompanhe em Minhas faturas.';
+                ? 'Pagamento confirmado. Crie sua senha para acessar o painel.'
+                : 'Pagamento em análise.';
         }
         if (order.status === 'paid_pending_provisioning') {
             result.querySelector('[data-result-title]').textContent = 'Pagamento confirmado';
+            if (setupUrl) {
+                window.setTimeout(goToPasswordSetup, 1200);
+            }
         }
     };
 
@@ -171,7 +191,6 @@
             billingType,
             name: form.name.value.trim(),
             email: form.email.value.trim(),
-            password: form.password.value,
             cpfCnpj: onlyDigits(form.cpfCnpj.value),
             phone: onlyDigits(form.mobilePhone.value),
             mobilePhone: onlyDigits(form.mobilePhone.value),
@@ -212,7 +231,7 @@
             if (!response.ok || !data.ok) throw new Error(data.error || 'Não foi possível concluir o checkout.');
             form.cardNumber.value = '';
             form.cardCcv.value = '';
-            form.password.value = '';
+            if (data.order.passwordSetupUrl) setupUrl = data.order.passwordSetupUrl;
             renderResult(data.order);
             if (data.order.billingType === 'PIX' || data.order.billingType === 'BOLETO') {
                 const poll = window.setInterval(async () => {
@@ -221,6 +240,7 @@
                         const body = await st.json();
                         if (body.ok && body.order?.status === 'paid_pending_provisioning') {
                             window.clearInterval(poll);
+                            if (setupUrl) body.order.passwordSetupUrl = setupUrl;
                             renderResult(body.order);
                         }
                     } catch (_) { /* ignore */ }

@@ -26,9 +26,22 @@ $periodsJson = json_encode($selection['plan']['periods'], JSON_UNESCAPED_UNICODE
 require __DIR__ . '/includes/header.php';
 ?>
 
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { gh: { lime: '#01e152', ink: '#1a1e24', paper: '#f3f4f5', line: '#dfe2e5' } },
+                borderRadius: { DEFAULT: '0px', none: '0px' },
+                fontFamily: { sans: ['Galano Grotesque', 'ui-sans-serif', 'system-ui', 'sans-serif'] }
+            }
+        },
+        corePlugins: { preflight: false }
+    };
+</script>
 <link rel="stylesheet" href="<?= e(asset('assets/css/checkout.css')) ?>">
 
-<section class="checkout-page page-width" data-checkout
+<section class="checkout-page page-width font-sans" data-checkout
     data-plan="<?= e($planCode) ?>"
     data-period="<?= e($periodCode) ?>"
     data-amount="<?= e((string) $selection['amount']) ?>"
@@ -96,7 +109,7 @@ require __DIR__ . '/includes/header.php';
                         <legend>Dados da conta</legend>
                         <label>Nome completo<input name="name" type="text" autocomplete="name" required maxlength="120"></label>
                         <label>E-mail (login do painel)<input name="email" type="email" autocomplete="email" required maxlength="180"></label>
-                        <label>Senha do painel<input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="120"></label>
+                        <p class="checkout-note">Depois do pagamento você cria a senha do painel em uma página segura.</p>
                         <label>CPF ou CNPJ<input name="cpfCnpj" type="text" inputmode="numeric" required maxlength="18" data-mask="doc"></label>
                         <label>Celular / WhatsApp<input name="mobilePhone" type="tel" required maxlength="20" data-mask="phone"></label>
                     </fieldset>
@@ -155,7 +168,9 @@ require __DIR__ . '/includes/header.php';
                 </div>
                 <div data-result-card hidden><p data-card-msg></p></div>
                 <p class="checkout-result-id">Pedido: <code data-order-id></code></p>
-                <a class="button button-dark" href="<?= e(url('/painel/faturas')) ?>">Ir para o painel →</a>
+                <p class="checkout-note" data-setup-hint hidden>Após a confirmação do pagamento, você será direcionado para criar a senha do painel.</p>
+                <a class="button button-lime" data-setup-link hidden href="#">Criar senha do painel →</a>
+                <a class="button button-dark" data-panel-link href="<?= e(url('/painel/login')) ?>">Já tenho senha · Entrar</a>
             </div>
         </div>
 

@@ -128,6 +128,11 @@ function geekhost_ensure_columns(PDO $pdo): void
             'asaas_credit_card_token' => 'VARCHAR(120) DEFAULT NULL',
             'overdue_since' => 'TEXT DEFAULT NULL',
         ],
+        'users' => [
+            'password_is_set' => 'INTEGER NOT NULL DEFAULT 1',
+            'password_setup_token_hash' => 'VARCHAR(64) DEFAULT NULL',
+            'password_setup_expires' => 'TEXT DEFAULT NULL',
+        ],
     ];
 
     foreach ($columns as $table => $defs) {

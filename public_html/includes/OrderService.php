@@ -48,11 +48,6 @@ final class OrderService
             throw new InvalidArgumentException('Plano ou período inválido.');
         }
 
-        $password = (string) ($input['password'] ?? '');
-        if (strlen($password) < 8) {
-            throw new InvalidArgumentException('Crie uma senha com pelo menos 8 caracteres para o painel.');
-        }
-
         $customerData = $this->normalizeCustomer($input);
         $idempotencyKey = (string) ($input['idempotencyKey'] ?? '');
         if (strlen($idempotencyKey) < 16) {
@@ -77,7 +72,9 @@ final class OrderService
             $customerId = $this->upsertLocalCustomer($customerData, $now);
             $asaasCustomerId = $this->ensureAsaasCustomer($customerId, $customerData);
 
-            $user = $this->auth->registerFromCheckout($customerId, $customerData['email'], $password, $customerData);
+            $registered = $this->auth->registerFromCheckout($customerId, $customerData['email'], $customerData);
+            $user = $registered['user'];
+            $setupToken = $registered['setupToken'];
             $userId = (int) ($user['id'] ?? 0);
 
             $invoiceNumber = $this->nextInvoiceNumber();
@@ -280,9 +277,6 @@ final class OrderService
 
             if ($order['status'] === 'paid_pending_provisioning') {
                 ProvisioningStub::queue($order);
-                if ($userId > 0) {
-                    $this->auth->startSession($userId);
-                }
             }
 
             geekhost_log('order_created', [
@@ -296,6 +290,12 @@ final class OrderService
 
             $presented = $this->presentOrder($order);
             $presented['panelLoginHint'] = $customerData['email'];
+            $presented['passwordSetupRequired'] = $setupToken !== null;
+            if ($setupToken !== null) {
+                $presented['passwordSetupToken'] = $setupToken;
+                $presented['passwordSetupUrl'] = (function_exists('url') ? url('/painel/criar-senha') : '/painel/criar-senha')
+                    . '?token=' . rawurlencode($setupToken);
+            }
             return $presented;
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) {

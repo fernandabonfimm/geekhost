@@ -7,17 +7,12 @@ require_once dirname(__DIR__) . '/includes/Auth.php';
 require_once dirname(__DIR__) . '/includes/csrf.php';
 
 $auth = new Auth();
-$panelUser = $auth->user();
 $requireAuth = $requireAuth ?? true;
-if ($requireAuth && !$panelUser) {
-    header('Location: ' . url('/painel/login'));
-    exit;
-}
+$panelUser = $requireAuth ? $auth->requireUser() : $auth->user();
 $csrf = csrf_token();
 $panelTitle = $panelTitle ?? 'Painel';
 $panelSection = $panelSection ?? '';
-$isAuthPage = empty($panelUser);
-$year = (int) date('Y');
+$isAuthPage = !$requireAuth;
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -27,6 +22,21 @@ $year = (int) date('Y');
     <title><?= e($panelTitle) ?> | GeekHost</title>
     <link rel="icon" type="image/png" href="<?= e(asset('assets/images/favicon.png')) ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gh: { lime: '#01e152', ink: '#1a1e24', paper: '#f3f4f5', line: '#dfe2e5', muted: '#697078' }
+                    },
+                    borderRadius: { DEFAULT: '0px', none: '0px' },
+                    fontFamily: { sans: ['Galano Grotesque', 'ui-sans-serif', 'system-ui', 'sans-serif'] }
+                }
+            },
+            corePlugins: { preflight: false }
+        };
+    </script>
     <link rel="stylesheet" href="<?= e(asset('assets/css/site.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset('assets/css/panel.css')) ?>">
 </head>
@@ -74,7 +84,7 @@ $year = (int) date('Y');
             <p class="eyebrow">Área do cliente</p>
             <h1><?= e($panelTitle) ?></h1>
         </div>
-        <a class="panel-topbar-site" href="<?= e(url('/')) ?>">Voltar ao site</a>
+        <!-- <a class="panel-topbar-site" href="<?= e(url('/')) ?>">Voltar ao site</a> -->
     </header>
     <main class="panel-main">
         <?php if (($panelUser['hostingStatus'] ?? '') === 'suspended'): ?>
