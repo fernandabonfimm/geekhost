@@ -65,8 +65,8 @@ body.checkout-body main#conteudo {
     z-index: 1;
     display: grid;
     align-items: center;
-    min-height: clamp(180px, 26vw, 260px);
-    padding-block: 36px 72px;
+    min-height: 100%;
+    padding-block: 100px;
 }
 .co-hero-copy {
     max-width: min(560px, 62%);
