@@ -652,25 +652,39 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .home-sub { margin: 8px 0 0; color: var(--gh-muted); max-width: 52ch; }
 
 .home-hero-banner {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(220px, .8fr);
-    gap: 18px;
     align-items: center;
-    padding: 24px 28px;
+    min-height: clamp(180px, 28vw, 280px);
     margin-bottom: 18px;
     border-radius: 18px;
     color: #fff;
-    background:
-        radial-gradient(circle at 85% 20%, rgba(1,224,79,.35), transparent 40%),
-        linear-gradient(125deg, #0f3d28 0%, #145c38 42%, #0b2a1c 100%);
     overflow: hidden;
+    background: #0b2a1c;
+    box-shadow: var(--gh-shadow);
+}
+.home-hero-banner-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+    z-index: 0;
+}
+.home-hero-copy {
     position: relative;
+    z-index: 1;
+    max-width: min(520px, 58%);
+    padding: 28px 32px;
+    background: linear-gradient(90deg, rgba(11, 24, 18, .72) 0%, rgba(11, 24, 18, .35) 70%, transparent 100%);
 }
 .home-hero-banner h2 {
-    margin: 0 0 10px;
+    margin: 0 0 12px;
     font-size: clamp(22px, 3vw, 30px);
     line-height: 1.2;
     letter-spacing: -.02em;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, .35);
 }
 .home-hero-banner h2 em {
     font-style: normal;
@@ -690,17 +704,13 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     gap: 8px;
     padding: 8px 12px;
     border-radius: 999px;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0, 0, 0, .35);
+    border: 1px solid rgba(255,255,255,.14);
+    backdrop-filter: blur(6px);
     font-size: 12px;
     font-weight: 600;
 }
 .home-hero-pills svg { width: 14px; height: 14px; color: var(--gh-green); }
-.home-hero-art {
-    justify-self: end;
-    max-width: 260px;
-    filter: drop-shadow(0 18px 28px rgba(0,0,0,.28));
-}
 
 .home-kpi-grid {
     display: grid;
@@ -1174,11 +1184,14 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .profile-layout,
     .usage-banner,
     .ns-card,
-    .site-upsell,
-    .home-hero-banner {
+    .site-upsell {
         grid-template-columns: 1fr;
     }
-    .home-hero-art,
+    .home-hero-copy {
+        max-width: 100%;
+        padding: 22px 18px 120px;
+        background: linear-gradient(180deg, rgba(11, 24, 18, .55) 0%, rgba(11, 24, 18, .15) 55%, transparent 100%);
+    }
     .usage-art { justify-self: center; max-width: 200px; }
     .invoice-kpi-grid { grid-template-columns: 1fr; }
     .panel-account-meta { display: none; }

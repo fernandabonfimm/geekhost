@@ -77,7 +77,7 @@ $statusLabel = static function (string $status): array {
     </div>
 
     <article class="home-hero-banner">
-        <div>
+        <div class="home-hero-copy">
             <h2>Sua ideia no ar.<br><em>Seu projeto em crescimento.</em></h2>
             <ul class="home-hero-pills">
                 <li><i data-lucide="server"></i> Hospedagem de alta performance</li>
@@ -85,7 +85,7 @@ $statusLabel = static function (string $status): array {
                 <li><i data-lucide="zap"></i> Suporte especializado</li>
             </ul>
         </div>
-        <img class="home-hero-art" src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="260" height="200">
+        <img class="home-hero-banner-img" src="<?= e(asset('assets/images/banner-painel-inicio.png')) ?>" alt="GeekHost — mascotes Geeko" width="1400" height="360">
     </article>
 
     <div class="home-kpi-grid">

@@ -51,9 +51,16 @@ require __DIR__ . '/includes/header.php';
     data-status-url="<?= e(url('/api/checkout/status')) ?>"
     data-periods='<?= e((string) $periodsJson) ?>'>
 
+    <div class="checkout-hero-banner">
+        <div class="checkout-hero-copy">
+            <p class="eyebrow">Checkout GeekHost</p>
+            <h1>Contratar <?= e($selection['plan']['name']) ?></h1>
+            <p class="checkout-hero-lead">Domínio, período e pagamento em etapas — com a mesma identidade GeekHost do painel.</p>
+        </div>
+        <img src="<?= e(asset('assets/images/banner-checkout.png')) ?>" alt="GeekHost checkout" width="1400" height="360">
+    </div>
+
     <div class="checkout-heading">
-        <p class="eyebrow">Checkout GeekHost</p>
-        <h1>Contratar <?= e($selection['plan']['name']) ?></h1>
         <ol class="checkout-steps" data-steps>
             <li class="is-active" data-step-indicator="1">Domínio</li>
             <li data-step-indicator="2">Configurar</li>
