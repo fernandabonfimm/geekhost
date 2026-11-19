@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `schema_migrations` (
   `applied_at` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_schema_migrations_version` (`version`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `customers` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `customers` (
   UNIQUE KEY `uq_customers_cpf_cnpj` (`cpf_cnpj`),
   UNIQUE KEY `uq_customers_asaas` (`asaas_customer_id`),
   KEY `idx_customers_email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `users` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `uq_users_public_id` (`public_id`),
   UNIQUE KEY `uq_users_email` (`email`),
   KEY `idx_users_customer` (`customer_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `user_sessions` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `user_sessions` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_user_sessions_token` (`token_hash`),
   KEY `idx_user_sessions_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `orders` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   UNIQUE KEY `uq_orders_asaas_payment` (`asaas_payment_id`),
   KEY `idx_orders_status` (`status`),
   KEY `idx_orders_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `subscriptions` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS `subscriptions` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_subscriptions_public_id` (`public_id`),
   UNIQUE KEY `uq_subscriptions_asaas` (`asaas_subscription_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `services` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `services` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_services_public_id` (`public_id`),
   KEY `idx_services_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `webhook_events` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS `webhook_events` (
   `created_at` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_webhook_events_key` (`event_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `user_domains` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS `user_domains` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_user_domains_public` (`public_id`),
   UNIQUE KEY `uq_user_domains_user_domain` (`user_id`, `domain`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `user_sites` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS `user_sites` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_user_sites_public` (`public_id`),
   KEY `idx_user_sites_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `hosting_accounts` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -224,7 +224,7 @@ CREATE TABLE IF NOT EXISTS `hosting_accounts` (
   UNIQUE KEY `uq_hosting_accounts_public` (`public_id`),
   UNIQUE KEY `uq_hosting_accounts_username` (`da_username`),
   KEY `idx_hosting_accounts_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `hosting_jobs` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -242,7 +242,7 @@ CREATE TABLE IF NOT EXISTS `hosting_jobs` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_hosting_jobs_public` (`public_id`),
   KEY `idx_hosting_jobs_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `hosting_audit_logs` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -254,7 +254,7 @@ CREATE TABLE IF NOT EXISTS `hosting_audit_logs` (
   `created_at` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_hosting_audit_account` (`hosting_account_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `admin_users` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -266,7 +266,7 @@ CREATE TABLE IF NOT EXISTS `admin_users` (
   `updated_at` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_admin_users_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `admin_audit_logs` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -281,7 +281,7 @@ CREATE TABLE IF NOT EXISTS `admin_audit_logs` (
   `created_at` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_admin_audit_created` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `admin_notifications` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -292,7 +292,7 @@ CREATE TABLE IF NOT EXISTS `admin_notifications` (
   `read_at` VARCHAR(40) DEFAULT NULL,
   `created_at` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `app_settings` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -302,7 +302,7 @@ CREATE TABLE IF NOT EXISTS `app_settings` (
   `updated_by` BIGINT UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_app_settings_key` (`setting_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `support_tickets` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -324,7 +324,7 @@ CREATE TABLE IF NOT EXISTS `support_tickets` (
   UNIQUE KEY `uq_support_tickets_public` (`public_id`),
   UNIQUE KEY `uq_support_tickets_number` (`number`),
   KEY `idx_support_tickets_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `support_messages` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -338,7 +338,7 @@ CREATE TABLE IF NOT EXISTS `support_messages` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_support_messages_public` (`public_id`),
   KEY `idx_support_messages_ticket` (`ticket_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `support_attachments` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -351,7 +351,7 @@ CREATE TABLE IF NOT EXISTS `support_attachments` (
   `created_at` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_support_attachments_public` (`public_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `support_ticket_events` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -363,7 +363,7 @@ CREATE TABLE IF NOT EXISTS `support_ticket_events` (
   `created_at` VARCHAR(40) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_support_ticket_events_ticket` (`ticket_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `support_notifications` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -379,7 +379,7 @@ CREATE TABLE IF NOT EXISTS `support_notifications` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_support_notifications_public` (`public_id`),
   KEY `idx_support_notifications_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
