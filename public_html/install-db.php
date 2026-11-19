@@ -30,11 +30,12 @@ echo '<style>body{font-family:system-ui,sans-serif;max-width:820px;margin:40px a
 echo 'code,pre{background:#f4f4f5;padding:2px 6px;border-radius:6px}pre{padding:12px;overflow:auto}';
 echo '.ok{color:#067647}.err{color:#b42318}.box{border:1px solid #e4e4e7;border-radius:12px;padding:16px;margin:16px 0}</style></head><body>';
 echo '<h1>GeekHost — instalar banco</h1>';
+echo '<p>Não use o SQL do phpMyAdmin (ele costuma mostrar “Documentação” vazio e 0 changes). Este instalador aplica o schema via PDO.</p>';
 
 if (!hash_equals($expected, $key)) {
     echo '<div class="box err"><strong>Chave inválida.</strong><p>Abra com <code>?key=...</code></p>';
-    echo '<p>No .env defina <code>INSTALL_DB_KEY=alguma-senha-temporaria</code> ou use a chave automática impressa no erro 403 do servidor se já configurou DB_PASS.</p>';
-    echo '<p>Chave esperada neste servidor (temporária): <code>' . h($expected) . '</code></p></div>';
+    echo '<p>No .env (pasta pai do public_html) defina <code>INSTALL_DB_KEY=geekhost-install-tmp</code>.</p>';
+    echo '<p>Chave esperada neste servidor: <code>' . h($expected) . '</code></p></div>';
     echo '<p>Depois de instalar, <strong>apague</strong> <code>public_html/install-db.php</code>.</p></body></html>';
     exit;
 }

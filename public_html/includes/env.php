@@ -18,10 +18,14 @@ function geekhost_load_env(?string $path = null): void
     if ($path !== null) {
         $candidates[] = $path;
     }
-    // Project root (sibling of public_html)
+    // Project root (sibling of public_html) — e.g. domains/geekhost.com.br/.env
     $candidates[] = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '.env';
+    // Same folder as public_html's parent via relative climb from includes/
+    $candidates[] = dirname(__DIR__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '.env';
     // One level above project (extra-safe hosting layouts)
     $candidates[] = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . '.env';
+    // Last resort: .env inside public_html (not ideal, but works on locked hosts)
+    $candidates[] = dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env';
 
     $file = null;
     foreach ($candidates as $candidate) {
