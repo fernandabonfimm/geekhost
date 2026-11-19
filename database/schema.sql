@@ -260,3 +260,51 @@ CREATE TABLE IF NOT EXISTS hosting_audit_logs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_hosting_audit_account ON hosting_audit_logs (hosting_account_id);
+
+CREATE TABLE IF NOT EXISTS admin_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    role VARCHAR(40) NOT NULL DEFAULT 'suporte',
+    status VARCHAR(40) NOT NULL DEFAULT 'active',
+    created_by INTEGER DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_users_user ON admin_users (user_id);
+
+CREATE TABLE IF NOT EXISTS admin_audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_user_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    action VARCHAR(80) NOT NULL,
+    resource_type VARCHAR(80) NOT NULL DEFAULT '',
+    resource_id VARCHAR(80) DEFAULT NULL,
+    result VARCHAR(40) NOT NULL DEFAULT 'ok',
+    ip VARCHAR(64) DEFAULT NULL,
+    detail_json TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON admin_audit_logs (created_at);
+
+CREATE TABLE IF NOT EXISTS admin_notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type VARCHAR(80) NOT NULL,
+    title VARCHAR(190) NOT NULL,
+    body TEXT NOT NULL,
+    link VARCHAR(255) DEFAULT NULL,
+    read_at TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    setting_key VARCHAR(120) NOT NULL,
+    value_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    updated_by INTEGER DEFAULT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_app_settings_key ON app_settings (setting_key);
