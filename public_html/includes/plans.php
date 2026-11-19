@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/env.php';
+
 /**
  * Official GeekHost hosting plan catalog — single source of truth for checkout amounts.
  * Checkout periods: mensal | semestral | anual.
+ * DA packages: Plano-Light-GeekHost / Plano-Empresa-GeekHost / Plano-Premium-GeekHost.
  */
 function geekhost_plans(): array
 {
@@ -14,6 +17,7 @@ function geekhost_plans(): array
             'name' => 'Plano Light',
             'tagline' => 'Para colocar seu site e suas ideias no ar.',
             'checkout_enabled' => true,
+            'da_package' => 'Plano-Light-GeekHost',
             'max_domains' => 1,
             'max_sites' => 1,
             'features' => ['5 contas de e-mail', '10 GB de espaço', 'Banco de dados ilimitado'],
@@ -55,6 +59,7 @@ function geekhost_plans(): array
             'name' => 'Plano Empresa',
             'tagline' => 'Para negócios e equipes que querem crescer online.',
             'checkout_enabled' => true,
+            'da_package' => 'Plano-Empresa-GeekHost',
             'max_domains' => 3,
             'max_sites' => 3,
             'features' => ['10 contas de e-mail', '15 GB de espaço', 'Banco de dados ilimitado'],
@@ -96,6 +101,7 @@ function geekhost_plans(): array
             'name' => 'Plano Premium',
             'tagline' => 'Para projetos que precisam de uma estrutura mais completa.',
             'checkout_enabled' => true,
+            'da_package' => 'Plano-Premium-GeekHost',
             'max_domains' => 10,
             'max_sites' => 10,
             'features' => ['E-mails ilimitados', '25 GB de espaço', 'Banco de dados ilimitado'],
@@ -222,4 +228,30 @@ function geekhost_plan_site_limit(string $planCode): int
 {
     $plan = geekhost_plan($planCode);
     return (int) ($plan['max_sites'] ?? 1);
+}
+
+/**
+ * DirectAdmin reseller package linked to a GeekHost checkout plan.
+ * Env overrides (DIRECTADMIN_PACKAGE_*) win when set; otherwise uses plans.php da_package.
+ */
+function geekhost_plan_da_package(string $planCode): string
+{
+    geekhost_load_env();
+    $envKey = match (strtolower($planCode)) {
+        'light' => 'DIRECTADMIN_PACKAGE_LIGHT',
+        'empresa' => 'DIRECTADMIN_PACKAGE_EMPRESA',
+        'premium' => 'DIRECTADMIN_PACKAGE_PREMIUM',
+        default => 'DIRECTADMIN_PACKAGE_DEFAULT',
+    };
+    $fromEnv = (string) env($envKey, '');
+    if ($fromEnv !== '') {
+        return $fromEnv;
+    }
+    $plan = geekhost_plan($planCode);
+    $fromPlan = (string) ($plan['da_package'] ?? '');
+    if ($fromPlan !== '') {
+        return $fromPlan;
+    }
+    $fallback = (string) env('DIRECTADMIN_PACKAGE_DEFAULT', '');
+    return $fallback !== '' ? $fallback : 'Plano-Light-GeekHost';
 }

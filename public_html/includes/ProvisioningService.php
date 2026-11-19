@@ -739,12 +739,7 @@ final class ProvisioningService
 
     private function packageForPlan(string $planCode): string
     {
-        $map = [
-            'light' => (string) env('DIRECTADMIN_PACKAGE_LIGHT', 'light'),
-            'empresa' => (string) env('DIRECTADMIN_PACKAGE_EMPRESA', 'empresa'),
-            'premium' => (string) env('DIRECTADMIN_PACKAGE_PREMIUM', 'premium'),
-        ];
-        return $map[$planCode] ?? (string) env('DIRECTADMIN_PACKAGE_DEFAULT', $planCode);
+        return geekhost_plan_da_package($planCode);
     }
 
     private function allocateUsername(int $userId, string $domain): string
