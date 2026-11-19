@@ -25,6 +25,31 @@ Options -Indexes
     RewriteRule ^api/painel/tickets-attachment/?$ api/painel/tickets-attachment.php [L,QSA]
     RewriteRule ^api/painel/notifications/?$ api/painel/notifications.php [L,QSA]
     RewriteRule ^api/admin/tickets/?$ api/admin/tickets.php [L,QSA]
+    RewriteRule ^api/admin/hosting/?$ api/admin/hosting.php [L,QSA]
+
+    # Standalone GeekHost Admin (not client /painel)
+    RewriteRule ^admin/?$ admin/index.php [L,QSA]
+    RewriteRule ^admin/login/?$ admin/login.php [L,QSA]
+    RewriteRule ^admin/logout/?$ admin/logout.php [L,QSA]
+    RewriteRule ^admin/vendas/?$ admin/vendas.php [L,QSA]
+    RewriteRule ^admin/faturamento/?$ admin/faturamento.php [L,QSA]
+    RewriteRule ^admin/cobrancas/?$ admin/cobrancas.php [L,QSA]
+    RewriteRule ^admin/clientes/?$ admin/clientes.php [L,QSA]
+    RewriteRule ^admin/hospedagens/?$ admin/hospedagens.php [L,QSA]
+    RewriteRule ^admin/dominios/?$ admin/dominios.php [L,QSA]
+    RewriteRule ^admin/sites/?$ admin/sites.php [L,QSA]
+    RewriteRule ^admin/planos/?$ admin/planos.php [L,QSA]
+    RewriteRule ^admin/administradores/?$ admin/administradores.php [L,QSA]
+    RewriteRule ^admin/relatorios/?$ admin/relatorios.php [L,QSA]
+    RewriteRule ^admin/auditoria/?$ admin/auditoria.php [L,QSA]
+    RewriteRule ^admin/configuracoes/?$ admin/configuracoes.php [L,QSA]
+    RewriteRule ^admin/busca/?$ admin/busca.php [L,QSA]
+
+    # Extensionless .php fallback (covers future admin/painel pages)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*)$ $1.php [L,QSA]
 </IfModule>
 
 <FilesMatch "^\.env">
