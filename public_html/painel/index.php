@@ -8,12 +8,15 @@ $panelLead = 'Acompanhe seus serviços, domínios e faturas em um só lugar.';
 require __DIR__ . '/_layout.php';
 require_once dirname(__DIR__) . '/includes/OrderService.php';
 require_once dirname(__DIR__) . '/includes/DomainSiteService.php';
+require_once dirname(__DIR__) . '/includes/ProvisioningService.php';
 require_once dirname(__DIR__) . '/includes/plans.php';
 require_once dirname(__DIR__) . '/includes/db.php';
 
 $orders = new OrderService();
 $domainSvc = new DomainSiteService();
+$provisioning = new ProvisioningService();
 $userId = (int) $panelUser['id'];
+$hostingAccount = $provisioning->findAccountForUser($userId);
 $counts = $orders->invoiceCounts($userId);
 $allInvoices = $orders->listInvoicesForUser($userId);
 $openAmount = 0.0;
@@ -45,6 +48,15 @@ $serviceRows = $services->fetchAll() ?: [];
 
 $firstName = explode(' ', (string) $panelUser['name'])[0] ?: 'cliente';
 $hostingStatus = (string) ($panelUser['hostingStatus'] ?? 'pending');
+if (!empty($hostingAccount['status'])) {
+    if ($hostingAccount['status'] === 'active') {
+        $hostingStatus = 'active';
+    } elseif ($hostingAccount['status'] === 'suspended') {
+        $hostingStatus = 'suspended';
+    } elseif (in_array($hostingAccount['status'], ['pending', 'creating', 'blocked_no_domain'], true)) {
+        $hostingStatus = 'pending';
+    }
+}
 $hasCard = !empty($panelUser['cardLast4']);
 $pendingProvisioning = false;
 foreach ($serviceRows as $service) {
@@ -55,6 +67,9 @@ foreach ($serviceRows as $service) {
 }
 if ($hostingStatus === 'pending' && $counts['pago'] > 0) {
     $pendingProvisioning = true;
+}
+if (!empty($hostingAccount) && $hostingAccount['status'] === 'active') {
+    $pendingProvisioning = false;
 }
 
 $fmtMoney = static function (float $n): string {

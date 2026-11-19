@@ -124,6 +124,14 @@ final class DomainSiteService
             ':up' => $now,
         ]);
 
+        $domainId = (int) $this->db->lastInsertId();
+        try {
+            require_once __DIR__ . '/ProvisioningService.php';
+            (new ProvisioningService())->queueAddDomain($userId, $domain, $domainId);
+        } catch (Throwable $e) {
+            geekhost_log('da_queue_add_domain_failed', ['domain' => $domain, 'error' => $e->getMessage()]);
+        }
+
         $notifications = new NotificationService();
         $notifications->notify(
             $userId,
@@ -216,9 +224,9 @@ final class DomainSiteService
         $title = trim($label) !== '' ? trim($label) : (string) $domain['domain'];
         $stmt = $this->db->prepare(
             'INSERT INTO user_sites (
-                public_id, user_id, domain_id, title, status, wordpress_status, created_at, updated_at
+                public_id, user_id, domain_id, title, status, wordpress_status, site_type, created_at, updated_at
             ) VALUES (
-                :p, :u, :d, :t, :st, :wp, :c, :up
+                :p, :u, :d, :t, :st, :wp, :type, :c, :up
             )'
         );
         $stmt->execute([
@@ -228,6 +236,7 @@ final class DomainSiteService
             ':t' => $title,
             ':st' => 'ready',
             ':wp' => 'not_installed',
+            ':type' => 'blank',
             ':c' => $now,
             ':up' => $now,
         ]);
@@ -251,13 +260,34 @@ final class DomainSiteService
         }
         $now = gmdate('c');
         $stmt = $this->db->prepare(
-            "UPDATE user_sites SET wordpress_status = 'queued', status = 'wordpress_queued', updated_at = :u WHERE id = :id"
+            "UPDATE user_sites SET wordpress_status = 'queued', status = 'wordpress_queued', site_type = 'wordpress', updated_at = :u WHERE id = :id"
         );
         $stmt->execute([':u' => $now, ':id' => $site['id']]);
+
+        $emailStmt = $this->db->prepare('SELECT email FROM users WHERE id = :id');
+        $emailStmt->execute([':id' => $userId]);
+        $email = (string) ($emailStmt->fetchColumn() ?: 'noreply@geekhost.com.br');
+
+        try {
+            require_once __DIR__ . '/ProvisioningService.php';
+            (new ProvisioningService())->queueWordpress(
+                $userId,
+                (int) $site['id'],
+                (string) ($site['domain_name'] ?? $site['domain'] ?? ''),
+                (string) ($site['title'] ?? ''),
+                $email
+            );
+        } catch (Throwable $e) {
+            $this->db->prepare(
+                "UPDATE user_sites SET wordpress_status = 'failed', status = 'wordpress_failed', updated_at = :u WHERE id = :id"
+            )->execute([':u' => $now, ':id' => $site['id']]);
+            throw new InvalidArgumentException($e->getMessage());
+        }
+
         geekhost_log('wordpress_install_queued', [
             'user_id' => $userId,
             'site' => $sitePublicId,
-            'domain' => $site['domain'] ?? null,
+            'domain' => $site['domain_name'] ?? $site['domain'] ?? null,
         ]);
         return $this->presentSite($this->findSiteByPublicId($sitePublicId) ?? []);
     }
@@ -388,6 +418,7 @@ final class DomainSiteService
             'nsOk' => (bool) ((int) ($row['ns_ok'] ?? 0)),
             'nsCheckedAt' => $row['ns_checked_at'] ?? null,
             'status' => $row['status'] ?? 'awaiting_dns',
+            'sslStatus' => $row['ssl_status'] ?? 'none',
             'nsFound' => $raw['found'] ?? [],
             'nsMissing' => $raw['missing'] ?? geekhost_nameservers(),
             'nsMessage' => $raw['message'] ?? '',
@@ -404,7 +435,9 @@ final class DomainSiteService
             'title' => $row['title'] ?? $domain,
             'domain' => $domain,
             'status' => $row['status'] ?? 'ready',
+            'siteType' => $row['site_type'] ?? 'blank',
             'wordpressStatus' => $wp,
+            'sslStatus' => $row['ssl_status'] ?? 'none',
             'nsOk' => (bool) ((int) ($row['ns_ok'] ?? 0)),
             'adminUrl' => $domain !== '' ? 'https://' . $domain . '/wp-admin' : null,
             'siteUrl' => $domain !== '' ? 'https://' . $domain : null,
@@ -457,6 +490,29 @@ final class DomainSiteService
                 $this->db->exec($sql);
             } catch (Throwable $e) {
                 // exists
+            }
+        }
+
+        $extra = [
+            'user_domains' => [
+                'ssl_status' => "VARCHAR(40) NOT NULL DEFAULT 'none'",
+                'hosting_account_id' => ($driver === 'mysql' ? 'BIGINT UNSIGNED' : 'INTEGER') . ' DEFAULT NULL',
+            ],
+            'user_sites' => [
+                'site_type' => "VARCHAR(40) NOT NULL DEFAULT 'blank'",
+                'ssl_status' => "VARCHAR(40) NOT NULL DEFAULT 'none'",
+            ],
+        ];
+        foreach ($extra as $table => $cols) {
+            $existing = geekhost_table_columns($this->db, $table);
+            foreach ($cols as $col => $def) {
+                if (!in_array($col, $existing, true)) {
+                    try {
+                        $this->db->exec("ALTER TABLE {$table} ADD COLUMN {$col} {$def}");
+                    } catch (Throwable $e) {
+                        // ignore
+                    }
+                }
             }
         }
     }

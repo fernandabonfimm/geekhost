@@ -908,6 +908,14 @@ final class OrderService
             $this->db->prepare("UPDATE subscriptions SET status = 'active', overdue_since = NULL, updated_at = :u WHERE asaas_subscription_id = :id")
                 ->execute([':u' => $now, ':id' => $asaasSubscriptionId]);
         }
+        if ($userId > 0) {
+            try {
+                require_once __DIR__ . '/ProvisioningService.php';
+                (new ProvisioningService())->unsuspendUserHosting($userId);
+            } catch (Throwable $e) {
+                geekhost_log('da_unsuspend_failed', ['user_id' => $userId, 'error' => $e->getMessage()]);
+            }
+        }
     }
 
     private function enforceOverdueSuspension(int $userId, string $now): void
@@ -944,6 +952,12 @@ final class OrderService
         $this->db->prepare(
             "UPDATE services SET status = 'suspended', updated_at = :u WHERE user_id = :id AND status != 'canceled'"
         )->execute([':u' => $now, ':id' => $userId]);
+        try {
+            require_once __DIR__ . '/ProvisioningService.php';
+            (new ProvisioningService())->suspendUserHosting($userId, 'overdue_2_months');
+        } catch (Throwable $e) {
+            geekhost_log('da_suspend_failed', ['user_id' => $userId, 'error' => $e->getMessage()]);
+        }
         geekhost_log('hosting_suspended_overdue', ['user_id' => $userId]);
     }
 

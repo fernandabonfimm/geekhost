@@ -19,7 +19,12 @@ function geekhost_log(string $event, array $context = []): void
     $file = $dir . DIRECTORY_SEPARATOR . 'checkout.log';
 
     $safe = $context;
-    foreach (['apiKey', 'access_token', 'creditCard', 'number', 'ccv', 'cvv', 'ASAAS_SANDBOX_API_KEY', 'ASAAS_PRODUCTION_API_KEY'] as $secretKey) {
+    foreach ([
+        'apiKey', 'access_token', 'creditCard', 'number', 'ccv', 'cvv',
+        'ASAAS_SANDBOX_API_KEY', 'ASAAS_PRODUCTION_API_KEY',
+        'DIRECTADMIN_LOGIN_KEY', 'DIRECTADMIN_PASSWORD', 'password', 'passwd', 'adminPass',
+        'da_password_enc', 'userpwd',
+    ] as $secretKey) {
         if (array_key_exists($secretKey, $safe)) {
             $safe[$secretKey] = '[redacted]';
         }

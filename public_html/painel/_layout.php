@@ -99,6 +99,18 @@ if (!empty($panelUser)) {
         <a href="<?= e(url('/painel/suporte')) ?>" class="<?= $panelSection === 'suporte' || $panelSection === 'admin-tickets' ? 'is-active' : '' ?>" data-nav-label="Suporte" title="Suporte">
             <i data-lucide="headset" aria-hidden="true"></i><span>Suporte</span>
         </a>
+        <?php
+        if (!empty($panelUser['email'])) {
+            require_once dirname(__DIR__) . '/includes/TicketService.php';
+            if (TicketService::isAdminEmail((string) $panelUser['email'])) {
+                ?>
+        <a href="<?= e(url('/painel/admin/hosting')) ?>" class="<?= $panelSection === 'admin-hosting' ? 'is-active' : '' ?>" data-nav-label="Hospedagem DA" title="Hospedagem DA">
+            <i data-lucide="server" aria-hidden="true"></i><span>Hospedagem DA</span>
+        </a>
+                <?php
+            }
+        }
+        ?>
     </nav>
     <div class="panel-sidebar-bottom">
         <?php if (!empty($companyWhatsapp)): ?>

@@ -104,6 +104,12 @@ function geekhost_migrate(PDO $pdo): void
             'CREATE UNIQUE INDEX idx_user_domains_user_domain ON user_domains (user_id, domain)',
             'CREATE UNIQUE INDEX idx_user_sites_public ON user_sites (public_id)',
             'CREATE INDEX idx_user_sites_user ON user_sites (user_id)',
+            'CREATE UNIQUE INDEX idx_hosting_accounts_public ON hosting_accounts (public_id)',
+            'CREATE UNIQUE INDEX idx_hosting_accounts_username ON hosting_accounts (da_username)',
+            'CREATE INDEX idx_hosting_accounts_user ON hosting_accounts (user_id)',
+            'CREATE UNIQUE INDEX idx_hosting_jobs_public ON hosting_jobs (public_id)',
+            'CREATE INDEX idx_hosting_jobs_status ON hosting_jobs (status)',
+            'CREATE INDEX idx_hosting_audit_account ON hosting_audit_logs (hosting_account_id)',
         ];
         foreach ($indexes as $indexSql) {
             try {

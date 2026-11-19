@@ -179,6 +179,8 @@ CREATE TABLE IF NOT EXISTS user_domains (
     ns_checked_at TEXT DEFAULT NULL,
     ns_raw_json TEXT DEFAULT NULL,
     status VARCHAR(40) NOT NULL DEFAULT 'awaiting_dns',
+    ssl_status VARCHAR(40) NOT NULL DEFAULT 'none',
+    hosting_account_id INTEGER DEFAULT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -195,6 +197,8 @@ CREATE TABLE IF NOT EXISTS user_sites (
     title VARCHAR(190) NOT NULL DEFAULT '',
     status VARCHAR(40) NOT NULL DEFAULT 'ready',
     wordpress_status VARCHAR(40) NOT NULL DEFAULT 'not_installed',
+    site_type VARCHAR(40) NOT NULL DEFAULT 'blank',
+    ssl_status VARCHAR(40) NOT NULL DEFAULT 'none',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
@@ -203,3 +207,56 @@ CREATE TABLE IF NOT EXISTS user_sites (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sites_public ON user_sites (public_id);
 CREATE INDEX IF NOT EXISTS idx_user_sites_user ON user_sites (user_id);
+
+CREATE TABLE IF NOT EXISTS hosting_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    user_id INTEGER NOT NULL,
+    order_id INTEGER DEFAULT NULL,
+    service_id INTEGER DEFAULT NULL,
+    plan_code VARCHAR(40) NOT NULL,
+    da_username VARCHAR(64) NOT NULL,
+    da_password_enc TEXT DEFAULT NULL,
+    da_package VARCHAR(80) NOT NULL DEFAULT '',
+    primary_domain VARCHAR(190) DEFAULT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'pending',
+    last_error TEXT DEFAULT NULL,
+    provisioned_at TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hosting_accounts_public ON hosting_accounts (public_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hosting_accounts_username ON hosting_accounts (da_username);
+CREATE INDEX IF NOT EXISTS idx_hosting_accounts_user ON hosting_accounts (user_id);
+
+CREATE TABLE IF NOT EXISTS hosting_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    hosting_account_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    job_type VARCHAR(40) NOT NULL,
+    payload_json TEXT DEFAULT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'pending',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT DEFAULT NULL,
+    available_at TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hosting_jobs_public ON hosting_jobs (public_id);
+CREATE INDEX IF NOT EXISTS idx_hosting_jobs_status ON hosting_jobs (status);
+
+CREATE TABLE IF NOT EXISTS hosting_audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hosting_account_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    actor VARCHAR(40) NOT NULL,
+    action VARCHAR(80) NOT NULL,
+    detail_json TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_hosting_audit_account ON hosting_audit_logs (hosting_account_id);
