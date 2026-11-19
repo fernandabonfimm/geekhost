@@ -1,30 +1,7 @@
--- =============================================================================
--- GeekHost — banco completo (MySQL 5.7+ / MariaDB / phpMyAdmin cPanel)
--- =============================================================================
--- COMO IMPORTAR:
--- 1) No cPanel → MySQL Databases: crie o banco (ex: geekhost) e o user geek6923_banco
--- 2) phpMyAdmin → clique no banco → Importar → este arquivo inteiro
--- 3) .env (fora de public_html):
---      DB_DRIVER=mysql
---      DB_HOST=127.0.0.1
---      DB_NAME=geekhost
---      DB_USER=geek6923_banco
---      DB_PASS=***
---
--- Admin padrão:
---   https://geekhost.com.br/admin/login
---   admin@geekhost.com.br
---   GeekHost@Admin1
--- =============================================================================
-
 SET NAMES utf8mb4;
 SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 SET FOREIGN_KEY_CHECKS = 0;
 SET time_zone = '+00:00';
-
--- Se o phpMyAdmin já tiver o banco selecionado, ignore a linha USE.
--- Ajuste o nome se o banco no cPanel for outro (ex: geek6923_geekhost).
--- USE `geekhost`;
 
 CREATE TABLE IF NOT EXISTS `schema_migrations` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -406,12 +383,6 @@ CREATE TABLE IF NOT EXISTS `support_notifications` (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- -----------------------------------------------------------------------------
--- Seed admin Geek
--- Email: admin@geekhost.com.br
--- Senha: GeekHost@Admin1
--- -----------------------------------------------------------------------------
-
 INSERT INTO `users` (
   `public_id`, `customer_id`, `email`, `password_hash`, `password_is_set`,
   `name_enc`, `phone_enc`, `mobile_enc`, `cpf_cnpj_enc`, `postal_code_enc`,
@@ -451,8 +422,8 @@ WHERE NOT EXISTS (
 );
 
 INSERT INTO `schema_migrations` (`version`, `applied_at`)
-SELECT 'cpanel-import-v2', '2026-01-01T00:00:00+00:00'
+SELECT 'cpanel-import-v3', '2026-01-01T00:00:00+00:00'
 FROM DUAL
 WHERE NOT EXISTS (
-  SELECT 1 FROM `schema_migrations` WHERE `version` = 'cpanel-import-v2'
+  SELECT 1 FROM `schema_migrations` WHERE `version` = 'cpanel-import-v3'
 );
