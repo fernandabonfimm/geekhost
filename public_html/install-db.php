@@ -57,19 +57,71 @@ if ($name === '' || $user === '') {
     exit;
 }
 
-echo '<div class="box"><strong>Conectando</strong><br>host=' . h($host) . ' db=' . h($name) . ' user=' . h($user) . '</div>';
+// DirectAdmin/cPanel often store the short name in the UI but the real MySQL
+// name is account_prefix + name (e.g. geek6923_newbanco).
+$dbCandidates = [$name];
+$userCandidates = [$user];
+if (!str_contains($name, '_')) {
+    $dbCandidates[] = 'geek6923_' . $name;
+}
+if (!str_contains($user, '_')) {
+    $userCandidates[] = 'geek6923_' . $user;
+}
+$dbCandidates = array_values(array_unique($dbCandidates));
+$userCandidates = array_values(array_unique($userCandidates));
 
-try {
-    $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $name);
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
-} catch (Throwable $e) {
-    echo '<p class="err">Falha PDO: ' . h($e->getMessage()) . '</p>';
-    echo '<p>Confira se o banco existe no cPanel e se o usuário tem permissão nele.</p></body></html>';
+echo '<div class="box"><strong>Conectando</strong><br>host=' . h($host);
+echo '<br>db candidatos: <code>' . h(implode(', ', $dbCandidates)) . '</code>';
+echo '<br>user candidatos: <code>' . h(implode(', ', $userCandidates)) . '</code></div>';
+
+$pdo = null;
+$lastError = '';
+$connectedAs = '';
+foreach ($userCandidates as $tryUser) {
+    foreach ($dbCandidates as $tryDb) {
+        try {
+            $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $tryDb);
+            $pdo = new PDO($dsn, $tryUser, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
+            $connectedAs = 'user=' . $tryUser . ' db=' . $tryDb;
+            $name = $tryDb;
+            $user = $tryUser;
+            break 2;
+        } catch (Throwable $e) {
+            $lastError = $e->getMessage();
+            echo '<p class="err">Falhou <code>' . h($tryUser) . '@' . h($tryDb) . '</code>: ' . h($lastError) . '</p>';
+        }
+    }
+}
+
+if ($pdo === null) {
+    echo '<p class="err"><strong>Não conectou.</strong> Último erro: ' . h($lastError) . '</p>';
+    echo '<div class="box"><p>No painel MySQL confira o <strong>nome completo</strong> (geralmente <code>geek6923_newbanco</code>, não só <code>newbanco</code>).</p>';
+    echo '<p>Confirme também que o usuário está <strong>associado</strong> ao banco com ALL PRIVILEGES.</p>';
+    echo '<p>No <code>.env</code> (pai do public_html):</p>';
+    echo '<pre>DB_NAME=geek6923_newbanco' . "\n" . 'DB_USER=geek6923_newbanco' . "\n" . 'DB_PASS=sua_senha</pre></div>';
+
+    // Try auth-only to list visible databases
+    foreach ($userCandidates as $tryUser) {
+        try {
+            $probe = new PDO(sprintf('mysql:host=%s;port=%s;charset=utf8mb4', $host, $port), $tryUser, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+            $dbs = $probe->query('SHOW DATABASES')->fetchAll(PDO::FETCH_COLUMN);
+            echo '<p class="ok">Login OK com <code>' . h($tryUser) . '</code>. Bancos visíveis: <code>' . h(implode(', ', array_map('strval', $dbs))) . '</code></p>';
+            echo '<p>Coloque no .env o nome exato de um desses bancos e associe o usuário a ele no painel.</p>';
+            break;
+        } catch (Throwable $e) {
+            echo '<p class="err">Login sem db também falhou para <code>' . h($tryUser) . '</code>: ' . h($e->getMessage()) . '</p>';
+        }
+    }
+    echo '</body></html>';
     exit;
 }
+
+echo '<p class="ok">Conectado: <code>' . h($connectedAs) . '</code></p>';
 
 $sqlFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'geekhost-cpanel-import.sql';
 if (!is_readable($sqlFile)) {
