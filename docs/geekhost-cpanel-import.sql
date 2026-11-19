@@ -390,7 +390,7 @@ INSERT INTO `users` (
   `hosting_status`, `created_at`, `updated_at`
 )
 SELECT
-  'a1111111-1111-4111-8111-111111111111',
+  'a2222222-2222-4222-8222-222222222222',
   NULL,
   'admin@geekhost.com.br',
   '$2y$12$cRaQXgSpf.FLKQvQwgNJweXfKXaTFleFGuc4RLJQjofZdj4zRN55e',
@@ -404,7 +404,18 @@ SELECT
 FROM DUAL
 WHERE NOT EXISTS (
   SELECT 1 FROM `users` WHERE `email` = 'admin@geekhost.com.br'
+)
+AND NOT EXISTS (
+  SELECT 1 FROM `users` WHERE `public_id` = 'a2222222-2222-4222-8222-222222222222'
 );
+
+UPDATE `users`
+SET
+  `password_hash` = '$2y$12$cRaQXgSpf.FLKQvQwgNJweXfKXaTFleFGuc4RLJQjofZdj4zRN55e',
+  `password_is_set` = 1,
+  `hosting_status` = 'active',
+  `updated_at` = '2026-01-01T00:00:00+00:00'
+WHERE `email` = 'admin@geekhost.com.br';
 
 INSERT INTO `admin_users` (`user_id`, `role`, `status`, `created_at`, `updated_at`)
 SELECT u.`id`, 'super_admin', 'active', '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00'

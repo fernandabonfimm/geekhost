@@ -1,0 +1,310 @@
+-- GeekHost checkout + client panel schema (SQLite-compatible)
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version VARCHAR(64) NOT NULL UNIQUE,
+    applied_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email VARCHAR(190) NOT NULL,
+    name VARCHAR(190) NOT NULL,
+    cpf_cnpj VARCHAR(20) NOT NULL,
+    phone VARCHAR(30) NOT NULL DEFAULT '',
+    mobile_phone VARCHAR(30) NOT NULL DEFAULT '',
+    postal_code VARCHAR(12) NOT NULL DEFAULT '',
+    address VARCHAR(190) NOT NULL DEFAULT '',
+    address_number VARCHAR(30) NOT NULL DEFAULT '',
+    complement VARCHAR(120) NOT NULL DEFAULT '',
+    province VARCHAR(2) NOT NULL DEFAULT '',
+    city VARCHAR(120) NOT NULL DEFAULT '',
+    asaas_customer_id VARCHAR(64) DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_cpf_cnpj ON customers (cpf_cnpj);
+CREATE INDEX IF NOT EXISTS idx_customers_email ON customers (email);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_asaas ON customers (asaas_customer_id);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    customer_id INTEGER DEFAULT NULL,
+    email VARCHAR(190) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    password_is_set INTEGER NOT NULL DEFAULT 1,
+    password_setup_token_hash VARCHAR(64) DEFAULT NULL,
+    password_setup_expires TEXT DEFAULT NULL,
+    name_enc TEXT NOT NULL DEFAULT '',
+    phone_enc TEXT NOT NULL DEFAULT '',
+    mobile_enc TEXT NOT NULL DEFAULT '',
+    cpf_cnpj_enc TEXT NOT NULL DEFAULT '',
+    postal_code_enc TEXT NOT NULL DEFAULT '',
+    address_enc TEXT NOT NULL DEFAULT '',
+    address_number_enc TEXT NOT NULL DEFAULT '',
+    complement_enc TEXT NOT NULL DEFAULT '',
+    province_enc TEXT NOT NULL DEFAULT '',
+    city_enc TEXT NOT NULL DEFAULT '',
+    photo_path VARCHAR(255) DEFAULT NULL,
+    asaas_credit_card_token VARCHAR(120) DEFAULT NULL,
+    card_brand VARCHAR(40) DEFAULT NULL,
+    card_last4 VARCHAR(4) DEFAULT NULL,
+    hosting_status VARCHAR(40) NOT NULL DEFAULT 'pending',
+    suspended_at TEXT DEFAULT NULL,
+    suspend_reason VARCHAR(190) DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_public_id ON users (public_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email);
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash VARCHAR(64) NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    revoked_at TEXT DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions (token_hash);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions (user_id);
+
+CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    invoice_number INTEGER DEFAULT NULL,
+    customer_id INTEGER NOT NULL,
+    user_id INTEGER DEFAULT NULL,
+    plan_code VARCHAR(40) NOT NULL,
+    plan_name VARCHAR(120) NOT NULL,
+    billing_period VARCHAR(40) NOT NULL,
+    domain VARCHAR(190) DEFAULT NULL,
+    amount_cents INTEGER NOT NULL,
+    renew_amount_cents INTEGER DEFAULT NULL,
+    currency VARCHAR(3) NOT NULL DEFAULT 'BRL',
+    billing_type VARCHAR(20) NOT NULL,
+    status VARCHAR(40) NOT NULL,
+    due_date TEXT DEFAULT NULL,
+    asaas_payment_id VARCHAR(64) DEFAULT NULL,
+    asaas_subscription_id VARCHAR(64) DEFAULT NULL,
+    asaas_invoice_url TEXT DEFAULT NULL,
+    pix_qr_code TEXT DEFAULT NULL,
+    pix_copy_paste TEXT DEFAULT NULL,
+    boleto_url TEXT DEFAULT NULL,
+    boleto_identification_field TEXT DEFAULT NULL,
+    card_brand VARCHAR(40) DEFAULT NULL,
+    card_last4 VARCHAR(4) DEFAULT NULL,
+    idempotency_key VARCHAR(64) NOT NULL,
+    provisioning_status VARCHAR(40) NOT NULL DEFAULT 'none',
+    metadata_json TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    paid_at TEXT DEFAULT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_public_id ON orders (public_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_idempotency ON orders (idempotency_key);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_asaas_payment ON orders (asaas_payment_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status);
+CREATE INDEX IF NOT EXISTS idx_orders_user ON orders (user_id);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    customer_id INTEGER NOT NULL,
+    user_id INTEGER DEFAULT NULL,
+    plan_code VARCHAR(40) NOT NULL,
+    billing_period VARCHAR(40) NOT NULL,
+    domain VARCHAR(190) DEFAULT NULL,
+    amount_cents INTEGER NOT NULL,
+    renew_amount_cents INTEGER NOT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'pending',
+    asaas_subscription_id VARCHAR(64) DEFAULT NULL,
+    asaas_credit_card_token VARCHAR(120) DEFAULT NULL,
+    next_due_date TEXT DEFAULT NULL,
+    overdue_since TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_public_id ON subscriptions (public_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_asaas ON subscriptions (asaas_subscription_id);
+
+CREATE TABLE IF NOT EXISTS services (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    user_id INTEGER NOT NULL,
+    order_id INTEGER DEFAULT NULL,
+    subscription_id INTEGER DEFAULT NULL,
+    plan_code VARCHAR(40) NOT NULL,
+    domain VARCHAR(190) NOT NULL DEFAULT '',
+    status VARCHAR(40) NOT NULL DEFAULT 'paid_pending_provisioning',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_services_public_id ON services (public_id);
+CREATE INDEX IF NOT EXISTS idx_services_user ON services (user_id);
+
+CREATE TABLE IF NOT EXISTS webhook_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_key VARCHAR(190) NOT NULL,
+    event_type VARCHAR(80) NOT NULL,
+    asaas_payment_id VARCHAR(64) DEFAULT NULL,
+    payload_json TEXT NOT NULL,
+    processed_at TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_webhook_events_key ON webhook_events (event_key);
+
+CREATE TABLE IF NOT EXISTS user_domains (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    user_id INTEGER NOT NULL,
+    domain VARCHAR(190) NOT NULL,
+    plan_code VARCHAR(40) NOT NULL DEFAULT 'light',
+    ns_ok INTEGER NOT NULL DEFAULT 0,
+    ns_checked_at TEXT DEFAULT NULL,
+    ns_raw_json TEXT DEFAULT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'awaiting_dns',
+    ssl_status VARCHAR(40) NOT NULL DEFAULT 'none',
+    hosting_account_id INTEGER DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_domains_public ON user_domains (public_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_domains_user_domain ON user_domains (user_id, domain);
+
+CREATE TABLE IF NOT EXISTS user_sites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    user_id INTEGER NOT NULL,
+    domain_id INTEGER NOT NULL,
+    title VARCHAR(190) NOT NULL DEFAULT '',
+    status VARCHAR(40) NOT NULL DEFAULT 'ready',
+    wordpress_status VARCHAR(40) NOT NULL DEFAULT 'not_installed',
+    site_type VARCHAR(40) NOT NULL DEFAULT 'blank',
+    ssl_status VARCHAR(40) NOT NULL DEFAULT 'none',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (domain_id) REFERENCES user_domains(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sites_public ON user_sites (public_id);
+CREATE INDEX IF NOT EXISTS idx_user_sites_user ON user_sites (user_id);
+
+CREATE TABLE IF NOT EXISTS hosting_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    user_id INTEGER NOT NULL,
+    order_id INTEGER DEFAULT NULL,
+    service_id INTEGER DEFAULT NULL,
+    plan_code VARCHAR(40) NOT NULL,
+    da_username VARCHAR(64) NOT NULL,
+    da_password_enc TEXT DEFAULT NULL,
+    da_package VARCHAR(80) NOT NULL DEFAULT '',
+    primary_domain VARCHAR(190) DEFAULT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'pending',
+    last_error TEXT DEFAULT NULL,
+    provisioned_at TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hosting_accounts_public ON hosting_accounts (public_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hosting_accounts_username ON hosting_accounts (da_username);
+CREATE INDEX IF NOT EXISTS idx_hosting_accounts_user ON hosting_accounts (user_id);
+
+CREATE TABLE IF NOT EXISTS hosting_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id VARCHAR(36) NOT NULL,
+    hosting_account_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    job_type VARCHAR(40) NOT NULL,
+    payload_json TEXT DEFAULT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'pending',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT DEFAULT NULL,
+    available_at TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hosting_jobs_public ON hosting_jobs (public_id);
+CREATE INDEX IF NOT EXISTS idx_hosting_jobs_status ON hosting_jobs (status);
+
+CREATE TABLE IF NOT EXISTS hosting_audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hosting_account_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    actor VARCHAR(40) NOT NULL,
+    action VARCHAR(80) NOT NULL,
+    detail_json TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_hosting_audit_account ON hosting_audit_logs (hosting_account_id);
+
+CREATE TABLE IF NOT EXISTS admin_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    role VARCHAR(40) NOT NULL DEFAULT 'suporte',
+    status VARCHAR(40) NOT NULL DEFAULT 'active',
+    created_by INTEGER DEFAULT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_users_user ON admin_users (user_id);
+
+CREATE TABLE IF NOT EXISTS admin_audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_user_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    action VARCHAR(80) NOT NULL,
+    resource_type VARCHAR(80) NOT NULL DEFAULT '',
+    resource_id VARCHAR(80) DEFAULT NULL,
+    result VARCHAR(40) NOT NULL DEFAULT 'ok',
+    ip VARCHAR(64) DEFAULT NULL,
+    detail_json TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON admin_audit_logs (created_at);
+
+CREATE TABLE IF NOT EXISTS admin_notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type VARCHAR(80) NOT NULL,
+    title VARCHAR(190) NOT NULL,
+    body TEXT NOT NULL,
+    link VARCHAR(255) DEFAULT NULL,
+    read_at TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    setting_key VARCHAR(120) NOT NULL,
+    value_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    updated_by INTEGER DEFAULT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_app_settings_key ON app_settings (setting_key);

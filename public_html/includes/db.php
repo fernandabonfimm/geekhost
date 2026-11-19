@@ -52,11 +52,44 @@ function geekhost_db(): PDO
     return $pdo;
 }
 
+function geekhost_core_tables_ready(PDO $pdo): bool
+{
+    foreach (['users', 'admin_users'] as $table) {
+        try {
+            $pdo->query('SELECT 1 FROM `' . str_replace('`', '``', $table) . '` LIMIT 1');
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function geekhost_schema_file(): ?string
+{
+    $candidates = [
+        geekhost_project_root() . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'schema.sql',
+        // public_html-only deploys (cPanel/DA): schema shipped next to the app
+        dirname(__DIR__) . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'schema.sql',
+        dirname(__DIR__) . DIRECTORY_SEPARATOR . 'schema.sql',
+    ];
+    foreach ($candidates as $path) {
+        if (is_readable($path)) {
+            return $path;
+        }
+    }
+    return null;
+}
+
 function geekhost_migrate(PDO $pdo): void
 {
-    $schemaFile = geekhost_project_root() . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'schema.sql';
-    if (!is_readable($schemaFile)) {
-        throw new RuntimeException('Database schema file missing.');
+    $schemaFile = geekhost_schema_file();
+    if ($schemaFile === null) {
+        // Production often uploads only public_html + .env; tables come from install-db.php.
+        if (geekhost_core_tables_ready($pdo)) {
+            geekhost_ensure_columns($pdo);
+            return;
+        }
+        throw new RuntimeException('Database schema file missing and core tables not found. Run install-db.php or upload database/schema.sql.');
     }
     $sql = file_get_contents($schemaFile);
     if ($sql === false) {
