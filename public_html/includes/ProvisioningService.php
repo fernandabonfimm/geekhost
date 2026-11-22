@@ -531,7 +531,7 @@ final class ProvisioningService
     {
         $limit = max(1, min(500, $limit));
         $rows = $this->db->query(
-            "SELECT h.*, u.email AS user_email, u.name AS user_name
+            "SELECT h.*, u.email AS user_email, u.name_enc AS user_name_enc
              FROM hosting_accounts h
              LEFT JOIN users u ON u.id = h.user_id
              ORDER BY h.id DESC LIMIT {$limit}"
@@ -1128,7 +1128,7 @@ final class ProvisioningService
             'id' => $row['public_id'] ?? '',
             'userId' => (int) ($row['user_id'] ?? 0),
             'userEmail' => $row['user_email'] ?? null,
-            'userName' => $row['user_name'] ?? null,
+            'userName' => geekhost_open(isset($row['user_name_enc']) ? (string) $row['user_name_enc'] : null),
             'planCode' => $row['plan_code'] ?? '',
             'daUsername' => $row['da_username'] ?? '',
             'package' => $row['da_package'] ?? '',

@@ -113,8 +113,8 @@ require __DIR__ . '/includes/header.php';
                     </div>
 
                     <p class="co-note" data-domain-later hidden>
-                        A GeekHost não vende domínio. Você finaliza a contratação da hospedagem agora.
-                        Depois de comprar o domínio onde preferir, cadastre em Minha Conta, na área Domínios.
+                        Você finaliza a contratação da hospedagem agora.
+                        <br>Depois você cadastra o domínio no painel da GeekHost.
                     </p>
 
                     <div data-domain-own>
@@ -202,7 +202,7 @@ require __DIR__ . '/includes/header.php';
                         <span class="co-card-icon"><i data-lucide="credit-card"></i></span>
                         <div>
                             <h2>3. Conta e pagamento</h2>
-                            <p>Dados da conta e forma de pagamento. Cartão/CVV não ficam salvos na GeekHost.</p>
+                            <p>Dados da conta e forma de pagamento.</p>
                         </div>
                     </div>
 

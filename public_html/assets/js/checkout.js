@@ -111,7 +111,7 @@
         const domain = form.domain?.value?.trim();
         if (domainEl) {
             domainEl.textContent = domainMode === 'later'
-                ? 'Domínio: você cadastra depois no painel'
+                ? 'Domínio:  '
                 : (domain ? `Domínio: ${domain}` : 'Domínio: —');
         }
         root.dataset.period = period;
