@@ -135,7 +135,7 @@
     const loadNotifications = async () => {
         if (!notifyList) return;
         try {
-            const res = await fetch('/api/painel/notifications', { credentials: 'same-origin' });
+            const res = await window.ghApi('/api/portal/notifications');
             const data = await res.json();
             if (!res.ok || !data.ok) throw new Error(data.error || 'Falha');
             if (notifyDot) notifyDot.hidden = !(data.unread > 0);
@@ -144,7 +144,7 @@
                 return;
             }
             notifyList.innerHTML = data.items.map((n) => `
-                <a class="panel-notify-item ${n.read ? '' : 'is-unread'}" href="${n.link || (n.ticketId ? `/painel/suporte?ticket=${encodeURIComponent(n.ticketId)}` : '/painel/')}">
+                <a class="panel-notify-item ${n.read ? '' : 'is-unread'}" href="${n.link || (n.ticketId ? `/portal/suporte?ticket=${encodeURIComponent(n.ticketId)}` : '/portal/')}">
                     <strong>${n.title}</strong>
                     <span>${n.body}</span>
                 </a>
@@ -170,9 +170,8 @@
         });
         document.querySelector('[data-notify-read-all]')?.addEventListener('click', async () => {
             try {
-                await fetch('/api/painel/notifications', {
+                await window.ghApi('/api/portal/notifications', {
                     method: 'POST',
-                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ csrfToken }),
                 });
@@ -188,7 +187,7 @@
 
     // Unpaid hosting reminder every 30 minutes
     if (body.dataset.unpaidHosting === '1') {
-        const payUrl = body.dataset.payUrl || '/painel/faturas?status=em_aberto';
+        const payUrl = body.dataset.payUrl || '/portal/faturas?status=em_aberto';
         const remindKey = 'gh_unpaid_toast_at';
         const remind = () => {
             toast('Há uma fatura em aberto. Toque para concluir o pagamento e liberar sua hospedagem.', 'warn', {
@@ -221,7 +220,7 @@
                     e.preventDefault();
                     toast('Conclua o pagamento do plano antes de cadastrar um domínio.', 'warn', {
                         title: 'Pagamento necessário',
-                        href: '/painel/faturas?status=em_aberto',
+                        href: '/portal/faturas?status=em_aberto',
                     });
                     return;
                 }
@@ -238,11 +237,11 @@
                 if (sitesPage.dataset.hasDomain !== '1') {
                     toast('Cadastre um domínio e aguarde o DNS antes de criar um site.', 'warn', {
                         title: 'Domínio necessário',
-                        href: '/painel/dominios',
+                        href: '/portal/dominios',
                     });
                     return;
                 }
-                window.location.href = '/painel/dominios';
+                window.location.href = '/portal/dominios';
             });
         });
     }

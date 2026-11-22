@@ -37,6 +37,14 @@ try {
     $dns = $svc->pollDnsAndSsl(50);
     // Second pass picks up SSL/wordpress jobs enqueued by DNS poll
     $jobs2 = $svc->processPendingJobs(30);
+    $billing = null;
+    try {
+        require_once dirname(__DIR__) . '/includes/BillingDunningService.php';
+        $billing = (new BillingDunningService())->run();
+    } catch (Throwable $billingError) {
+        geekhost_log('cron_billing_error', ['error' => $billingError->getMessage()]);
+        $billing = ['ok' => false];
+    }
 
     $result = [
         'ok' => true,
@@ -44,6 +52,7 @@ try {
         'jobs' => $jobs,
         'jobsFollowUp' => $jobs2,
         'dns' => $dns,
+        'billing' => $billing,
         'ts' => gmdate('c'),
     ];
     geekhost_log('cron_hosting', $result);

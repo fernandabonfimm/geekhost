@@ -3,47 +3,43 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # PHP does not always receive Authorization. Keep the bearer token available.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # If the browser typed /public_html, send it to the same path without that folder.
+    # Internal rewrites already set REDIRECT_STATUS, so this does not loop.
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteCond %{REQUEST_URI} ^/geekhost/public_html/?(.*)$
+    RewriteRule ^ /geekhost/%1 [R=301,L]
+
     RewriteRule ^checkout/?$ checkout.php [L,QSA]
     RewriteRule ^api/checkout/create/?$ api/checkout/create.php [L,QSA]
     RewriteRule ^api/checkout/status/?$ api/checkout/status.php [L,QSA]
     RewriteRule ^api/webhooks/asaas/?$ api/webhooks/asaas.php [L,QSA]
 
-    RewriteRule ^painel/?$ painel/index.php [L,QSA]
-    RewriteRule ^painel/login/?$ painel/login.php [L,QSA]
-    RewriteRule ^painel/logout/?$ painel/logout.php [L,QSA]
-    RewriteRule ^painel/faturas/?$ painel/faturas.php [L,QSA]
-    RewriteRule ^painel/perfil/?$ painel/perfil.php [L,QSA]
-    RewriteRule ^painel/carteira/?$ painel/carteira.php [L,QSA]
-    RewriteRule ^painel/dominios/?$ painel/dominios.php [L,QSA]
-    RewriteRule ^painel/sites/?$ painel/sites.php [L,QSA]
-    RewriteRule ^painel/suporte/?$ painel/suporte.php [L,QSA]
-    RewriteRule ^painel/admin/tickets/?$ painel/admin/tickets.php [L,QSA]
-    RewriteRule ^painel/criar-senha/?$ painel/criar-senha.php [L,QSA]
-    RewriteRule ^api/painel/me/?$ api/painel/me.php [L,QSA]
-    RewriteRule ^api/painel/faturas/?$ api/painel/faturas.php [L,QSA]
-    RewriteRule ^api/painel/tickets/?$ api/painel/tickets.php [L,QSA]
-    RewriteRule ^api/painel/tickets-attachment/?$ api/painel/tickets-attachment.php [L,QSA]
-    RewriteRule ^api/painel/notifications/?$ api/painel/notifications.php [L,QSA]
-    RewriteRule ^api/admin/tickets/?$ api/admin/tickets.php [L,QSA]
-    RewriteRule ^api/admin/hosting/?$ api/admin/hosting.php [L,QSA]
+    # Old bookmarks: client lived at /painel and admin at /admin.
+    # REQUEST_URI is the browser URL, so the new /painel (admin) is not redirected.
+    RewriteCond %{REQUEST_URI} ^/geekhost/painel/?(.*)$
+    RewriteRule ^painel/?(.*)$ /portal/%1 [R=301,L]
+    RewriteCond %{REQUEST_URI} ^/geekhost/admin/?(.*)$ [OR]
+    RewriteCond %{REQUEST_URI} ^/admin/?(.*)$
+    RewriteRule ^admin/?(.*)$ /painel/$1 [R=301,L]
 
-    # Standalone GeekHost Admin (not client /painel)
-    RewriteRule ^admin/?$ admin/index.php [L,QSA]
-    RewriteRule ^admin/login/?$ admin/login.php [L,QSA]
-    RewriteRule ^admin/logout/?$ admin/logout.php [L,QSA]
-    RewriteRule ^admin/vendas/?$ admin/vendas.php [L,QSA]
-    RewriteRule ^admin/faturamento/?$ admin/faturamento.php [L,QSA]
-    RewriteRule ^admin/cobrancas/?$ admin/cobrancas.php [L,QSA]
-    RewriteRule ^admin/clientes/?$ admin/clientes.php [L,QSA]
-    RewriteRule ^admin/hospedagens/?$ admin/hospedagens.php [L,QSA]
-    RewriteRule ^admin/dominios/?$ admin/dominios.php [L,QSA]
-    RewriteRule ^admin/sites/?$ admin/sites.php [L,QSA]
-    RewriteRule ^admin/planos/?$ admin/planos.php [L,QSA]
-    RewriteRule ^admin/administradores/?$ admin/administradores.php [L,QSA]
-    RewriteRule ^admin/relatorios/?$ admin/relatorios.php [L,QSA]
-    RewriteRule ^admin/auditoria/?$ admin/auditoria.php [L,QSA]
-    RewriteRule ^admin/configuracoes/?$ admin/configuracoes.php [L,QSA]
-    RewriteRule ^admin/busca/?$ admin/busca.php [L,QSA]
+    RewriteRule ^cron/billing/?$ cron/billing.php [L,QSA]
+
+    # Admin is public /painel → files in admin/
+    RewriteRule ^painel/?$ admin/index.php [L,QSA]
+    RewriteRule ^painel/([a-z0-9-]+)/?$ admin/$1.php [L,QSA]
+
+    # Client is public /portal → files in painel/
+    RewriteRule ^portal/?$ painel/index.php [L,QSA]
+    RewriteRule ^portal/admin/tickets/?$ painel/admin/tickets.php [L,QSA]
+    RewriteRule ^portal/([a-z0-9-]+)/?$ painel/$1.php [L,QSA]
+
+    # Client API /api/portal → api/painel. Admin API /api/painel → api/admin.
+    RewriteRule ^api/portal/([a-z0-9-]+)/?$ api/painel/$1.php [L,QSA]
+    RewriteRule ^api/painel/([a-z0-9-]+)/?$ api/admin/$1.php [L,QSA]
 
     # Extensionless .php fallback (covers future admin/painel pages)
     RewriteCond %{REQUEST_FILENAME} !-f

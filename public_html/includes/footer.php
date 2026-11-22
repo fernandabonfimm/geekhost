@@ -47,6 +47,7 @@
             <a href="politica-de-privacidade.php">Política de Privacidade</a>
         </nav>
         <small>&copy; <?= date('Y') ?> FBS Tecnologia - CNPJ 61.171.635/0001-46. Rua Pais Leme, 215, Conj. 1713, Pinheiros, São Paulo/SP, CEP 05424-150. Todos os direitos reservados.</small>
+        <a class="footer-admin-link" href="<?= e(url('/admin/login')) ?>">Acesso</a>
         <nav class="footer-social" aria-label="Redes sociais GeekHost">
             <a href="https://www.instagram.com/geekhost" target="_blank" rel="noopener noreferrer" aria-label="Instagram GeekHost" title="Instagram GeekHost">
                 <i class="bi bi-instagram" aria-hidden="true"></i>
@@ -135,6 +136,7 @@
 <?php if (!empty($loadQrCode)): ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <?php endif; ?>
+<script src="<?= e(asset('assets/js/password-toggle.js')) ?>" defer></script>
 <script src="<?= e(asset('assets/js/site.js')) ?>" defer></script>
 </body>
 </html>

@@ -2,9 +2,69 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/includes/config.php';
+require_once dirname(__DIR__) . '/includes/csrf.php';
+require_once dirname(__DIR__) . '/includes/AdminGate.php';
+require_once dirname(__DIR__) . '/includes/ProvisioningService.php';
+require_once dirname(__DIR__) . '/includes/Mailer.php';
+require_once dirname(__DIR__) . '/includes/plans.php';
+
+$gate = new AdminGate();
+try {
+    $ctx = $gate->requireAdmin();
+} catch (Throwable $e) {
+    $ctx = null;
+}
+if ($ctx && in_array('clientes', $gate->pagesFor($ctx['admin']), true) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_validate(isset($_POST['csrf']) ? (string) $_POST['csrf'] : null)) {
+        $_SESSION['admin_notice'] = 'Sessão expirada. Recarregue a página.';
+    } else {
+        try {
+            $svc = new ProvisioningService();
+            $created = $svc->createClientForAdmin(
+                (string) ($_POST['name'] ?? ''),
+                (string) ($_POST['email'] ?? ''),
+                (string) ($_POST['password'] ?? ''),
+                (string) ($_POST['plan'] ?? 'light'),
+                (string) ($_POST['domain'] ?? '')
+            );
+            $notice = 'Cliente ' . $created['daUsername'] . ' (' . $created['status'] . ').';
+            if (!empty($created['panelPassword'])) {
+                $login = geekhost_public_url('/painel/login');
+                $html = '<p>Sua hospedagem GeekHost foi aberta.</p>'
+                    . '<p>Painel: ' . htmlspecialchars($login, ENT_QUOTES, 'UTF-8') . '<br>E-mail: '
+                    . htmlspecialchars($created['email'], ENT_QUOTES, 'UTF-8') . '<br>Senha: '
+                    . htmlspecialchars((string) $created['panelPassword'], ENT_QUOTES, 'UTF-8') . '</p>'
+                    . '<p>Se você ainda não tem domínio, compre em qualquer registrador e cadastre em Domínios no painel.</p>';
+                $sent = Mailer::send($created['email'], 'Sua conta GeekHost', $html, false);
+                $notice .= $sent
+                    ? ' E-mail enviado.'
+                    : ' O e-mail não saiu. Senha do painel: ' . $created['panelPassword'];
+                if ($sent) {
+                    $notice .= ' Senha do painel: ' . $created['panelPassword'];
+                }
+            } else {
+                $notice .= ' Conta já existia; a senha do cliente não foi alterada.';
+            }
+            if ($created['status'] === 'blocked_no_domain') {
+                $notice .= ' A hospedagem no DirectAdmin começa quando o domínio for cadastrado.';
+            }
+            $_SESSION['admin_notice'] = $notice;
+            $gate->audit((int) $ctx['admin']['id'], (int) $created['userId'], 'client_created', 'user', (string) $created['userId'], 'ok', [
+                'email' => $created['email'],
+                'status' => $created['status'],
+            ]);
+        } catch (Throwable $e) {
+            $_SESSION['admin_notice'] = $e->getMessage();
+        }
+    }
+    header('Location: ' . url('/admin/clientes'));
+    exit;
+}
+
 $adminTitle = 'Clientes';
 $adminSection = 'clientes';
-$adminLead = 'Usuários do painel GeekHost (CRM operacional).';
+$adminLead = 'Usuários do painel GeekHost. Crie a conta e a hospedagem; o domínio pode entrar depois.';
 require __DIR__ . '/_layout.php';
 require_once dirname(__DIR__) . '/includes/db.php';
 
@@ -36,6 +96,40 @@ $stmt->execute($params);
 $rows = $stmt->fetchAll() ?: [];
 $fmt = static fn (int $c) => 'R$ ' . number_format($c / 100, 2, ',', '.');
 ?>
+<article class="admin-card">
+    <h2>Novo cliente</h2>
+    <form class="admin-form" method="post">
+        <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+        <div class="admin-form-grid">
+            <label>Nome
+                <input name="name" required maxlength="120">
+            </label>
+            <label>E-mail
+                <input name="email" type="email" required maxlength="190" autocomplete="off">
+            </label>
+            <label>Senha do painel
+                <?php geekhost_password_input('password', [
+                    'minlength' => 8,
+                    'autocomplete' => 'new-password',
+                    'placeholder' => 'Em branco gera uma senha',
+                ]); ?>
+            </label>
+            <label>Plano
+                <select name="plan">
+                    <?php foreach (['light', 'empresa', 'premium'] as $code):
+                        $plan = geekhost_plan($code);
+                        if (!$plan) continue; ?>
+                        <option value="<?= e($code) ?>"><?= e((string) $plan['name']) ?> · <?= (int) geekhost_plan_domain_limit($code) ?> domínio(s)</option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Domínio (opcional)
+                <input name="domain" placeholder="meusite.com.br" maxlength="180">
+            </label>
+        </div>
+        <button class="gh-btn gh-btn-primary" type="submit">Criar cliente</button>
+    </form>
+</article>
 <form class="admin-filters" method="get">
     <input type="search" name="q" placeholder="E-mail…" value="<?= e($q) ?>">
     <select name="filter">

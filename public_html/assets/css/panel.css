@@ -396,10 +396,51 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     margin: 0 auto;
     padding: 20px 28px 40px;
 }
+body.panel-body.is-auth {
+    background:
+        radial-gradient(700px 320px at 10% 0%, rgba(1, 224, 79, .18), transparent 60%),
+        #101418;
+}
 .panel-main-auth {
-    width: min(420px, calc(100% - 32px));
-    margin: 64px auto;
+    display: grid;
+    grid-template-columns: minmax(220px, .9fr) minmax(0, 1.1fr);
+    width: min(920px, calc(100% - 28px));
+    margin: 36px auto;
     padding: 0;
+    overflow: hidden;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .28);
+}
+.panel-auth-brand {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: 32px 28px;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(1, 224, 79, .35), transparent 42%),
+        #1a1e24;
+    color: #fff;
+}
+.panel-auth-brand img { width: 148px; height: auto; margin-bottom: auto; }
+.panel-auth-brand h2 { margin: 0; font-size: 28px; line-height: 1.15; letter-spacing: -.03em; }
+.panel-auth-brand ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.panel-auth-brand li { color: rgba(255, 255, 255, .78); font-size: 14px; }
+.panel-auth-brand li::before { content: "●"; margin-right: 8px; color: var(--gh-green); font-size: 10px; }
+.panel-auth-links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 16px 0 0; }
+.panel-auth-links a { color: var(--gh-green-dark); font-size: 13px; font-weight: 800; }
+.panel-main-auth .panel-auth { border: 0; box-shadow: none; border-radius: 0; }
+.panel-auth-wide { grid-column: 1 / -1; }
+body.panel-body.is-auth .panel-footer { color: rgba(255, 255, 255, .62); background: transparent; }
+.segunda-via-list { display: grid; gap: 12px; margin-top: 18px; }
+.segunda-via-card { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px; border: 1px solid var(--gh-line); border-radius: 14px; background: #f8faf9; }
+.segunda-via-card p { margin: 4px 0 0; color: var(--gh-muted); font-size: 13px; }
+.segunda-via-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+@media (max-width: 760px) {
+    .panel-main-auth { grid-template-columns: 1fr; }
+    .panel-auth-brand { min-height: 180px; }
+    .panel-auth-brand h2 { font-size: 22px; }
 }
 .panel-footer {
     margin-top: auto;
@@ -1741,3 +1782,18 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .support-composer-bar .gh-btn { flex: 1; }
     .admin-ticket-kpis { grid-template-columns: 1fr; }
 }
+
+.billing-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 8px 0 18px; }
+.billing-actions-note { flex: 1 1 240px; margin: 0; color: var(--muted, #5c656e); font-size: 13px; }
+.billing-flash { margin: 0 0 14px; padding: 12px 14px; border: 1px solid #d7e3d4; background: #f3faf3; color: #1d3b24; }
+.billing-flash.is-warn { border-color: #ead7a3; background: #fff8e8; color: #5c4510; }
+.billing-dialog { width: min(520px, calc(100% - 24px)); border: 0; padding: 0; background: #fff; color: #1a1e24; }
+.billing-dialog::backdrop { background: rgba(16, 18, 22, .55); }
+.billing-dialog form { display: grid; gap: 12px; padding: 22px; }
+.billing-dialog h2 { margin: 0; font-size: 22px; }
+.billing-dialog p { margin: 0; color: #5c656e; font-size: 14px; }
+.billing-dialog fieldset { display: grid; gap: 8px; border: 1px solid #e4e7ea; padding: 12px; }
+.billing-check { display: flex; gap: 8px; align-items: center; }
+.billing-comment, .billing-dialog label { display: grid; gap: 6px; font-size: 14px; }
+.billing-dialog textarea, .billing-dialog input[type="number"] { width: 100%; padding: 10px; border: 1px solid #d5dadf; }
+.billing-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }

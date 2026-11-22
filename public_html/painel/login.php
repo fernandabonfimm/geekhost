@@ -17,6 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Sessão expirada. Tente novamente.';
     } else {
         $user = $auth->attempt((string) ($_POST['email'] ?? ''), (string) ($_POST['password'] ?? ''));
+        if (!empty($user['unverified'])) {
+            header('Location: ' . url('/painel/confirmar-email?email=' . rawurlencode((string) $user['email'])));
+            exit;
+        }
         if ($user) {
             header('Location: ' . url('/painel/'));
             exit;
@@ -25,16 +29,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<section class="panel-auth">
-    <img src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="140" height="40" style="margin-bottom:18px">
-    <h1>Entrar no painel</h1>
-    <p>Use o e-mail do checkout e a senha criada após o pagamento.</p>
-    <?php if ($error): ?><div class="gh-alert gh-alert-danger"><div><?= e($error) ?></div></div><?php endif; ?>
-    <form method="post" class="panel-form" style="padding:0;border:0;box-shadow:none;background:transparent;max-width:none">
+<section class="auth-panel">
+    <p class="auth-kicker">Área do cliente</p>
+    <h1>Bem-vindo de volta.</h1>
+    <p class="auth-lead">Entre na sua conta para continuar.</p>
+    <?php if ($error): ?><div class="auth-alert is-danger"><?= e($error) ?></div><?php endif; ?>
+    <form method="post" action="<?= e(url('/painel/login')) ?>" class="auth-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-        <label>E-mail<input type="email" name="email" required autocomplete="username"></label>
-        <label>Senha<input type="password" name="password" required autocomplete="current-password"></label>
-        <button class="gh-btn gh-btn-primary" type="submit">Entrar</button>
+        <div>
+            <div class="auth-label-row"><span>Endereço de e-mail</span></div>
+            <label class="auth-field">
+                <i data-lucide="mail" aria-hidden="true"></i>
+                <input type="email" name="email" required autocomplete="username" placeholder="seu@email.com">
+            </label>
+        </div>
+        <div>
+            <div class="auth-label-row">
+                <span>Senha</span>
+                <a href="<?= e(url('/painel/esqueci-senha')) ?>">Esqueceu a senha?</a>
+            </div>
+            <label class="auth-field">
+                <i data-lucide="lock" aria-hidden="true"></i>
+                <?php geekhost_password_input('password', ['required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'Sua senha']); ?>
+            </label>
+        </div>
+        <button class="auth-submit" type="submit">Entrar <i data-lucide="arrow-right" aria-hidden="true"></i></button>
     </form>
+    <p class="auth-switch">Ainda não tem conta? <a href="<?= e(url('/painel/cadastro')) ?>">Criar conta</a></p>
 </section>
 <?php require __DIR__ . '/_footer.php'; ?>

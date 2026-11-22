@@ -47,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" class="panel-form" style="padding:0;border:0;box-shadow:none;background:transparent;max-width:none">
             <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
             <input type="hidden" name="token" value="<?= e($token) ?>">
-            <label>Nova senha<input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
-            <label>Confirmar senha<input type="password" name="password_confirm" required minlength="8" autocomplete="new-password"></label>
+            <label>Nova senha<?php geekhost_password_input('password', ['required' => true, 'minlength' => 8, 'autocomplete' => 'new-password']); ?></label>
+            <label>Confirmar senha<?php geekhost_password_input('password_confirm', ['required' => true, 'minlength' => 8, 'autocomplete' => 'new-password']); ?></label>
             <button class="gh-btn gh-btn-primary" type="submit">Criar senha</button>
         </form>
     <?php endif; ?>

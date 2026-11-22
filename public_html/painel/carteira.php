@@ -97,7 +97,7 @@ $hasCard = $last4 !== '';
                 <div class="checkout-grid-3">
                     <label>Mês<input name="cardExpiryMonth" data-card-month required maxlength="2" placeholder="MM"></label>
                     <label>Ano<input name="cardExpiryYear" data-card-year required maxlength="4" placeholder="AAAA"></label>
-                    <label>CVV<input name="cardCcv" type="password" required maxlength="4" autocomplete="off"></label>
+                    <label>CVV<?php geekhost_password_input('cardCcv', ['required' => true, 'maxlength' => 4, 'autocomplete' => 'off', 'inputmode' => 'numeric']); ?></label>
                 </div>
 
                 <hr class="panel-divider">

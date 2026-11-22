@@ -66,7 +66,9 @@ require __DIR__ . '/includes/header.php';
     <article class="legal-section">
         <h2>6. Pagamentos, renovação e cancelamento</h2>
         <p>Os valores, formas de pagamento e periodicidade são os indicados no momento da contratação. A falta de pagamento pode resultar em suspensão ou cancelamento do serviço, após comunicação pelos canais cadastrados.</p>
-        <p>Quando a oferta incluir período de teste gratuito, as condições desse período (duração, limites e conversão em plano pago) serão as divulgadas na contratação. Planos sem fidelidade permitem cancelamento conforme regras comerciais vigentes; valores já pagos podem seguir política de reembolso específica informada no pedido ou no suporte.</p>
+        <p>Os 7 dias grátis existem somente na compra com cartão de crédito. Nesse caso o cartão é confirmado e salvo na contratação, e a primeira cobrança acontece depois dos 7 dias. PIX, boleto e débito são cobrados na hora e não têm período grátis.</p>
+        <p>No cartão, as cobranças seguintes seguem o dia da compra (compra no dia 1, cobrança todo dia 1). Se o cartão for recusado, a tentativa seguinte ocorre no mês seguinte. O cliente pode pedir outro dia de cobrança, inclusive em plano semestral ou anual. Enquanto o pedido está em análise, vale o dia 10. Se a data for recusada, o cliente solicita outra ou permanece no dia 10.</p>
+        <p>O cancelamento não gera reembolso em PIX, boleto, débito ou cartão. O serviço permanece disponível até a próxima data de cobrança. Exemplo: contratação em 01/10 e cancelamento em 25/10 — uso até 01/11.</p>
         <p>Após o cancelamento, a GeekHost poderá excluir dados e arquivos do ambiente do cliente, observando prazos técnicos razoáveis e eventuais obrigações legais de retenção.</p>
     </article>
 

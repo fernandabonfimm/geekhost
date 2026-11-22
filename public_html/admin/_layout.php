@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/csrf.php';
 require_once dirname(__DIR__) . '/includes/AdminGate.php';
+require_once dirname(__DIR__) . '/includes/password-field.php';
 
 $adminGate = new AdminGate();
 $requireAdminAuth = $requireAdminAuth ?? true;
@@ -48,6 +49,8 @@ $nav = [
     ['vendas', 'Vendas', 'shopping-bag', '/admin/vendas'],
     ['faturamento', 'Faturamento', 'line-chart', '/admin/faturamento'],
     ['cobrancas', 'Cobranças', 'receipt', '/admin/cobrancas'],
+    ['cancelamentos', 'Cancelamentos', 'user-x', '/admin/cancelamentos'],
+    ['datas', 'Datas de cobrança', 'calendar', '/admin/datas-cobranca'],
     ['clientes', 'Clientes', 'users', '/admin/clientes'],
     ['ops2', 'Técnico'],
     ['hospedagens', 'Hospedagens', 'server', '/admin/hospedagens'],
@@ -60,6 +63,35 @@ $nav = [
     ['auditoria', 'Logs e auditoria', 'scroll-text', '/admin/auditoria'],
     ['configuracoes', 'Configurações', 'settings', '/admin/configuracoes'],
 ];
+
+$adminAllowed = $adminRow ? $adminGate->pagesFor($adminRow) : [];
+$adminDenied = $requireAdminAuth && !in_array($adminSection, $adminAllowed, true);
+if ($requireAdminAuth) {
+    $filtered = [];
+    $label = null;
+    foreach ($nav as $item) {
+        if (count($item) === 2) {
+            $label = $item;
+            continue;
+        }
+        if (!in_array($item[0], $adminAllowed, true)) {
+            continue;
+        }
+        if ($label) {
+            $filtered[] = $label;
+            $label = null;
+        }
+        $filtered[] = $item;
+    }
+    $nav = $filtered;
+}
+$adminHome = '/admin/';
+foreach ($nav as $item) {
+    if (count($item) === 4) {
+        $adminHome = $item[3];
+        break;
+    }
+}
 ?>
 <!doctype html>
 <html lang="pt-BR" data-theme="light">
@@ -73,11 +105,15 @@ $nav = [
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@0.468.0" defer></script>
     <link rel="stylesheet" href="<?= e(asset('assets/css/admin.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset('assets/css/password-field.css')) ?>">
+    <?php if (!$requireAdminAuth): ?>
+        <link rel="stylesheet" href="<?= e(asset('assets/css/auth.css')) ?>">
+    <?php endif; ?>
 </head>
-<body class="admin-body" data-admin data-csrf="<?= e($csrf) ?>">
+<body class="admin-body<?= $requireAdminAuth ? '' : ' is-auth-screen' ?>" data-admin data-csrf="<?= e($csrf) ?>">
 <?php if ($requireAdminAuth): ?>
 <aside class="admin-sidebar" data-admin-sidebar>
-    <a class="admin-brand" href="<?= e(url('/admin/')) ?>">
+    <a class="admin-brand" href="<?= e(url($adminHome)) ?>">
         <img src="<?= e(asset('assets/images/favicon.png')) ?>" alt="">
         <span>
             <strong>GeekHost</strong>
@@ -147,6 +183,14 @@ $nav = [
             <h1><?= e($adminTitle) ?></h1>
             <?php if ($adminLead !== ''): ?><p><?= e($adminLead) ?></p><?php endif; ?>
         </div>
+        <?php if (!empty($_SESSION['admin_notice']) && is_string($_SESSION['admin_notice'])): ?>
+            <div class="gh-alert"><div><?= e($_SESSION['admin_notice']) ?></div></div>
+            <?php unset($_SESSION['admin_notice']); ?>
+        <?php endif; ?>
+        <?php if (!empty($adminDenied)): ?>
+            <article class="admin-card"><p>Seu acesso não inclui esta página. Peça a um super admin para liberar.</p></article>
+            <?php require __DIR__ . '/_footer.php'; exit; ?>
+        <?php endif; ?>
 <?php else: ?>
 <main>
 <?php endif; ?>

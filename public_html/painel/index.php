@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/includes/routes.php';
+geekhost_cli_dispatch();
+
 $panelTitle = 'Início';
 $panelSection = 'inicio';
 $panelLead = 'Acompanhe seus serviços, domínios e faturas em um só lugar.';
@@ -101,6 +104,16 @@ $statusLabel = static function (string $status): array {
         </div>
         <img class="home-hero-banner-img" src="<?= e(asset('assets/images/banner-painel-inicio.png')) ?>" alt="GeekHost — mascotes Geeko" width="1400" height="360">
     </article>
+
+    <?php if ($openAmount > 0): ?>
+        <div class="gh-alert gh-alert-warn">
+            <div>
+                Há <?= e($fmtMoney($openAmount)) ?> em aberto.
+                Sem o pagamento a hospedagem pode ser suspensa e o site sai do ar. Depois de 60 dias a conta é cancelada.
+                <a href="<?= e(url('/painel/faturas?status=em_aberto')) ?>">Pagar agora</a>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <div class="home-kpi-grid">
         <article class="gh-card home-kpi">

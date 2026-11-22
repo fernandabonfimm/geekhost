@@ -37,12 +37,18 @@ final class OrderService
         $domain = preg_replace('#^www\.#', '', $domain) ?? $domain;
         $domain = rtrim($domain, '/');
 
+        $later = !empty($input['domainLater']) && $input['domainLater'] !== 'false' && $input['domainLater'] !== '0';
+        if ($later) {
+            $domain = '';
+        }
+
         if (!in_array($billingType, ['PIX', 'BOLETO', 'CREDIT_CARD'], true)) {
             throw new InvalidArgumentException('Forma de pagamento inválida.');
         }
-        if ($domain === '' || !preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', $domain)) {
+        if (!$later && ($domain === '' || !preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', $domain))) {
             throw new InvalidArgumentException('Informe um domínio válido (ex: meuscript.com.br).');
         }
+        $domainLabel = $domain !== '' ? $domain : 'domínio a cadastrar depois';
 
         $selection = geekhost_resolve_checkout_selection($planCode, $periodCode);
         if ($selection === null) {
@@ -99,7 +105,7 @@ final class OrderService
                 ':plan_code' => $selection['plan']['code'],
                 ':plan_name' => $selection['plan']['name'],
                 ':billing_period' => $periodCode,
-                ':domain' => $domain,
+                ':domain' => $domain !== '' ? $domain : null,
                 ':amount_cents' => $amountCents,
                 ':renew_cents' => $renewCents,
                 ':currency' => 'BRL',
@@ -113,6 +119,7 @@ final class OrderService
                     'asaas_cycle' => $selection['period']['cycle'],
                     'renew_amount' => $renewAmount,
                     'asaas_env' => $this->asaas->environment(),
+                    'domain_pending' => $domain === '',
                 ], JSON_UNESCAPED_UNICODE),
                 ':created_at' => $now,
                 ':updated_at' => $now,
@@ -124,7 +131,7 @@ final class OrderService
                 'billingType' => $billingType,
                 'value' => round($amountCents / 100, 2),
                 'dueDate' => $dueDate,
-                'description' => $selection['plan']['name'] . ' — ' . $selection['period']['label'] . ' — ' . $domain,
+                'description' => $selection['plan']['name'] . ' — ' . $selection['period']['label'] . ' — ' . $domainLabel,
                 'externalReference' => $publicId,
             ];
 
@@ -157,10 +164,6 @@ final class OrderService
                 $paymentPayload['remoteIp'] = $this->clientIp();
             }
 
-            $payment = $this->asaas->createPayment($paymentPayload, $idempotencyKey);
-            unset($paymentPayload['creditCard'], $input['creditCard']);
-
-            $status = $this->mapAsaasPaymentStatus((string) ($payment['status'] ?? 'PENDING'));
             $pixQr = null;
             $pixCopy = null;
             $boletoUrl = null;
@@ -168,36 +171,52 @@ final class OrderService
             $cardBrand = null;
             $cardLast4 = null;
             $creditCardToken = null;
+            $trial = false;
+            $chargeOn = null;
+            $billingDay = null;
+            $payment = ['id' => '', 'status' => 'PENDING'];
 
+            if ($billingType === 'CREDIT_CARD') {
+                $tokenized = $this->asaas->tokenizeCreditCard(
+                    $asaasCustomerId,
+                    $cardPayload,
+                    $holderPayload,
+                    $this->clientIp()
+                );
+                $creditCardToken = (string) ($tokenized['creditCardToken'] ?? '');
+                if ($creditCardToken === '') {
+                    throw new RuntimeException('Não foi possível confirmar o cartão. Confira os dados e tente de novo.');
+                }
+                $cardBrand = isset($tokenized['creditCardBrand']) ? (string) $tokenized['creditCardBrand'] : null;
+                $digits = preg_replace('/\D+/', '', (string) ($tokenized['creditCardNumber'] ?? $cardPayload['number'])) ?? '';
+                $cardLast4 = $digits !== '' ? substr($digits, -4) : null;
+                $trial = true;
+                $chargeOn = gmdate('Y-m-d', time() + 7 * 86400);
+                $billingDay = min(28, max(1, (int) gmdate('j')));
+                $status = 'trial_active';
+                unset($paymentPayload['creditCard'], $input['creditCard'], $cardPayload['ccv']);
+            } else {
+                $payment = $this->asaas->createPayment($paymentPayload, $idempotencyKey);
+                unset($paymentPayload['creditCard'], $input['creditCard']);
+                $status = $this->mapAsaasPaymentStatus((string) ($payment['status'] ?? 'PENDING'));
+            }
+
+            $pixError = null;
             if ($billingType === 'PIX') {
                 $paymentId = (string) ($payment['id'] ?? '');
-                // Keep create fast: a couple of quick tries; status endpoint can fill later.
-                for ($attempt = 1; $attempt <= 2; $attempt++) {
-                    try {
-                        $pix = $this->asaas->getPixQrCode($paymentId);
-                        $pixQr = isset($pix['encodedImage']) ? (string) $pix['encodedImage'] : null;
-                        $pixCopy = isset($pix['payload']) ? (string) $pix['payload'] : null;
-                        if ($pixQr || $pixCopy) {
-                            break;
-                        }
-                    } catch (Throwable $e) {
-                        geekhost_log('pix_qr_fetch_failed', ['order' => $publicId, 'attempt' => $attempt, 'error' => $e->getMessage()]);
-                    }
-                    if ($attempt < 2) {
-                        usleep(250000);
-                    }
+                try {
+                    $pix = $this->asaas->getPixQrCode($paymentId);
+                    $pixQr = isset($pix['encodedImage']) ? (string) $pix['encodedImage'] : null;
+                    $pixCopy = isset($pix['payload']) ? (string) $pix['payload'] : null;
+                } catch (Throwable $e) {
+                    $pixError = $this->pixFailureMessage($e->getMessage());
+                    geekhost_log('pix_qr_fetch_failed', ['order' => $publicId, 'error' => $e->getMessage()]);
                 }
             }
 
             if ($billingType === 'BOLETO') {
                 $boletoUrl = isset($payment['bankSlipUrl']) ? (string) $payment['bankSlipUrl'] : (isset($payment['invoiceUrl']) ? (string) $payment['invoiceUrl'] : null);
                 $boletoField = isset($payment['identificationField']) ? (string) $payment['identificationField'] : null;
-            }
-
-            if ($billingType === 'CREDIT_CARD' && isset($payment['creditCard']) && is_array($payment['creditCard'])) {
-                $cardBrand = isset($payment['creditCard']['creditCardBrand']) ? (string) $payment['creditCard']['creditCardBrand'] : null;
-                $cardLast4 = isset($payment['creditCard']['creditCardNumber']) ? substr((string) $payment['creditCard']['creditCardNumber'], -4) : null;
-                $creditCardToken = isset($payment['creditCard']['creditCardToken']) ? (string) $payment['creditCard']['creditCardToken'] : null;
             }
 
             $localSubId = $this->insertLocalSubscription([
@@ -213,7 +232,8 @@ final class OrderService
             ], $now);
 
             $asaasSubscriptionId = null;
-            if ($status === 'paid_pending_provisioning') {
+            $grantAccess = $status === 'paid_pending_provisioning' || $trial;
+            if ($grantAccess) {
                 $asaasSubscriptionId = $this->ensureAsaasSubscription(
                     $asaasCustomerId,
                     $selection,
@@ -221,11 +241,23 @@ final class OrderService
                     $domain,
                     $billingType,
                     $creditCardToken,
-                    $cardPayload,
-                    $holderPayload,
-                    $publicId
+                    $trial ? null : ($cardPayload ?? null),
+                    $trial ? null : ($holderPayload ?? null),
+                    $publicId,
+                    $trial ? $chargeOn : null,
+                    $trial ? (float) $selection['amount'] : null
                 );
                 $this->activateLocalSubscription($localSubId, $asaasSubscriptionId, $periodCode, $now);
+                if ($trial && $chargeOn !== null && $billingDay !== null) {
+                    $this->db->prepare(
+                        'UPDATE subscriptions SET next_due_date = :n, billing_day = :d, updated_at = :u WHERE id = :id'
+                    )->execute([
+                        ':n' => $chargeOn,
+                        ':d' => $billingDay,
+                        ':u' => $now,
+                        ':id' => $localSubId,
+                    ]);
+                }
             }
 
             $upd = $this->db->prepare(
@@ -255,7 +287,7 @@ final class OrderService
                 ':boleto_url' => $boletoUrl,
                 ':boleto_field' => $boletoField,
                 ':card_brand' => $cardBrand,
-                ':card_last4' => $cardLast4,
+                ':card_last4' => $this->sealSecret($cardLast4),
                 ':paid_at' => $paidAt,
                 ':updated_at' => $now,
                 ':id' => $orderId,
@@ -263,10 +295,49 @@ final class OrderService
 
             if ($userId > 0 && ($cardBrand || $cardLast4 || $creditCardToken)) {
                 $u = $this->db->prepare('UPDATE users SET card_brand = COALESCE(:b, card_brand), card_last4 = COALESCE(:l, card_last4), asaas_credit_card_token = COALESCE(:t, asaas_credit_card_token), updated_at = :u WHERE id = :id');
-                $u->execute([':b' => $cardBrand, ':l' => $cardLast4, ':t' => $creditCardToken, ':u' => $now, ':id' => $userId]);
+                $u->execute([':b' => $cardBrand, ':l' => $this->sealSecret($cardLast4), ':t' => $this->sealSecret($creditCardToken), ':u' => $now, ':id' => $userId]);
             }
 
-            if ($status === 'paid_pending_provisioning') {
+            if ($pixError) {
+                $metaRow = $this->db->prepare('SELECT metadata_json FROM orders WHERE id = :id');
+                $metaRow->execute([':id' => $orderId]);
+                $meta = json_decode((string) $metaRow->fetchColumn(), true);
+                if (!is_array($meta)) {
+                    $meta = [];
+                }
+                $meta['pix_error'] = $pixError;
+                $this->db->prepare('UPDATE orders SET metadata_json = :m, updated_at = :u WHERE id = :id')
+                    ->execute([':m' => json_encode($meta, JSON_UNESCAPED_UNICODE), ':u' => $now, ':id' => $orderId]);
+            }
+
+            if ($trial && $chargeOn !== null && $billingDay !== null) {
+                $meta = [
+                    'period_label' => $selection['period']['label'],
+                    'asaas_cycle' => $selection['period']['cycle'],
+                    'renew_amount' => $renewAmount,
+                    'asaas_env' => $this->asaas->environment(),
+                    'domain_pending' => $domain === '',
+                    'trial' => true,
+                    'free_days' => 7,
+                    'charge_on' => $chargeOn,
+                    'billing_day' => $billingDay,
+                ];
+                $this->db->prepare('UPDATE orders SET due_date = :d, metadata_json = :m, updated_at = :u WHERE id = :id')
+                    ->execute([
+                        ':d' => $chargeOn,
+                        ':m' => json_encode($meta, JSON_UNESCAPED_UNICODE),
+                        ':u' => $now,
+                        ':id' => $orderId,
+                    ]);
+                if ($userId > 0) {
+                    $this->db->prepare(
+                        "UPDATE users SET billing_day = :d, billing_day_source = 'purchase', updated_at = :u
+                         WHERE id = :id AND (billing_day_source IS NULL OR billing_day_source = '' OR billing_day_source = 'purchase')"
+                    )->execute([':d' => $billingDay, ':u' => $now, ':id' => $userId]);
+                }
+            }
+
+            if ($status === 'paid_pending_provisioning' || $trial) {
                 $this->createServiceForOrder($orderId, $userId, $localSubId, $selection['plan']['code'], $domain, $now);
             }
 
@@ -277,7 +348,7 @@ final class OrderService
                 throw new RuntimeException('Pedido não encontrado após criação.');
             }
 
-            if ($order['status'] === 'paid_pending_provisioning') {
+            if ($order['status'] === 'paid_pending_provisioning' || $order['status'] === 'trial_active') {
                 ProvisioningStub::queue($order);
             }
 
@@ -287,7 +358,16 @@ final class OrderService
                     $payLink = !empty($order['asaas_invoice_url'])
                         ? (string) $order['asaas_invoice_url']
                         : (function_exists('url') ? url('/painel/faturas?status=em_aberto') : '/painel/faturas?status=em_aberto');
-                    if ($order['status'] === 'paid_pending_provisioning') {
+                    if ($order['status'] === 'trial_active') {
+                        $when = (string) ($chargeOn ?? '');
+                        $notifications->notify(
+                            $userId,
+                            'card_trial',
+                            'Cartão confirmado',
+                            'Seu cartão foi salvo. Os 7 dias grátis começaram e a primeira cobrança sai em ' . ($when !== '' ? $when : '7 dias') . '. PIX, boleto e débito não têm esse período.',
+                            function_exists('url') ? url('/painel/faturas') : '/painel/faturas'
+                        );
+                    } elseif ($order['status'] === 'paid_pending_provisioning') {
                         $notifications->notify(
                             $userId,
                             'payment_approved',
@@ -432,11 +512,17 @@ final class OrderService
 
         if ($updated && $updated['status'] === 'overdue') {
             $this->markSubscriptionOverdue((string) ($updated['asaas_subscription_id'] ?? ''), (int) ($updated['user_id'] ?? 0), $now);
+            if ((string) ($updated['billing_type'] ?? '') === 'CREDIT_CARD') {
+                $this->scheduleCardRetryNextCycle($updated, $now);
+            }
             $this->enforceOverdueSuspension((int) ($updated['user_id'] ?? 0), $now);
         }
 
         if ($updated && $updated['status'] === 'paid_pending_provisioning') {
             $this->clearOverdue((int) ($updated['user_id'] ?? 0), (string) ($updated['asaas_subscription_id'] ?? ''), $now);
+            if ((string) ($updated['billing_type'] ?? '') === 'CREDIT_CARD') {
+                $this->realignCardBillingDay($updated, $now);
+            }
         }
 
         geekhost_log('webhook_processed', [
@@ -497,9 +583,9 @@ final class OrderService
 
         $now = gmdate('c');
         $this->db->prepare('UPDATE subscriptions SET asaas_credit_card_token = COALESCE(:t, asaas_credit_card_token), updated_at = :u WHERE id = :id')
-            ->execute([':t' => $token, ':u' => $now, ':id' => $sub['id']]);
+            ->execute([':t' => $this->sealSecret($token), ':u' => $now, ':id' => $sub['id']]);
         $this->db->prepare('UPDATE users SET card_brand = COALESCE(:b, card_brand), card_last4 = COALESCE(:l, card_last4), asaas_credit_card_token = COALESCE(:t, asaas_credit_card_token), updated_at = :u WHERE id = :id')
-            ->execute([':b' => $brand, ':l' => $last4, ':t' => $token, ':u' => $now, ':id' => $userId]);
+            ->execute([':b' => $brand, ':l' => $this->sealSecret($last4), ':t' => $this->sealSecret($token), ':u' => $now, ':id' => $userId]);
 
         return ['brand' => $brand, 'last4' => $last4];
     }
@@ -520,7 +606,7 @@ final class OrderService
         $params = [':u' => $userId];
         $map = [
             'pago' => ['paid_pending_provisioning'],
-            'em_aberto' => ['awaiting_payment', 'overdue'],
+            'em_aberto' => ['awaiting_payment', 'overdue', 'trial_active'],
             'cancelado' => ['canceled'],
             'reembolsado' => ['refunded'],
         ];
@@ -582,7 +668,7 @@ final class OrderService
             $status = (string) $row['status'];
             if ($status === 'paid_pending_provisioning') {
                 $counts['pago'] += $c;
-            } elseif (in_array($status, ['awaiting_payment', 'overdue'], true)) {
+            } elseif (in_array($status, ['awaiting_payment', 'overdue', 'trial_active'], true)) {
                 $counts['em_aberto'] += $c;
             } elseif ($status === 'canceled') {
                 $counts['cancelado'] += $c;
@@ -619,6 +705,11 @@ final class OrderService
         if (!empty($order['pix_qr_code']) && !empty($order['pix_copy_paste'])) {
             return $order;
         }
+        $existingMeta = json_decode((string) ($order['metadata_json'] ?? ''), true);
+        $existingError = is_array($existingMeta) ? (string) ($existingMeta['pix_error'] ?? '') : '';
+        if ($existingError !== '' && str_contains($existingError, 'chave Pix')) {
+            return $order;
+        }
         $paymentId = (string) ($order['asaas_payment_id'] ?? '');
         if ($paymentId === '') {
             return $order;
@@ -628,21 +719,34 @@ final class OrderService
             $pixQr = isset($pix['encodedImage']) ? (string) $pix['encodedImage'] : null;
             $pixCopy = isset($pix['payload']) ? (string) $pix['payload'] : null;
             if ($pixQr || $pixCopy) {
+                $meta = is_array($existingMeta) ? $existingMeta : [];
+                unset($meta['pix_error']);
                 $this->db->prepare(
                     'UPDATE orders SET
                         pix_qr_code = COALESCE(:qr, pix_qr_code),
                         pix_copy_paste = COALESCE(:cp, pix_copy_paste),
+                        metadata_json = :m,
                         updated_at = :u
                      WHERE id = :id'
                 )->execute([
                     ':qr' => $pixQr,
                     ':cp' => $pixCopy,
+                    ':m' => json_encode($meta, JSON_UNESCAPED_UNICODE),
                     ':u' => gmdate('c'),
                     ':id' => $order['id'],
                 ]);
                 return $this->findOrderByPublicId($publicId) ?? $order;
             }
         } catch (Throwable $e) {
+            $message = $this->pixFailureMessage($e->getMessage());
+            $meta = is_array($existingMeta) ? $existingMeta : [];
+            $meta['pix_error'] = $message;
+            try {
+                $this->db->prepare('UPDATE orders SET metadata_json = :m, updated_at = :u WHERE id = :id')
+                    ->execute([':m' => json_encode($meta, JSON_UNESCAPED_UNICODE), ':u' => gmdate('c'), ':id' => $order['id']]);
+                $order['metadata_json'] = json_encode($meta, JSON_UNESCAPED_UNICODE);
+            } catch (Throwable $ignored) {
+            }
             geekhost_log('pix_qr_refresh_failed', ['order' => $publicId, 'error' => $e->getMessage()]);
         }
         return $order;
@@ -654,6 +758,7 @@ final class OrderService
         $status = (string) $order['status'];
         $badge = match ($status) {
             'paid_pending_provisioning' => 'Pago',
+            'trial_active' => 'Cartão confirmado',
             'awaiting_payment' => 'Em aberto',
             'overdue' => 'Em aberto',
             'canceled' => 'Cancelado',
@@ -714,9 +819,15 @@ final class OrderService
             ],
             'card' => [
                 'brand' => $order['card_brand'],
-                'last4' => $order['card_last4'],
+                'last4' => geekhost_open(isset($order['card_last4']) ? (string) $order['card_last4'] : null),
             ],
             'provisioningStatus' => $order['provisioning_status'],
+            'trial' => $status === 'trial_active' || !empty($meta['trial']),
+            'chargeOn' => $meta['charge_on'] ?? ($status === 'trial_active' ? ($order['due_date'] ?? null) : null),
+            'billingDay' => isset($meta['billing_day']) ? (int) $meta['billing_day'] : null,
+            'freeDays' => $status === 'trial_active' ? 7 : null,
+            'pixError' => isset($meta['pix_error']) ? (string) $meta['pix_error'] : null,
+            'asaasEnv' => (string) ($meta['asaas_env'] ?? ''),
         ];
     }
 
@@ -794,13 +905,15 @@ final class OrderService
         ?string $creditCardToken,
         ?array $card,
         ?array $holder,
-        string $externalReference
+        string $externalReference,
+        ?string $nextDueOverride = null,
+        ?float $valueOverride = null
     ): string {
-        $nextDue = geekhost_period_end_date($periodCode);
+        $nextDue = $nextDueOverride ?: geekhost_period_end_date($periodCode);
         $payload = [
             'customer' => $asaasCustomerId,
             'billingType' => $billingType === 'CREDIT_CARD' ? 'CREDIT_CARD' : $billingType,
-            'value' => round($selection['renew_amount'], 2),
+            'value' => round($valueOverride ?? $selection['renew_amount'], 2),
             'nextDueDate' => $nextDue,
             'cycle' => $selection['period']['cycle'],
             'description' => $selection['plan']['name'] . ' renovação — ' . $domain,
@@ -842,7 +955,7 @@ final class OrderService
             ':a' => $data['amount_cents'],
             ':r' => $data['renew_amount_cents'],
             ':st' => $data['status'],
-            ':tok' => $data['asaas_credit_card_token'],
+            ':tok' => $this->sealSecret(isset($data['asaas_credit_card_token']) ? (string) $data['asaas_credit_card_token'] : null),
             ':c1' => $now,
             ':u1' => $now,
         ]);
@@ -1019,6 +1132,57 @@ final class OrderService
         return $this->findOrderByPublicId($publicId);
     }
 
+    /** After a card charge, the next one follows the billing day (purchase day, or 10 while a request is open). */
+    private function realignCardBillingDay(array $order, string $now): void
+    {
+        $this->moveCardSubscription($order, $now, false);
+    }
+
+    /** A declined card stays on the subscription and is tried again on the next cycle. */
+    private function scheduleCardRetryNextCycle(array $order, string $now): void
+    {
+        $this->moveCardSubscription($order, $now, true);
+    }
+
+    /** @param array<string, mixed> $order */
+    private function moveCardSubscription(array $order, string $now, bool $forceNextCycle): void
+    {
+        $subId = (string) ($order['asaas_subscription_id'] ?? '');
+        $userId = (int) ($order['user_id'] ?? 0);
+        if ($subId === '' || $userId <= 0) {
+            return;
+        }
+        require_once __DIR__ . '/AccountBilling.php';
+        $billing = new AccountBilling($this->db);
+        $day = $billing->effectiveDay($userId);
+        $period = (string) ($order['billing_period'] ?? 'mensal');
+        $anchor = $forceNextCycle ? gmdate('Y-m-d') : (string) ($order['due_date'] ?? '');
+        $next = AccountBilling::dueOnDay($anchor, $day, $period, $forceNextCycle);
+        try {
+            $this->asaas->updateSubscription($subId, ['nextDueDate' => $next]);
+        } catch (Throwable $e) {
+            geekhost_log('card_cycle_update_failed', ['subscription' => $subId, 'error' => $e->getMessage()]);
+        }
+        try {
+            $this->db->prepare(
+                'UPDATE subscriptions SET billing_day = :d, next_due_date = :n, updated_at = :u WHERE asaas_subscription_id = :id'
+            )->execute([':d' => $day, ':n' => $next, ':u' => $now, ':id' => $subId]);
+        } catch (Throwable $e) {
+            geekhost_log('card_cycle_local_failed', ['error' => $e->getMessage()]);
+        }
+    }
+
+    private function pixFailureMessage(string $raw): string
+    {
+        if (stripos($raw, 'chave Pix') !== false) {
+            return 'A conta Asaas deste ambiente não tem chave Pix cadastrada, então o QR não é gerado. No sandbox, cadastre uma chave em sandbox.asaas.com. Em produção vale a chave da conta real.';
+        }
+        if (stripos($raw, 'Falha de comunicação') !== false || stripos($raw, 'timed out') !== false) {
+            return 'O Asaas demorou para devolver o QR Code. A cobrança já existe; aguarde alguns segundos e atualize.';
+        }
+        return $raw !== '' ? $raw : 'Não foi possível gerar o Pix agora.';
+    }
+
     private function mapAsaasPaymentStatus(string $asaasStatus, string $event = ''): string
     {
         $asaasStatus = strtoupper($asaasStatus);
@@ -1086,35 +1250,54 @@ final class OrderService
     /** @param array<string, string> $data */
     private function upsertLocalCustomer(array $data, string $now): int
     {
-        $stmt = $this->db->prepare('SELECT id FROM customers WHERE cpf_cnpj = :c LIMIT 1');
-        $stmt->execute([':c' => $data['cpf_cnpj']]);
+        $digits = preg_replace('/\D+/', '', (string) ($data['cpf_cnpj'] ?? '')) ?? '';
+        $hash = $digits !== '' ? hash('sha256', $digits) : '';
+        if ($hash !== '') {
+            $stmt = $this->db->prepare('SELECT id FROM customers WHERE cpf_hash = :h OR cpf_cnpj = :c LIMIT 1');
+            $stmt->execute([':h' => $hash, ':c' => $data['cpf_cnpj']]);
+        } else {
+            $stmt = $this->db->prepare('SELECT id FROM customers WHERE cpf_cnpj = :c LIMIT 1');
+            $stmt->execute([':c' => $data['cpf_cnpj']]);
+        }
         $row = $stmt->fetch();
+        $sealed = [
+            ':e' => $data['email'],
+            ':n' => geekhost_seal($data['name']) ?? '',
+            ':c' => geekhost_seal($data['cpf_cnpj']) ?? '',
+            ':h' => $hash !== '' ? $hash : null,
+            ':p' => geekhost_seal($data['phone']) ?? '',
+            ':m' => geekhost_seal($data['mobile_phone']) ?? '',
+            ':z' => geekhost_seal($data['postal_code']) ?? '',
+            ':a' => geekhost_seal($data['address']) ?? '',
+            ':num' => geekhost_seal($data['address_number']) ?? '',
+            ':comp' => geekhost_seal($data['complement']) ?? '',
+            ':uf' => geekhost_seal($data['province']) ?? '',
+            ':city' => geekhost_seal($data['city']) ?? '',
+        ];
         if ($row) {
             $upd = $this->db->prepare(
-                'UPDATE customers SET email=:e, name=:n, phone=:p, mobile_phone=:m, postal_code=:z,
+                'UPDATE customers SET email=:e, name=:n, cpf_cnpj=:c, cpf_hash=:h, phone=:p, mobile_phone=:m, postal_code=:z,
                     address=:a, address_number=:num, complement=:comp, province=:uf, city=:city, updated_at=:u
                  WHERE id=:id'
             );
-            $upd->execute([
-                ':e' => $data['email'], ':n' => $data['name'], ':p' => $data['phone'], ':m' => $data['mobile_phone'],
-                ':z' => $data['postal_code'], ':a' => $data['address'], ':num' => $data['address_number'],
-                ':comp' => $data['complement'], ':uf' => $data['province'], ':city' => $data['city'],
-                ':u' => $now, ':id' => $row['id'],
-            ]);
+            $upd->execute($sealed + [':u' => $now, ':id' => $row['id']]);
             return (int) $row['id'];
         }
 
         $ins = $this->db->prepare(
-            'INSERT INTO customers (email, name, cpf_cnpj, phone, mobile_phone, postal_code, address, address_number, complement, province, city, created_at, updated_at)
-             VALUES (:e,:n,:c,:p,:m,:z,:a,:num,:comp,:uf,:city,:c1,:u)'
+            'INSERT INTO customers (email, name, cpf_cnpj, cpf_hash, phone, mobile_phone, postal_code, address, address_number, complement, province, city, created_at, updated_at)
+             VALUES (:e,:n,:c,:h,:p,:m,:z,:a,:num,:comp,:uf,:city,:c1,:u)'
         );
-        $ins->execute([
-            ':e' => $data['email'], ':n' => $data['name'], ':c' => $data['cpf_cnpj'], ':p' => $data['phone'],
-            ':m' => $data['mobile_phone'], ':z' => $data['postal_code'], ':a' => $data['address'],
-            ':num' => $data['address_number'], ':comp' => $data['complement'], ':uf' => $data['province'],
-            ':city' => $data['city'], ':c1' => $now, ':u' => $now,
-        ]);
+        $ins->execute($sealed + [':c1' => $now, ':u' => $now]);
         return (int) $this->db->lastInsertId();
+    }
+
+    private function sealSecret(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        return geekhost_seal($value);
     }
 
     /** @param array<string, string> $data */

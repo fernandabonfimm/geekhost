@@ -235,7 +235,7 @@
         Object.entries(params).forEach(([k, v]) => {
             if (v !== '' && v != null) url.searchParams.set(k, String(v));
         });
-        const res = await fetch(url.toString(), { credentials: 'same-origin' });
+        const res = await window.ghApi(url.toString());
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error || 'Falha na requisição.');
         return data;
@@ -246,7 +246,7 @@
         Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
         fd.append('csrfToken', csrf);
         files.forEach((f) => fd.append('attachments[]', f));
-        const res = await fetch(api, { method: 'POST', body: fd, credentials: 'same-origin' });
+        const res = await window.ghApi(api, { method: 'POST', body: fd });
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error || 'Falha na requisição.');
         return data;

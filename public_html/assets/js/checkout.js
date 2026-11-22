@@ -109,12 +109,42 @@
                 : `Renova em ${months} meses por ${formatBRL(renew)}.`;
         }
         const domain = form.domain?.value?.trim();
-        if (domainEl) domainEl.textContent = domain ? `Domínio: ${domain}` : 'Domínio: —';
+        if (domainEl) {
+            domainEl.textContent = domainMode === 'later'
+                ? 'Domínio: você cadastra depois no painel'
+                : (domain ? `Domínio: ${domain}` : 'Domínio: —');
+        }
         root.dataset.period = period;
         root.dataset.amount = String(info.amount || root.dataset.amount);
     };
 
+    let domainMode = 'own';
+    const ownBox = root.querySelector('[data-domain-own]');
+    const laterNote = root.querySelector('[data-domain-later]');
+    const applyDomainMode = (mode) => {
+        domainMode = mode === 'later' ? 'later' : 'own';
+        root.querySelectorAll('[data-domain-mode]').forEach((b) => {
+            const on = b.getAttribute('data-domain-mode') === domainMode;
+            b.classList.toggle('is-selected', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        if (ownBox) ownBox.hidden = domainMode === 'later';
+        if (laterNote) laterNote.hidden = domainMode !== 'later';
+        if (form.domain) {
+            form.domain.required = domainMode !== 'later';
+            if (domainMode === 'later') form.domain.value = '';
+        }
+        syncSummary();
+    };
+
     const validateDomain = () => {
+        if (domainMode === 'later') {
+            const error = root.querySelector('[data-domain-error]');
+            const ok = root.querySelector('[data-domain-ok]');
+            if (error) error.hidden = true;
+            if (ok) ok.hidden = true;
+            return true;
+        }
         const input = form.domain;
         const error = root.querySelector('[data-domain-error]');
         const ok = root.querySelector('[data-domain-ok]');
@@ -137,14 +167,8 @@
 
     root.querySelectorAll('[data-domain-mode]').forEach((btn) => {
         btn.addEventListener('click', () => {
-            if (btn.disabled || btn.getAttribute('data-domain-mode') === 'register') {
-                toast('Registro de domínio em breve.', 'danger');
-                return;
-            }
-            root.querySelectorAll('[data-domain-mode]').forEach((b) => {
-                b.classList.toggle('is-selected', b === btn);
-                b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
-            });
+            if (btn.disabled) return;
+            applyDomainMode(btn.getAttribute('data-domain-mode') || 'own');
         });
     });
 
@@ -193,6 +217,10 @@
         });
         const cardFields = root.querySelector('[data-card-fields]');
         if (cardFields) cardFields.hidden = type !== 'CREDIT_CARD';
+        const label = root.querySelector('[data-submit-label]');
+        if (label && !submitting) {
+            label.textContent = type === 'PIX' ? 'Gerar PIX' : type === 'BOLETO' ? 'Gerar boleto' : 'Confirmar cartão';
+        }
     };
     form.querySelectorAll('input[name="billingType"]').forEach((input) => {
         input.addEventListener('change', syncPayDetail);
@@ -238,15 +266,16 @@
     const renderResult = (order) => {
         if (!order || !result) return;
         rememberOrder(order.id);
-        showStep(4, { completedUntil: order.status === 'paid_pending_provisioning' ? 4 : 3 });
+        showStep(4, { completedUntil: order.status === 'paid_pending_provisioning' || order.status === 'trial_active' ? 4 : 3 });
 
+        const trial = order.status === 'trial_active';
         const paid = order.status === 'paid_pending_provisioning';
         const pending = ['awaiting_payment', 'overdue'].includes(order.status);
         const refused = ['canceled', 'refunded'].includes(order.status);
 
         setHero(
-            paid ? 'Pedido concluído!' : order.billingType === 'PIX' ? 'Pague com Pix' : pending ? 'Pedido recebido' : refused ? 'Pagamento não confirmado' : 'Pedido criado',
-            paid ? 'Sua hospedagem foi contratada com sucesso.' : 'Conclua o pagamento nesta etapa para liberar o painel.',
+            trial ? 'Cartão confirmado' : paid ? 'Pedido concluído!' : order.billingType === 'PIX' ? 'Pague com Pix' : pending ? 'Pedido recebido' : refused ? 'Pagamento não confirmado' : 'Pedido criado',
+            trial ? 'Você tem 7 dias grátis. A cobrança no cartão começa depois disso.' : paid ? 'Sua hospedagem foi contratada com sucesso.' : 'Conclua o pagamento nesta etapa para liberar o painel.',
             'Checkout GeekHost'
         );
 
@@ -259,7 +288,18 @@
         const setupHint = result.querySelector('[data-setup-hint]');
         const paidBox = root.querySelector('[data-summary-paid]');
 
-        if (paid) {
+        if (trial) {
+            setConfirmVisual('ok');
+            const when = order.chargeOn ? new Date(order.chargeOn + 'T12:00:00').toLocaleDateString('pt-BR') : '7 dias';
+            if (title) title.textContent = 'Cartão confirmado — 7 dias grátis';
+            if (status) {
+                status.textContent = `Não cobramos agora. O cartão fica salvo e a primeira cobrança sai em ${when}. PIX, boleto e débito não têm esses 7 dias: esses meios são cobrados na hora. Se cancelar, não há reembolso e o uso segue até a próxima data de cobrança.`;
+            }
+            if (panelCta) {
+                panelCta.href = root.dataset.panelUrl || root.dataset.loginUrl;
+                panelCta.textContent = 'Ir para o painel';
+            }
+        } else if (paid) {
             setConfirmVisual('ok');
             if (title) title.textContent = 'Pagamento aprovado!';
             if (status) status.textContent = 'Estamos preparando sua hospedagem. Agora crie a senha do painel para acessar sua conta.';
@@ -344,7 +384,13 @@
                 }
             }
             if (copy) copy.value = order.pix?.copyPaste || '';
-            if (waiting) waiting.hidden = hasQr || hasCopy;
+            if (waiting) {
+                waiting.hidden = hasQr || hasCopy;
+                if (!hasQr && !hasCopy && order.pixError) {
+                    waiting.hidden = false;
+                    waiting.textContent = order.pixError;
+                }
+            }
         }
         if (order.billingType === 'BOLETO' && !paid && boletoBox) {
             boletoBox.hidden = false;
@@ -385,7 +431,7 @@
                 if (!body.ok || !body.order) return;
                 if (setupUrl) body.order.passwordSetupUrl = setupUrl;
                 renderResult(body.order);
-                if (body.order.status === 'paid_pending_provisioning') {
+                if (body.order.status === 'paid_pending_provisioning' || (body.order.pixError && String(body.order.pixError).includes('chave Pix'))) {
                     stopPoll();
                 }
             } catch (_) { /* keep polling */ }
@@ -427,7 +473,8 @@
             csrfToken: root.dataset.csrf,
             plan: root.dataset.plan,
             period: form.period.value,
-            domain: form.domain.value.trim(),
+            domain: domainMode === 'later' ? '' : form.domain.value.trim(),
+            domainLater: domainMode === 'later',
             billingType,
             name: form.name.value.trim(),
             email: form.email.value.trim(),

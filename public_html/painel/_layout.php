@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/Auth.php';
 require_once dirname(__DIR__) . '/includes/csrf.php';
+require_once dirname(__DIR__) . '/includes/password-field.php';
 
 $auth = new Auth();
 $requireAuth = $requireAuth ?? true;
@@ -55,6 +56,10 @@ if (!empty($panelUser)) {
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@0.468.0" defer></script>
     <link rel="stylesheet" href="<?= e(asset('assets/css/panel.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset('assets/css/password-field.css')) ?>">
+    <?php if ($isAuthPage): ?>
+        <link rel="stylesheet" href="<?= e(asset('assets/css/auth.css')) ?>">
+    <?php endif; ?>
 </head>
 <body
     class="panel-body<?= $isAuthPage ? ' is-auth' : '' ?>"
@@ -185,4 +190,22 @@ if (!empty($panelUser)) {
         <?php endif; ?>
 <?php else: ?>
 <main class="panel-main panel-main-auth">
+<aside class="auth-visual">
+    <div class="auth-stars" aria-hidden="true"></div>
+    <div class="auth-orbit" aria-hidden="true"></div>
+    <div class="auth-visual-top">
+        <div class="auth-wordmark">
+            <img src="<?= e(asset('assets/images/favicon.png')) ?>" alt="" width="42" height="42">
+            GeekHost
+        </div>
+    </div>
+    <div class="auth-visual-copy">
+        <h2>Seu site no ar, com gente de verdade.</h2>
+        <p>Faturas, domínio e suporte humano no mesmo lugar. Sem fila de robô.</p>
+        <div class="auth-float-card">
+            <strong>Suporte no WhatsApp</strong>
+            <span>Resposta humana enquanto você publica o projeto.</span>
+        </div>
+    </div>
+</aside>
 <?php endif; ?>

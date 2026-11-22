@@ -38,6 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Sessão expirada. Tente novamente.';
     } else {
         $user = $auth->attempt((string) ($_POST['email'] ?? ''), (string) ($_POST['password'] ?? ''));
+        if (!empty($user['unverified'])) {
+            header('Location: ' . url('/painel/confirmar-email?next=admin&email=' . rawurlencode((string) $user['email'])));
+            exit;
+        }
         if ($user) {
             try {
                 $adminGate->requireAdmin();
@@ -52,17 +56,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<section class="admin-auth">
-    <div class="admin-auth-card">
-        <img src="<?= e(asset('assets/images/logo-header.png')) ?>" alt="GeekHost" width="140" height="40">
-        <h1>Admin GeekHost</h1>
-        <p>Painel operacional da revenda (DirectAdmin <code>geek6923</code>). Não é o painel do cliente.</p>
-        <?php if ($error): ?><div class="gh-alert gh-alert-danger"><div><?= e($error) ?></div></div><?php endif; ?>
-        <form method="post" class="admin-form">
+<section class="auth-shell">
+    <aside class="auth-visual">
+        <div class="auth-stars" aria-hidden="true"></div>
+        <div class="auth-orbit" aria-hidden="true"></div>
+        <div class="auth-visual-top">
+            <div class="auth-wordmark">
+                <img src="<?= e(asset('assets/images/favicon.png')) ?>" alt="" width="42" height="42">
+                GeekHost
+            </div>
+        </div>
+        <div class="auth-visual-copy">
+            <h2>Painel da operação.</h2>
+            <p>Cobranças, hospedagens e clientes. Esta entrada não é a área do cliente.</p>
+        </div>
+    </aside>
+    <div class="auth-panel">
+        <p class="auth-kicker">Admin</p>
+        <h1>Bem-vindo de volta.</h1>
+        <p class="auth-lead">Entre com o e-mail de staff para continuar.</p>
+        <?php if ($error): ?><div class="auth-alert is-danger"><?= e($error) ?></div><?php endif; ?>
+        <?php if (($_GET['senha'] ?? '') === '1'): ?><div class="auth-alert">Senha atualizada. Entre com a nova senha.</div><?php endif; ?>
+        <form method="post" action="<?= e(url('/admin/login')) ?>" class="auth-form">
             <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-            <label>E-mail staff<input type="email" name="email" required autocomplete="username"></label>
-            <label>Senha<input type="password" name="password" required autocomplete="current-password"></label>
-            <button class="gh-btn gh-btn-primary" type="submit">Entrar no admin</button>
+            <div>
+                <div class="auth-label-row"><span>E-mail</span></div>
+                <label class="auth-field"><i data-lucide="mail"></i><input type="email" name="email" required autocomplete="username" placeholder="seu@email.com"></label>
+            </div>
+            <div>
+                <div class="auth-label-row"><span>Senha</span><a href="<?= e(url('/admin/esqueci-senha')) ?>">Esqueceu a senha?</a></div>
+                <label class="auth-field"><i data-lucide="lock"></i><?php geekhost_password_input('password', ['required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'Sua senha']); ?></label>
+            </div>
+            <button class="auth-submit" type="submit">Entrar <i data-lucide="arrow-right"></i></button>
         </form>
     </div>
 </section>

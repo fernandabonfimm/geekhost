@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/includes/routes.php';
+geekhost_cli_dispatch();
+
 $adminTitle = 'Visão geral';
 $adminSection = 'overview';
 $adminLead = 'Indicadores reais do banco GeekHost (espelho Asaas + hospedagens DA).';

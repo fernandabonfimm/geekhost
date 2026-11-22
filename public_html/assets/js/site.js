@@ -115,6 +115,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const accountMenu = document.querySelector('[data-account-menu]');
+    if (accountMenu) {
+        const accountToggle = accountMenu.querySelector('.account-menu-toggle');
+        const accountPanel = accountMenu.querySelector('.account-menu-panel');
+        const setAccountOpen = (open) => {
+            accountToggle?.setAttribute('aria-expanded', String(open));
+            if (accountPanel) accountPanel.hidden = !open;
+            accountMenu.classList.toggle('is-open', open);
+        };
+        accountToggle?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            setAccountOpen(accountToggle.getAttribute('aria-expanded') !== 'true');
+        });
+        document.addEventListener('click', (event) => {
+            if (!accountMenu.contains(event.target)) setAccountOpen(false);
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setAccountOpen(false);
+        });
+    }
+
     const planCards = [...document.querySelectorAll('[data-plan-card]')];
     if (planCards.length > 0 && 'IntersectionObserver' in window) {
         const observer = new IntersectionObserver((entries) => {

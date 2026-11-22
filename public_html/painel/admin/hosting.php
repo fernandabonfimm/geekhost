@@ -98,7 +98,7 @@ if (!TicketService::isAdminEmail((string) ($panelUser['email'] ?? ''))) {
   const el = (sel) => root.querySelector(sel);
 
   async function load() {
-    const res = await fetch(api + '?action=overview', { credentials: 'same-origin' });
+    const res = await window.ghApi(api + '?action=overview');
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'Falha');
     el('[data-kpi="flag"]').textContent = data.provisioningEnabled ? 'ON' : 'OFF';
@@ -156,9 +156,8 @@ if (!TicketService::isAdminEmail((string) ($panelUser['email'] ?? ''))) {
       const action = btn.hasAttribute('data-run-cron') ? 'run_cron' : 'reprocess';
       const payload = { action, csrfToken: csrf };
       if (action === 'reprocess') payload.id = btn.getAttribute('data-reprocess');
-      const res = await fetch(api, {
+      const res = await window.ghApi(api, {
         method: 'POST',
-        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
@@ -170,9 +169,11 @@ if (!TicketService::isAdminEmail((string) ($panelUser['email'] ?? ''))) {
     }
   });
 
-  load().catch((e) => {
+  const start = () => load().catch((e) => {
     el('[data-accounts-body]').innerHTML = `<tr><td colspan="7">${escapeHtml(e.message)}</td></tr>`;
   });
+  if (window.ghApi) start();
+  else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
 <?php require dirname(__DIR__) . '/_footer.php'; ?>

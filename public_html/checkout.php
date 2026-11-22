@@ -105,8 +105,19 @@ require __DIR__ . '/includes/header.php';
                             <strong>Já tenho um domínio</strong>
                             <small>Use um domínio que você já possui</small>
                         </button>
+                        <button type="button" class="co-choice" data-domain-mode="later" aria-pressed="false">
+                            <span class="co-choice-check" aria-hidden="true"><i data-lucide="check"></i></span>
+                            <strong>Ainda não tenho um domínio</strong>
+                            <small>Contrate agora e cadastre o domínio depois no painel</small>
+                        </button>
                     </div>
 
+                    <p class="co-note" data-domain-later hidden>
+                        A GeekHost não vende domínio. Você finaliza a contratação da hospedagem agora.
+                        Depois de comprar o domínio onde preferir, cadastre em Minha Conta, na área Domínios.
+                    </p>
+
+                    <div data-domain-own>
                     <label class="co-field">
                         <span>Digite o seu domínio</span>
                         <div class="co-input-wrap">
@@ -116,6 +127,7 @@ require __DIR__ . '/includes/header.php';
                         </div>
                         <span class="co-field-error" data-domain-error hidden></span>
                     </label>
+                    </div>
 
                     <div class="co-actions">
                         <button type="button" class="co-btn co-btn-primary" data-next-step="2">Continuar <i data-lucide="arrow-right"></i></button>
@@ -227,7 +239,7 @@ require __DIR__ . '/includes/header.php';
                             <input type="radio" name="billingType" value="CREDIT_CARD">
                             <span class="co-choice-check" aria-hidden="true"><i data-lucide="check"></i></span>
                             <strong>Cartão de crédito</strong>
-                            <small>Tokenização segura</small>
+                            <small>7 dias grátis</small>
                         </label>
                         <label class="co-pay">
                             <input type="radio" name="billingType" value="BOLETO">
@@ -242,6 +254,9 @@ require __DIR__ . '/includes/header.php';
                         <div>
                             <strong>Pagamento via PIX</strong>
                             <p>Ao finalizar, geramos o QR Code e o código copia e cola. O status atualiza automaticamente quando o pagamento for confirmado.</p>
+                            <?php if (function_exists('geekhost_resolve_asaas_env') && geekhost_resolve_asaas_env() === 'sandbox'): ?>
+                                <p>Ambiente local usa o Asaas sandbox. O QR só sai se a conta sandbox tiver uma chave Pix cadastrada.</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="co-pay-detail" data-pay-detail="CREDIT_CARD" hidden>
@@ -251,9 +266,21 @@ require __DIR__ . '/includes/header.php';
                             <div class="co-grid-3">
                                 <label class="co-field"><span>Mês</span><input name="cardExpiryMonth" type="text" inputmode="numeric" maxlength="2" placeholder="MM"></label>
                                 <label class="co-field"><span>Ano</span><input name="cardExpiryYear" type="text" inputmode="numeric" maxlength="4" placeholder="AAAA"></label>
-                                <label class="co-field"><span>CVV</span><input name="cardCcv" type="password" inputmode="numeric" maxlength="4" autocomplete="cc-csc"></label>
+                                <label class="co-field"><span>CVV</span><?php geekhost_password_input('cardCcv', ['maxlength' => 4, 'autocomplete' => 'cc-csc', 'inputmode' => 'numeric']); ?></label>
                             </div>
-                            <p class="co-hint">Número e CVV são processados de forma segura. Débito não está disponível.</p>
+                            <p class="co-hint">O cartão é só confirmado e salvo agora. A primeira cobrança sai depois de 7 dias grátis. PIX, boleto e débito são cobrados na hora e não têm esses 7 dias. O CVV não fica gravado.</p>
+                            <?php if (function_exists('geekhost_resolve_asaas_env') && geekhost_resolve_asaas_env() === 'sandbox'): ?>
+                                <div class="co-sandbox-card">
+                                    <strong>Cartão de teste do sandbox</strong>
+                                    <p>Neste computador a cobrança vai para o Asaas sandbox, sem valor real. Use um cartão fictício, validade futura e CVV fictício.</p>
+                                    <ul>
+                                        <li>Aprovado Visa <code>4539 6560 4839 2220</code></li>
+                                        <li>Aprovado Mastercard <code>5263 8372 5327 8275</code></li>
+                                        <li>Recusado Visa <code>4916 5613 5824 0741</code></li>
+                                    </ul>
+                                    <p>CVV: qualquer código de 3 dígitos (4 na American Express). Nome: qualquer nome fictício.</p>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="co-pay-detail" data-pay-detail="BOLETO" hidden>

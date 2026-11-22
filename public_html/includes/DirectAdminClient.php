@@ -162,6 +162,30 @@ final class DirectAdminClient
     /**
      * @return array<string, mixed>
      */
+    /**
+     * Reseller backup of a client account, stored on the reseller server.
+     *
+     * @return array<string, mixed>
+     */
+    public function backupUser(string $username, string $domain = ''): array
+    {
+        if ($this->dryRun) {
+            geekhost_log('da_dry_run', ['op' => 'backupUser', 'username' => $username, 'domain' => $domain]);
+            return ['error' => '0', 'text' => 'dry-run', 'dry_run' => true];
+        }
+        $params = [
+            'action' => 'backup',
+            'select0' => $username,
+            'who' => 'selected',
+            'where' => 'local',
+            'when' => 'now',
+        ];
+        if ($domain !== '') {
+            $params['domain'] = $domain;
+        }
+        return $this->cmdApi('CMD_API_SITE_BACKUP', $params, true);
+    }
+
     public function suspendUser(string $username): array
     {
         if ($this->dryRun) {
@@ -274,6 +298,51 @@ final class DirectAdminClient
     }
 
     /**
+     * One-time browser login for a client account. The reseller password never leaves the server.
+     * Returns null while DIRECTADMIN_DRY_RUN=1.
+     */
+    public function oneTimeLoginUrl(string $username, string $redirect = '/'): ?string
+    {
+        $username = strtolower(trim($username));
+        if ($username === '' || !$this->isConfigured() || $this->dryRun) {
+            return null;
+        }
+        $key = bin2hex(random_bytes(16));
+        $this->cmdApi('CMD_API_LOGIN_KEYS', [
+            'action' => 'create',
+            'type' => 'key',
+            'keyname' => 'gh' . substr($key, 0, 8),
+            'key' => $key,
+            'key2' => $key,
+            'expiry' => (string) (time() + 600),
+            'max_uses' => '1',
+            'clear_key' => 'no',
+            'allow_htm' => 'yes',
+        ], true, $username);
+        $path = $redirect !== '' ? $redirect : '/';
+        return $this->baseUrl . '/CMD_LOGIN?username=' . rawurlencode($username)
+            . '&password=' . rawurlencode($key)
+            . '&referer=' . rawurlencode($path);
+    }
+
+    /** @return list<string> */
+    public function listDatabases(string $username): array
+    {
+        if ($username === '' || !$this->isConfigured() || $this->dryRun) {
+            return [];
+        }
+        $parsed = $this->cmdApi('CMD_API_DATABASES', ['action' => 'list'], false, $username);
+        $list = $parsed['list'] ?? [];
+        if (is_string($list) && $list !== '') {
+            return [$list];
+        }
+        if (!is_array($list)) {
+            return [];
+        }
+        return array_values(array_filter(array_map('strval', $list)));
+    }
+
+    /**
      * Read-only connectivity probe.
      *
      * @return array{ok:bool, http_status:int, message:string, packages?:list<string>}
@@ -351,7 +420,7 @@ final class DirectAdminClient
      * @param array<string, scalar|null> $params
      * @return array<string, mixed>
      */
-    public function cmdApi(string $command, array $params = [], bool $mutating = false): array
+    public function cmdApi(string $command, array $params = [], bool $mutating = false, ?string $asUser = null): array
     {
         $command = strtoupper(ltrim($command, '/'));
         if (!str_starts_with($command, 'CMD_API_')) {
@@ -362,13 +431,18 @@ final class DirectAdminClient
             return ['error' => '0', 'text' => 'dry-run', 'dry_run' => true];
         }
         $url = $this->baseUrl . '/' . $command;
+        $loginUser = $this->username;
+        $asUser = $asUser !== null ? strtolower(trim($asUser)) : '';
+        if ($asUser !== '' && $asUser !== strtolower($this->username)) {
+            $loginUser .= '|' . $asUser;
+        }
         $res = $this->request('POST', $url, [
             'headers' => [
                 'Accept: text/plain',
                 'Content-Type: application/x-www-form-urlencoded',
                 'User-Agent: GeekHost-DA/1.0',
             ],
-            'userpwd' => $this->username . ':' . $this->password,
+            'userpwd' => $loginUser . ':' . $this->password,
             'body' => http_build_query($params),
         ], false);
 

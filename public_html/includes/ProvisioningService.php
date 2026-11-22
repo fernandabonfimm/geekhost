@@ -250,6 +250,52 @@ final class ProvisioningService
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function backupUserAccount(int $userId): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM hosting_accounts WHERE user_id = :u AND da_username <> '' ORDER BY id DESC LIMIT 1"
+        );
+        $stmt->execute([':u' => $userId]);
+        $account = $stmt->fetch() ?: null;
+        if (!$account) {
+            return ['skipped' => true, 'reason' => 'no_directadmin_account'];
+        }
+        $result = $this->da->backupUser(
+            (string) $account['da_username'],
+            (string) ($account['primary_domain'] ?? '')
+        );
+        $this->audit((int) $account['id'], $userId, 'billing', 'backup_requested', [
+            'dry_run' => !empty($result['dry_run']),
+            'error' => $result['error'] ?? null,
+        ]);
+        return $result;
+    }
+
+    public function adminSuspendAccount(string $publicId): void
+    {
+        $account = $this->findAccountByPublicId($publicId);
+        if (!$account) {
+            throw new InvalidArgumentException('Hospedagem não encontrada.');
+        }
+        $this->da->suspendUser((string) $account['da_username']);
+        $this->db->prepare("UPDATE hosting_accounts SET status = 'suspended', updated_at = :u WHERE id = :id")
+            ->execute([':u' => gmdate('c'), ':id' => $account['id']]);
+    }
+
+    public function adminUnsuspendAccount(string $publicId): void
+    {
+        $account = $this->findAccountByPublicId($publicId);
+        if (!$account) {
+            throw new InvalidArgumentException('Hospedagem não encontrada.');
+        }
+        $this->da->unsuspendUser((string) $account['da_username']);
+        $this->db->prepare("UPDATE hosting_accounts SET status = 'active', updated_at = :u WHERE id = :id")
+            ->execute([':u' => gmdate('c'), ':id' => $account['id']]);
+    }
+
     public function suspendUserHosting(int $userId, string $reason = 'overdue'): void
     {
         $account = $this->findActiveAccountForUser($userId);
@@ -277,13 +323,193 @@ final class ProvisioningService
     public function queueAddDomain(int $userId, string $domain, int $domainId): void
     {
         $account = $this->findActiveAccountForUser($userId);
-        if (!$account) {
+        if ($account && trim((string) ($account['primary_domain'] ?? '')) === '') {
+            $this->attachPrimaryDomain($account, $domain);
             return;
         }
-        $this->enqueueJob((int) $account['id'], $userId, 'add_domain', [
-            'domain' => $domain,
-            'domain_id' => $domainId,
+        if ($account) {
+            $this->enqueueJob((int) $account['id'], $userId, 'add_domain', [
+                'domain' => $domain,
+                'domain_id' => $domainId,
+            ]);
+            return;
+        }
+        $blocked = $this->findBlockedAccountForUser($userId);
+        if ($blocked) {
+            $this->attachPrimaryDomain($blocked, $domain);
+        }
+    }
+
+    /**
+     * @return array{userId:int,email:string,panelPassword:?string,createdUser:bool,daUsername:string,status:string}
+     */
+    public function createClientForAdmin(string $name, string $email, string $password, string $planCode, string $domain): array
+    {
+        $name = trim($name);
+        $email = strtolower(trim($email));
+        $domain = $this->normalizeDomain($domain);
+        if ($name === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            throw new InvalidArgumentException('Informe nome e e-mail válidos.');
+        }
+        if (geekhost_plan($planCode) === null) {
+            throw new InvalidArgumentException('Plano inválido.');
+        }
+
+        $existing = $this->db->prepare('SELECT * FROM users WHERE email = :e LIMIT 1');
+        $existing->execute([':e' => $email]);
+        $user = $existing->fetch() ?: null;
+        $panelPassword = null;
+        $createdUser = false;
+        if (!$user) {
+            if ($password === '') {
+                $password = $this->generatePassword(12);
+            }
+            if (strlen($password) < 8) {
+                throw new InvalidArgumentException('A senha deve ter pelo menos 8 caracteres.');
+            }
+            $panelPassword = $password;
+            $createdUser = true;
+            $now = gmdate('c');
+            $this->db->prepare(
+                'INSERT INTO users (
+                    public_id, customer_id, email, password_hash, password_is_set,
+                    name_enc, hosting_status, created_at, updated_at
+                ) VALUES (
+                    :pid, NULL, :email, :ph, 1, :name, :hs, :c, :u
+                )'
+            )->execute([
+                ':pid' => $this->uuid(),
+                ':email' => $email,
+                ':ph' => password_hash($password, PASSWORD_DEFAULT),
+                ':name' => geekhost_encrypt($name) ?? '',
+                ':hs' => 'pending',
+                ':c' => $now,
+                ':u' => $now,
+            ]);
+            $userId = (int) $this->db->lastInsertId();
+        } else {
+            if ($password !== '') {
+                throw new InvalidArgumentException('Este e-mail já tem conta. Deixe a senha em branco para só abrir a hospedagem.');
+            }
+            $userId = (int) $user['id'];
+        }
+
+        $dup = $this->db->prepare('SELECT id FROM hosting_accounts WHERE user_id = :u LIMIT 1');
+        $dup->execute([':u' => $userId]);
+        if ($dup->fetch()) {
+            throw new InvalidArgumentException('Este cliente já tem uma hospedagem.');
+        }
+
+        $username = $this->allocateUsername($userId, $domain);
+        $status = $domain === '' ? 'blocked_no_domain' : 'pending';
+        $now = gmdate('c');
+        $publicId = $this->uuid();
+        $this->db->prepare(
+            'INSERT INTO hosting_accounts (
+                public_id, user_id, order_id, service_id, plan_code, da_username, da_password_enc,
+                da_package, primary_domain, status, created_at, updated_at
+            ) VALUES (
+                :p, :u, NULL, NULL, :plan, :user, :pass, :pkg, :dom, :st, :c, :up
+            )'
+        )->execute([
+            ':p' => $publicId,
+            ':u' => $userId,
+            ':plan' => $planCode,
+            ':user' => $username,
+            ':pass' => geekhost_encrypt($this->generatePassword()),
+            ':pkg' => $this->packageForPlan($planCode),
+            ':dom' => $domain !== '' ? $domain : null,
+            ':st' => $status,
+            ':c' => $now,
+            ':up' => $now,
         ]);
+        $account = $this->findAccountByPublicId($publicId);
+        if ($account && $status === 'pending') {
+            $this->enqueueJob((int) $account['id'], $userId, 'provision', ['source' => 'admin']);
+        }
+        if ($account) {
+            $this->audit((int) $account['id'], $userId, 'admin', 'client_created', [
+                'status' => $status,
+                'domain' => $domain,
+            ]);
+        }
+        return [
+            'userId' => $userId,
+            'email' => $email,
+            'panelPassword' => $panelPassword,
+            'createdUser' => $createdUser,
+            'daUsername' => $username,
+            'status' => $status,
+        ];
+    }
+
+    public function adminAttachDomain(string $publicId, string $domain): void
+    {
+        $account = $this->findAccountByPublicId($publicId);
+        if (!$account) {
+            throw new InvalidArgumentException('Hospedagem não encontrada.');
+        }
+        $domain = $this->normalizeDomain($domain);
+        $userId = (int) $account['user_id'];
+        $planCode = (string) ($account['plan_code'] ?? 'light');
+        $limit = geekhost_plan_domain_limit($planCode);
+        $countStmt = $this->db->prepare('SELECT COUNT(*) FROM user_domains WHERE user_id = :u');
+        $countStmt->execute([':u' => $userId]);
+        $count = (int) $countStmt->fetchColumn();
+        $primary = trim((string) ($account['primary_domain'] ?? ''));
+        $replacingEmpty = $primary === '' || (string) ($account['status'] ?? '') === 'blocked_no_domain';
+        if (!$replacingEmpty && $count >= $limit) {
+            throw new InvalidArgumentException("O plano permite no máximo {$limit} domínios.");
+        }
+        $exists = $this->db->prepare('SELECT id FROM user_domains WHERE user_id = :u AND domain = :d LIMIT 1');
+        $exists->execute([':u' => $userId, ':d' => $domain]);
+        if (!$exists->fetch()) {
+            $now = gmdate('c');
+            $this->db->prepare(
+                'INSERT INTO user_domains (
+                    public_id, user_id, domain, plan_code, ns_ok, status, hosting_account_id, created_at, updated_at
+                ) VALUES (
+                    :p, :u, :d, :plan, 0, :st, :h, :c, :up
+                )'
+            )->execute([
+                ':p' => $this->uuid(),
+                ':u' => $userId,
+                ':d' => $domain,
+                ':plan' => $planCode,
+                ':st' => 'awaiting_dns',
+                ':h' => $account['id'],
+                ':c' => $now,
+                ':up' => $now,
+            ]);
+        }
+        if ($replacingEmpty) {
+            $this->attachPrimaryDomain($account, $domain);
+            return;
+        }
+        $this->enqueueJob((int) $account['id'], $userId, 'add_domain', ['domain' => $domain]);
+    }
+
+    public function directAdminLoginUrl(string $publicId, string $path): ?string
+    {
+        $account = $this->findAccountByPublicId($publicId);
+        if (!$account) {
+            throw new InvalidArgumentException('Hospedagem não encontrada.');
+        }
+        $username = trim((string) ($account['da_username'] ?? ''));
+        if ($username === '') {
+            throw new InvalidArgumentException('Conta sem usuário DirectAdmin.');
+        }
+        return $this->da->oneTimeLoginUrl($username, $path);
+    }
+
+    /** @return list<string> */
+    public function databasesForAccount(string $publicId): array
+    {
+        $account = $this->findAccountByPublicId($publicId);
+        if (!$account) {
+            throw new InvalidArgumentException('Hospedagem não encontrada.');
+        }
+        return $this->da->listDatabases((string) ($account['da_username'] ?? ''));
     }
 
     public function queueWordpress(int $userId, int $siteId, string $domain, string $title, string $email): void
@@ -830,6 +1056,56 @@ final class ProvisioningService
     {
         $stmt = $this->db->prepare('SELECT * FROM hosting_accounts WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    /** @param array<string, mixed> $account */
+    private function attachPrimaryDomain(array $account, string $domain): void
+    {
+        $now = gmdate('c');
+        $this->db->prepare(
+            "UPDATE hosting_accounts
+             SET primary_domain = :d, status = 'pending', last_error = NULL, updated_at = :u
+             WHERE id = :id"
+        )->execute([
+            ':d' => $domain,
+            ':u' => $now,
+            ':id' => $account['id'],
+        ]);
+        $orderId = (int) ($account['order_id'] ?? 0);
+        if ($orderId > 0) {
+            $this->db->prepare('UPDATE orders SET domain = :d, updated_at = :u WHERE id = :id AND (domain IS NULL OR domain = \'\')')
+                ->execute([':d' => $domain, ':u' => $now, ':id' => $orderId]);
+        }
+        $this->enqueueJob((int) $account['id'], (int) $account['user_id'], 'provision', [
+            'domain' => $domain,
+            'source' => 'domain_added',
+        ]);
+    }
+
+    private function normalizeDomain(string $domain): string
+    {
+        $domain = strtolower(trim($domain));
+        $domain = preg_replace('#^https?://#', '', $domain) ?? $domain;
+        $domain = preg_replace('#^www\.#', '', $domain) ?? $domain;
+        $domain = rtrim($domain, '/');
+        if ($domain === '') {
+            return '';
+        }
+        if (!preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', $domain)) {
+            throw new InvalidArgumentException('Informe um domínio válido, ex: meusite.com.br.');
+        }
+        return $domain;
+    }
+
+    /** @return array<string, mixed>|null */
+    private function findBlockedAccountForUser(int $userId): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM hosting_accounts WHERE user_id = :u AND status = 'blocked_no_domain' ORDER BY id DESC LIMIT 1"
+        );
+        $stmt->execute([':u' => $userId]);
         $row = $stmt->fetch();
         return $row ?: null;
     }

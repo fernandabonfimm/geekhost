@@ -34,6 +34,9 @@
   });
 })();
 </script>
+<?php geekhost_client_config(!empty($adminUser) ? $adminGate->auth()->currentSessionToken() : null); ?>
+<script src="<?= e(asset('assets/js/api.js')) ?>" defer></script>
+<script src="<?= e(asset('assets/js/password-toggle.js')) ?>" defer></script>
 <?php if (!empty($adminScripts)): foreach ((array) $adminScripts as $src): ?>
 <script src="<?= e(asset($src)) ?>" defer></script>
 <?php endforeach; endif; ?>

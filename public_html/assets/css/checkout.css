@@ -233,6 +233,16 @@ body.checkout-body main#conteudo {
     background: #f8fafc;
     transform: none;
 }
+.co-note {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f4fbf6;
+    border: 1px solid #cfeedd;
+    color: #1a1e24;
+    font-size: 14px;
+    line-height: 1.5;
+}
 .co-choice strong,
 .co-period strong,
 .co-pay strong { font-size: 15px; }
@@ -659,3 +669,16 @@ body.checkout-body main#conteudo {
     .co-specs { grid-template-columns: 1fr; }
     .co-card { padding: 18px; }
 }
+
+.co-sandbox-card {
+    margin-top: 12px;
+    padding: 14px 16px;
+    border: 1px solid rgba(1, 225, 82, .45);
+    border-radius: 14px;
+    background: rgba(1, 225, 82, .08);
+    color: var(--co-ink, #1a1e24);
+}
+.co-sandbox-card strong { display: block; margin-bottom: 6px; }
+.co-sandbox-card p, .co-sandbox-card ul { margin: 0 0 8px; font-size: 13px; }
+.co-sandbox-card li { margin: 4px 0; }
+.co-sandbox-card code { font-weight: 700; }

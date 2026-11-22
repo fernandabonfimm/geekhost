@@ -1325,3 +1325,87 @@ body.exit-intent-open { overflow: hidden; }
     .testimonial-visual { min-height: 200px; }
     .testimonial-arrow { width: 42px; height: 42px; }
 }
+
+.account-menu { position: relative; }
+.account-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--forest);
+    font: 700 13px var(--font-display);
+    cursor: pointer;
+}
+.account-menu-toggle .bi-person-circle { color: var(--leaf); font-size: 16px; }
+.account-menu-chevron { font-size: 11px; transition: transform .18s ease; }
+.account-menu.is-open .account-menu-chevron { transform: rotate(180deg); }
+.account-menu-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 30;
+    display: grid;
+    width: min(320px, calc(100vw - 32px));
+    gap: 4px;
+    padding: 10px;
+    border-radius: 16px;
+    background: #1a1e24;
+    color: #fff;
+    box-shadow: 0 22px 50px rgba(26, 30, 36, .28);
+}
+.account-menu-panel[hidden] { display: none; }
+.account-menu-label {
+    margin: 4px 10px 6px;
+    color: rgba(255, 255, 255, .55);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.account-menu-panel a {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border-radius: 12px;
+    color: #fff;
+}
+.account-menu-panel a:hover { background: rgba(255, 255, 255, .06); }
+.account-menu-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(1, 225, 82, .14);
+    color: var(--lime);
+}
+.account-menu-panel strong { display: block; font-size: 14px; }
+.account-menu-panel small { display: block; margin-top: 2px; color: rgba(255, 255, 255, .62); font-size: 12px; font-weight: 500; }
+.footer-admin-link {
+    position: relative;
+    z-index: 50;
+    grid-column: 1 / -1;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 999px;
+    color: rgba(255, 255, 255, .86);
+    font-size: 12px;
+    font-weight: 700;
+}
+.footer-admin-link:hover { color: rgba(255, 255, 255, .72); }
+@media (max-width: 800px) {
+    .account-menu,
+    .account-menu-toggle { width: 100%; }
+    .account-menu-toggle { justify-content: space-between; }
+    .account-menu-panel { position: static; width: 100%; margin-top: 8px; }
+}

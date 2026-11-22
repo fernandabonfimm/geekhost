@@ -45,7 +45,7 @@ final class AsaasClient
      * @param array<string, mixed>|null $body
      * @return array{status:int, body:array<string,mixed>|list<mixed>|null, raw:string}
      */
-    public function request(string $method, string $path, ?array $body = null, ?string $idempotencyKey = null): array
+    public function request(string $method, string $path, ?array $body = null, ?string $idempotencyKey = null, ?int $timeout = null): array
     {
         $url = $this->baseUrl . '/' . ltrim($path, '/');
         $headers = [
@@ -67,7 +67,7 @@ final class AsaasClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => strtoupper($method),
             CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_TIMEOUT => $this->timeout,
+            CURLOPT_TIMEOUT => $timeout ?? $this->timeout,
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
@@ -159,7 +159,7 @@ final class AsaasClient
     /** @return array<string, mixed> */
     public function getPixQrCode(string $paymentId): array
     {
-        $res = $this->request('GET', '/payments/' . rawurlencode($paymentId) . '/pixQrCode');
+        $res = $this->request('GET', '/payments/' . rawurlencode($paymentId) . '/pixQrCode', null, null, 8);
         if ($res['status'] >= 400 || !is_array($res['body'])) {
             throw new RuntimeException($this->errorMessage($res, 'Não foi possível obter o QR Code Pix.'));
         }
@@ -198,6 +198,45 @@ final class AsaasClient
             throw new RuntimeException($this->errorMessage($res, 'Não foi possível atualizar o cartão da assinatura.'));
         }
         return $res['body'];
+    }
+
+    /**
+     * Confirms the card with Asaas and returns a token. Does not create a charge.
+     *
+     * @param array<string, mixed> $card
+     * @param array<string, mixed> $holder
+     * @return array<string, mixed>
+     */
+    public function tokenizeCreditCard(string $customerId, array $card, array $holder, string $remoteIp): array
+    {
+        $res = $this->request('POST', '/creditCard/tokenizeCreditCard', [
+            'customer' => $customerId,
+            'creditCard' => $card,
+            'creditCardHolderInfo' => $holder,
+            'remoteIp' => $remoteIp,
+        ]);
+        if ($res['status'] >= 400 || !is_array($res['body'])) {
+            throw new RuntimeException($this->errorMessage($res, 'Não foi possível confirmar o cartão.'));
+        }
+        return $res['body'];
+    }
+
+    /** @param array<string, mixed> $payload @return array<string, mixed> */
+    public function updateSubscription(string $subscriptionId, array $payload): array
+    {
+        $res = $this->request('PUT', '/subscriptions/' . rawurlencode($subscriptionId), $payload);
+        if ($res['status'] >= 400 || !is_array($res['body'])) {
+            throw new RuntimeException($this->errorMessage($res, 'Não foi possível atualizar a assinatura.'));
+        }
+        return $res['body'];
+    }
+
+    public function deleteSubscription(string $subscriptionId): void
+    {
+        $res = $this->request('DELETE', '/subscriptions/' . rawurlencode($subscriptionId));
+        if ($res['status'] >= 400 && $res['status'] !== 404) {
+            throw new RuntimeException($this->errorMessage($res, 'Não foi possível encerrar a assinatura no gateway.'));
+        }
     }
 
     /** @param array{status:int, body:array<string,mixed>|list<mixed>|null, raw:string} $res */

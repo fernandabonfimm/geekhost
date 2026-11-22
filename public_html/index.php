@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/includes/routes.php';
+geekhost_cli_dispatch();
+
 $pageTitle = 'Hospedagem de sites para o seu próximo projeto';
 $pageDescription = 'Hospedagem de sites GeekHost para colocar seu site, negócio ou loja online com desempenho, segurança e suporte humano.';
 $currentPage = 'inicio';
@@ -180,13 +183,13 @@ require __DIR__ . '/includes/header.php';
             <a class="button button-lime" href="#planos">Conheça os planos <span aria-hidden="true">↘</span></a>
             <a class="button button-outline button-support button-support-light" href="https://wa.me/5516997399174"><span>Fale com o suporte</span><span class="support-favicon" aria-hidden="true"><img src="assets/images/favicon.png" alt="" width="24" height="24"></span></a>
         </div>
-        <p class="hero-footnote">7 dias grátis para começar. Sem fidelidade.</p>
+        <p class="hero-footnote">7 dias grátis no cartão. PIX, boleto e débito são cobrados na hora.</p>
     </div>
 </section>
 
 <section class="proof-strip page-width" aria-label="Destaques da oferta GeekHost">
     <article><strong>3</strong><span>planos de hospedagem de sites</span></article>
-    <article><strong>7 dias</strong><span>grátis para começar</span></article>
+    <article><strong>7 dias</strong><span>grátis no cartão</span></article>
     <article><strong>Sem</strong><span>fidelidade: cancele quando quiser</span></article>
 </section>
 
@@ -206,7 +209,7 @@ require __DIR__ . '/includes/header.php';
             <p>Para colocar seu site e suas ideias no ar.</p>
             <p class="plan-price"><strong>R$ 19,90</strong><span>/no 1º mês</span></p>
             <p class="plan-regular-price">A partir do 2º mês: <strong>R$ 35,90/mês</strong></p>
-            <div class="plan-first-month"><span>7 dias grátis para começar</span></div>
+            <div class="plan-first-month"><span>7 dias grátis no cartão</span></div>
             <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>45% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div>
             <ul class="plan-features"><li>5 contas de e-mail</li><li>10 GB de espaço</li><li>Banco de dados ilimitado</li></ul>
             <a class="arrow-link" href="planos.php#light">Conhecer o Light <span aria-hidden="true">↗</span></a>
@@ -219,7 +222,7 @@ require __DIR__ . '/includes/header.php';
             <p>Para negócios e equipes que querem crescer online.</p>
             <p class="plan-price"><strong>R$ 29,90</strong><span>/no 1º mês</span></p>
             <p class="plan-regular-price">A partir do 2º mês: <strong>R$ 45,90/mês</strong></p>
-            <div class="plan-first-month"><span>7 dias grátis para começar</span></div>
+            <div class="plan-first-month"><span>7 dias grátis no cartão</span></div>
             <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>35% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div>
             <ul class="plan-features"><li>10 contas de e-mail</li><li>15 GB de espaço</li><li>Banco de dados ilimitado</li></ul>
             <a class="arrow-link" href="planos.php#empresa">Conhecer o Empresa <span aria-hidden="true">↗</span></a>
@@ -231,7 +234,7 @@ require __DIR__ . '/includes/header.php';
             <p>Para projetos que precisam de uma estrutura mais completa.</p>
             <p class="plan-price"><strong>R$ 39,90</strong><span>/no 1º mês</span></p>
             <p class="plan-regular-price">A partir do 2º mês: <strong>R$ 55,90/mês</strong></p>
-            <div class="plan-first-month"><span>7 dias grátis para começar</span></div>
+            <div class="plan-first-month"><span>7 dias grátis no cartão</span></div>
             <div class="plan-savings"><img class="plan-savings-emblem" src="assets/images/emblema.png" alt="" aria-hidden="true" width="24" height="24"><span><strong>29% OFF | Economize R$ 16,00</strong><small>no 1º mês</small></span></div>
             <ul class="plan-features"><li>E-mails ilimitados</li><li>25 GB de espaço</li><li>Banco de dados ilimitado</li></ul>
             <a class="arrow-link" href="planos.php#premium">Conhecer o Premium <span aria-hidden="true">↗</span></a>
@@ -390,7 +393,7 @@ require __DIR__ . '/includes/header.php';
             <article class="benefit-item"><span>03</span><h3>Painel cPanel em português</h3><p>Gerencie hospedagem de sites e e-mails em um painel conhecido, completo e fácil de usar.</p></article>
             <article class="benefit-item"><span>04</span><h3>Suporte humano</h3><p>Fale com o time GeekHost pelo WhatsApp quando precisar de orientação.</p></article>
         </div>
-        <p class="benefit-note">7 dias grátis no início da contratação, conforme as condições comerciais. Todos os planos são sem fidelidade.</p>
+        <p class="benefit-note">7 dias grátis somente no cartão de crédito. PIX, boleto e débito são cobrados na hora. Todos os planos são sem fidelidade e o cancelamento não tem reembolso: o uso segue até a próxima cobrança.</p>
     </div>
 </section>
 
@@ -530,7 +533,7 @@ require __DIR__ . '/includes/header.php';
             </details>
             <details>
                 <summary>Como funciona o preço promocional do primeiro mês?</summary>
-                <p>Após os 7 dias grátis, aplica-se o valor promocional informado para o primeiro mês. A partir do segundo mês, passa a valer o preço mensal regular exibido para cada plano.</p>
+                <p>Os 7 dias grátis valem só para pagamento no cartão. Depois deles, aplica-se o valor promocional do primeiro mês. A partir do segundo mês, vale o preço mensal regular. PIX, boleto e débito são cobrados na hora.</p>
             </details>
             <details>
                 <summary>A GeekHost pode migrar meu site?</summary>
@@ -538,7 +541,7 @@ require __DIR__ . '/includes/header.php';
             </details>
             <details>
                 <summary>Existe um período para testar a hospedagem?</summary>
-                <p>Há teste grátis de 7 dias, conforme as condições comerciais. Consulte a equipe para conhecer as regras aplicáveis ao plano escolhido.</p>
+                <p>Sim, 7 dias grátis apenas na compra com cartão de crédito. O cartão é confirmado na hora e a primeira cobrança sai depois dos 7 dias. PIX, boleto e débito não têm esse período.</p>
             </details>
         </div>
     </div>
@@ -550,7 +553,7 @@ require __DIR__ . '/includes/header.php';
         <div class="closing-row">
             <div class="closing-copy">
                 <h2 id="closing-cta-title">Seu próximo site começa pela hospedagem certa.</h2>
-                <p>Escolha um plano, teste 7 dias e publique com suporte humano do outro lado.</p>
+                <p>Escolha um plano. No cartão, os 7 dias grátis começam na confirmação. PIX, boleto e débito são cobrados na hora.</p>
             </div>
             <a class="button button-lime" href="#planos">Ver planos <span aria-hidden="true">↗</span></a>
         </div>

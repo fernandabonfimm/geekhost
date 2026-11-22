@@ -42,3 +42,34 @@ function geekhost_decrypt(?string $payload): ?string
     $plain = openssl_decrypt($cipher, 'AES-256-CBC', geekhost_app_data_key(), OPENSSL_RAW_DATA, $iv);
     return $plain === false ? null : $plain;
 }
+
+function geekhost_is_sealed(?string $stored): bool
+{
+    return is_string($stored) && str_starts_with($stored, 'gh1:');
+}
+
+/** Encrypt a value for storage. Empty stays empty. Already sealed values are kept. */
+function geekhost_seal(?string $plain): ?string
+{
+    if ($plain === null || $plain === '') {
+        return $plain;
+    }
+    if (geekhost_is_sealed($plain)) {
+        return $plain;
+    }
+    $cipher = geekhost_encrypt($plain);
+    return $cipher === null ? null : 'gh1:' . $cipher;
+}
+
+/** Decrypt a stored value for display or a server-side charge. Legacy plaintext is returned as-is. */
+function geekhost_open(?string $stored): ?string
+{
+    if ($stored === null || $stored === '') {
+        return $stored;
+    }
+    if (geekhost_is_sealed($stored)) {
+        $plain = geekhost_decrypt(substr($stored, 4));
+        return $plain === null ? '' : $plain;
+    }
+    return geekhost_decrypt($stored);
+}

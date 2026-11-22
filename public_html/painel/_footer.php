@@ -13,6 +13,9 @@
 
 <div class="gh-toast-host" data-toast-host aria-live="polite" aria-relevant="additions"></div>
 
+<?php geekhost_client_config(!empty($panelUser) ? $auth->currentSessionToken() : null); ?>
+<script src="<?= e(asset('assets/js/api.js')) ?>" defer></script>
+<script src="<?= e(asset('assets/js/password-toggle.js')) ?>" defer></script>
 <script src="<?= e(asset('assets/js/panel.js')) ?>" defer></script>
 <?php if (!empty($panelScripts)): foreach ((array) $panelScripts as $src): ?>
 <script src="<?= e(asset($src)) ?>" defer></script>

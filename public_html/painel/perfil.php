@@ -2,6 +2,19 @@
 
 declare(strict_types=1);
 
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (string) ($_POST['action'] ?? '') === 'revoke_session') {
+    require_once dirname(__DIR__) . '/includes/config.php';
+    require_once dirname(__DIR__) . '/includes/Auth.php';
+    require_once dirname(__DIR__) . '/includes/csrf.php';
+    $earlyAuth = new Auth();
+    $earlyUser = $earlyAuth->user();
+    if ($earlyUser && csrf_validate($_POST['csrf'] ?? null)) {
+        $ended = $earlyAuth->revokeSession((int) $earlyUser['id'], (int) ($_POST['session_id'] ?? 0));
+        header('Location: ' . url($ended ? '/painel/login' : '/painel/perfil?tab=seguranca&sessao=1'));
+        exit;
+    }
+}
+
 $panelTitle = 'Perfil';
 $panelSection = 'perfil';
 $panelLead = 'Dados da conta, endereço, segurança e preferências.';
@@ -10,7 +23,10 @@ require_once dirname(__DIR__) . '/includes/NotificationService.php';
 
 $message = '';
 $error = '';
-$activeTab = 'dados';
+$activeTab = (string) ($_GET['tab'] ?? 'dados');
+if (!in_array($activeTab, ['dados', 'endereco', 'seguranca', 'preferencias'], true)) {
+    $activeTab = 'dados';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_validate($_POST['csrf'] ?? null)) {
@@ -18,17 +34,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $action = (string) ($_POST['action'] ?? 'profile');
-            if ($action === 'password') {
+            if ($action === 'revoke_session') {
                 $activeTab = 'seguranca';
-                $auth->changePassword((int) $panelUser['id'], (string) ($_POST['current_password'] ?? ''), (string) ($_POST['new_password'] ?? ''));
-                $message = 'Senha atualizada.';
-                (new NotificationService())->notify(
-                    (int) $panelUser['id'],
-                    'profile_updated',
-                    'Senha atualizada',
-                    'A senha da sua conta GeekHost foi alterada com sucesso.',
-                    url('/painel/perfil')
-                );
+                $error = 'Sessão expirada.';
+            } elseif ($action === 'password') {
+                $activeTab = 'seguranca';
+                $code = trim((string) ($_POST['code'] ?? ''));
+                if ($code === '') {
+                    $auth->requestPasswordChangeCode((int) $panelUser['id'], (string) ($_POST['current_password'] ?? ''));
+                    $message = 'Enviamos um código para o seu e-mail. Digite-o no campo abaixo, junto com a nova senha, para concluir.';
+                } else {
+                    $auth->confirmPasswordChange(
+                        (int) $panelUser['id'],
+                        (string) ($_POST['current_password'] ?? ''),
+                        (string) ($_POST['new_password'] ?? ''),
+                        $code
+                    );
+                    $message = 'Senha atualizada.';
+                    (new NotificationService())->notify(
+                        (int) $panelUser['id'],
+                        'profile_updated',
+                        'Senha atualizada',
+                        'A senha da sua conta GeekHost foi alterada com sucesso.',
+                        url('/painel/perfil')
+                    );
+                }
             } else {
                 $activeTab = (string) ($_POST['tab'] ?? 'dados');
                 if (!in_array($activeTab, ['dados', 'endereco', 'preferencias'], true)) {
@@ -51,9 +81,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $photoPath = 'assets/uploads/avatars/' . $filename;
                 }
+                $postedEmail = strtolower(trim((string) ($_POST['email'] ?? '')));
+                $emailNotice = '';
+                if ($postedEmail !== '' && $postedEmail !== strtolower((string) $panelUser['email'])) {
+                    $auth->requestEmailChange((int) $panelUser['id'], $postedEmail);
+                    $emailNotice = 'Enviamos um código para ' . $postedEmail . '. Abra Confirmar e-mail e digite o código para concluir a troca.';
+                }
                 $panelUser = $auth->updateProfile((int) $panelUser['id'], [
                     'name' => (string) ($_POST['name'] ?? ''),
-                    'email' => (string) ($_POST['email'] ?? ''),
+                    'email' => (string) $panelUser['email'],
                     'phone' => (string) ($_POST['phone'] ?? ''),
                     'mobilePhone' => (string) ($_POST['mobilePhone'] ?? ''),
                     'postalCode' => (string) ($_POST['postalCode'] ?? ''),
@@ -63,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'province' => (string) ($_POST['province'] ?? ''),
                     'city' => (string) ($_POST['city'] ?? ''),
                 ], $photoPath);
-                $message = 'Perfil atualizado.';
+                $message = $emailNotice !== '' ? $emailNotice : 'Perfil atualizado.';
                 (new NotificationService())->notify(
                     (int) $panelUser['id'],
                     'profile_updated',
@@ -158,14 +194,42 @@ $initials = strtoupper(substr((string) ($nameParts[0] ?? 'G'), 0, 1) . substr((s
                 <input type="hidden" name="action" value="password">
                 <h2 style="margin:0 0 14px;font-size:16px">Segurança</h2>
                 <div class="gh-form">
-                    <label>Senha atual<input type="password" name="current_password" required autocomplete="current-password"></label>
-                    <label>Nova senha<input type="password" name="new_password" required minlength="8" autocomplete="new-password"></label>
-                    <p style="margin:0;color:var(--gh-muted);font-size:13px">Use pelo menos 8 caracteres. O cartão de renovação fica em Carteira.</p>
+                    <label>Senha atual<?php geekhost_password_input('current_password', ['required' => true, 'autocomplete' => 'current-password']); ?></label>
+                    <label>Nova senha<?php geekhost_password_input('new_password', ['required' => true, 'minlength' => 8, 'autocomplete' => 'new-password']); ?></label>
+                    <label>Código do e-mail<input name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Deixe em branco para receber o código"></label>
+                    <p style="margin:0;color:var(--gh-muted);font-size:13px">Primeiro enviamos um código para o seu e-mail. Depois cole o código aqui e salve. O login não pede esse código.</p>
+                    <p style="margin:0;color:var(--gh-muted);font-size:13px">A senha fica só como hash. Ela não pode ser lida de volta, nem pela equipe.</p>
                     <div class="profile-panel-actions">
                         <button class="gh-btn gh-btn-dark" type="submit">Atualizar senha</button>
                     </div>
                 </div>
             </form>
+
+            <div class="gh-card profile-panel" data-profile-panel="seguranca" <?= $activeTab === 'seguranca' ? '' : 'hidden' ?>>
+                <h2 style="margin:0 0 8px;font-size:16px">Dispositivos com sessão</h2>
+                <p style="margin:0 0 14px;color:var(--gh-muted);font-size:13px">Cada login dura 7 horas neste aparelho e depois pede a senha de novo.</p>
+                <?php if (($_GET['sessao'] ?? '') === '1'): ?><div class="gh-alert gh-alert-ok"><div>Sessão encerrada.</div></div><?php endif; ?>
+                <?php
+                $deviceSessions = $auth->sessionsFor((int) $panelUser['id']);
+                if ($deviceSessions === []): ?>
+                    <p style="margin:0;color:var(--gh-muted)">Nenhuma sessão ativa.</p>
+                <?php else: ?>
+                    <div class="gh-form">
+                        <?php foreach ($deviceSessions as $device): ?>
+                            <form method="post" action="<?= e(url('/painel/perfil')) ?>" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+                                <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                                <input type="hidden" name="action" value="revoke_session">
+                                <input type="hidden" name="session_id" value="<?= (int) $device['id'] ?>">
+                                <div>
+                                    <strong><?= e((string) $device['device']) ?><?= !empty($device['current']) ? ' · este aparelho' : '' ?></strong>
+                                    <div style="color:var(--gh-muted);font-size:12px">IP <?= e((string) $device['ip']) ?> · expira <?= e((string) $device['expiresAt']) ?></div>
+                                </div>
+                                <button class="gh-btn gh-btn-secondary" type="submit"><?= !empty($device['current']) ? 'Sair deste aparelho' : 'Encerrar' ?></button>
+                            </form>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
 
             <div class="gh-card profile-panel" data-profile-panel="preferencias" <?= $activeTab === 'preferencias' ? '' : 'hidden' ?>>
                 <h2 style="margin:0 0 14px;font-size:16px">Preferências</h2>

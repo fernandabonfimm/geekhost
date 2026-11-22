@@ -218,8 +218,42 @@ function geekhost_nameservers(): array
     return ['ns1.geekhost.com.br', 'ns2.geekhost.com.br'];
 }
 
+/** @return array<string, int> */
+function geekhost_plan_limit_overrides(): array
+{
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+    $cache = [];
+    if (!function_exists('geekhost_db')) {
+        return $cache;
+    }
+    try {
+        $pdo = geekhost_db();
+        $stmt = $pdo->prepare('SELECT value_json FROM app_settings WHERE setting_key = :k LIMIT 1');
+        $stmt->execute([':k' => 'plans.domain_limits']);
+        $raw = $stmt->fetchColumn();
+        $decoded = is_string($raw) ? json_decode($raw, true) : null;
+        if (is_array($decoded)) {
+            foreach ($decoded as $code => $limit) {
+                if (is_string($code) && is_numeric($limit)) {
+                    $cache[$code] = max(1, (int) $limit);
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        $cache = [];
+    }
+    return $cache;
+}
+
 function geekhost_plan_domain_limit(string $planCode): int
 {
+    $overrides = geekhost_plan_limit_overrides();
+    if (isset($overrides[$planCode])) {
+        return (int) $overrides[$planCode];
+    }
     $plan = geekhost_plan($planCode);
     return (int) ($plan['max_domains'] ?? 1);
 }
