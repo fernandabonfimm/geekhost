@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * Pretty URLs for the PHP built-in server.
- * Admin is public /painel (files in admin/). Client is public /portal (files in painel/).
+ * Invariant: admin = /admin (files in admin/), client = /painel (files in painel/).
  * php -S without router.php serves a directory index.php for any extra path,
  * so the homepages call geekhost_cli_dispatch() before rendering.
  */
@@ -34,8 +34,9 @@ function geekhost_public_script(string $uri): ?string
         return $fixed[$path];
     }
 
-    if (preg_match('#^/(portal|painel)(/.*)?$#', $path, $m) === 1) {
-        $base = $m[1] === 'portal' ? '/painel' : '/admin';
+    // Admin /admin → admin/*.php ; Client /painel → painel/*.php
+    if (preg_match('#^/(admin|painel)(/.*)?$#', $path, $m) === 1) {
+        $base = '/' . $m[1];
         $rest = $m[2] ?? '';
         if ($rest === '' || $rest === '/') {
             $rel = $base . '/index.php';
@@ -47,9 +48,9 @@ function geekhost_public_script(string $uri): ?string
         return is_file(geekhost_public_root() . $rel) ? $rel : null;
     }
 
-    if (preg_match('#^/api/(portal|painel)/([a-z0-9-]+)$#', $path, $m) === 1) {
-        $folder = $m[1] === 'portal' ? '/api/painel/' : '/api/admin/';
-        $rel = $folder . $m[2] . '.php';
+    // APIs: /api/admin/* → api/admin/ ; /api/painel/* → api/painel/
+    if (preg_match('#^/api/(admin|painel)/([a-z0-9-]+)$#', $path, $m) === 1) {
+        $rel = '/api/' . $m[1] . '/' . $m[2] . '.php';
         return is_file(geekhost_public_root() . $rel) ? $rel : null;
     }
 
@@ -64,9 +65,15 @@ function geekhost_cli_dispatch(): void
     $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     $uri = is_string($uri) ? rawurldecode($uri) : '/';
 
-    if (preg_match('#^/admin(/.*)?$#', $uri) === 1) {
-        $tail = substr($uri, strlen('/admin'));
+    // Mistaken remap bookmarks: /portal → /painel
+    if (preg_match('#^/portal(/.*)?$#', $uri) === 1) {
+        $tail = substr($uri, strlen('/portal'));
         header('Location: /painel' . ($tail !== '' ? $tail : '/'), true, 301);
+        exit;
+    }
+    if (preg_match('#^/api/portal(/.*)?$#', $uri) === 1) {
+        $tail = substr($uri, strlen('/api/portal'));
+        header('Location: /api/painel' . ($tail !== '' ? $tail : ''), true, 301);
         exit;
     }
 

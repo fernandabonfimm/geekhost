@@ -55,37 +55,22 @@ function geekhost_base_path(): string
 }
 
 /**
- * Public routes, applied once: admin /admin → /painel, client /painel → /portal.
- * /api/admin → /api/painel and /api/painel → /api/portal in the same single pass.
+ * Identity helper kept for call sites. Invariant: admin = /admin, client = /painel.
+ * Do not remap /admin → /painel or /painel → /portal.
  */
 function geekhost_canonical_route(string $path): string
 {
-    $query = '';
-    $qPos = strpos($path, '?');
-    if ($qPos !== false) {
-        $query = substr($path, $qPos);
-        $path = substr($path, 0, $qPos);
-    }
-    if (preg_match('#^/api/admin(/|$)#', $path) === 1) {
-        $path = '/api/painel' . substr($path, strlen('/api/admin'));
-    } elseif (preg_match('#^/api/painel(/|$)#', $path) === 1) {
-        $path = '/api/portal' . substr($path, strlen('/api/painel'));
-    } elseif (preg_match('#^/admin(/|$)#', $path) === 1) {
-        $path = '/painel' . substr($path, strlen('/admin'));
-    } elseif (preg_match('#^/painel(/|$)#', $path) === 1) {
-        $path = '/portal' . substr($path, strlen('/painel'));
-    }
-    return $path . $query;
+    return $path;
 }
 
 function geekhost_is_app_route(string $path): bool
 {
-    return preg_match('#^/(painel|portal|api/painel|api/portal)(/|$|\?)#', $path) === 1;
+    return preg_match('#^/(admin|painel|api/admin|api/painel)(/|$|\?)#', $path) === 1;
 }
 
 /**
  * Local XAMPP serves the marketing site under /geekhost, but admin and client
- * links must be root-absolute: /painel/... and /portal/...
+ * links must be root-absolute: /admin/... and /painel/...
  */
 function geekhost_request_is_loopback(): bool
 {

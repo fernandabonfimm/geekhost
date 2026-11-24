@@ -17,31 +17,26 @@ Options -Indexes
     RewriteRule ^api/checkout/create/?$ api/checkout/create.php [L,QSA]
     RewriteRule ^api/checkout/status/?$ api/checkout/status.php [L,QSA]
     RewriteRule ^api/webhooks/asaas/?$ api/webhooks/asaas.php [L,QSA]
-
-    # Old bookmarks: client lived at /painel and admin at /admin.
-    # REQUEST_URI is the browser URL, so the new /painel (admin) is not redirected.
-    RewriteCond %{REQUEST_URI} ^/geekhost/painel/?(.*)$
-    RewriteRule ^painel/?(.*)$ /portal/%1 [R=301,L]
-    RewriteCond %{REQUEST_URI} ^/geekhost/admin/?(.*)$ [OR]
-    RewriteCond %{REQUEST_URI} ^/admin/?(.*)$
-    RewriteRule ^admin/?(.*)$ /painel/$1 [R=301,L]
-
     RewriteRule ^cron/billing/?$ cron/billing.php [L,QSA]
 
-    # Admin is public /painel → files in admin/
-    RewriteRule ^painel/?$ admin/index.php [L,QSA]
-    RewriteRule ^painel/([a-z0-9-]+)/?$ admin/$1.php [L,QSA]
+    # Undo mistaken /portal remap bookmarks → client /painel (never /admin → /painel).
+    RewriteRule ^portal/?(.*)$ /painel/$1 [R=301,L]
+    RewriteRule ^api/portal/([a-z0-9-]+)/?$ /api/painel/$1 [R=301,L]
 
-    # Client is public /portal → files in painel/
-    RewriteRule ^portal/?$ painel/index.php [L,QSA]
-    RewriteRule ^portal/admin/tickets/?$ painel/admin/tickets.php [L,QSA]
-    RewriteRule ^portal/([a-z0-9-]+)/?$ painel/$1.php [L,QSA]
+    # Admin ops: /admin → admin/
+    RewriteRule ^admin/?$ admin/index.php [L,QSA]
+    RewriteRule ^admin/([a-z0-9-]+)/?$ admin/$1.php [L,QSA]
 
-    # Client API /api/portal → api/painel. Admin API /api/painel → api/admin.
-    RewriteRule ^api/portal/([a-z0-9-]+)/?$ api/painel/$1.php [L,QSA]
-    RewriteRule ^api/painel/([a-z0-9-]+)/?$ api/admin/$1.php [L,QSA]
+    # Client panel: /painel → painel/
+    RewriteRule ^painel/?$ painel/index.php [L,QSA]
+    RewriteRule ^painel/admin/tickets/?$ painel/admin/tickets.php [L,QSA]
+    RewriteRule ^painel/([a-z0-9-]+)/?$ painel/$1.php [L,QSA]
 
-    # Extensionless .php fallback (covers future admin/painel pages)
+    # APIs match folders 1:1
+    RewriteRule ^api/admin/([a-z0-9-]+)/?$ api/admin/$1.php [L,QSA]
+    RewriteRule ^api/painel/([a-z0-9-]+)/?$ api/painel/$1.php [L,QSA]
+
+    # Extensionless .php fallback
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.php -f

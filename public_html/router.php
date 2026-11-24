@@ -7,9 +7,15 @@ require_once __DIR__ . '/includes/routes.php';
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $uri = is_string($uri) ? rawurldecode($uri) : '/';
 
-if (preg_match('#^/admin(/.*)?$#', $uri) === 1) {
-    $tail = substr($uri, strlen('/admin'));
+// Mistaken remap bookmarks only — never send /admin to /painel.
+if (preg_match('#^/portal(/.*)?$#', $uri) === 1) {
+    $tail = substr($uri, strlen('/portal'));
     header('Location: /painel' . ($tail !== '' ? $tail : '/'), true, 301);
+    return true;
+}
+if (preg_match('#^/api/portal(/.*)?$#', $uri) === 1) {
+    $tail = substr($uri, strlen('/api/portal'));
+    header('Location: /api/painel' . ($tail !== '' ? $tail : ''), true, 301);
     return true;
 }
 
