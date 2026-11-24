@@ -10,9 +10,9 @@ $companyEmail = filter_var(env('GEEKHOST_CONTACT_EMAIL', 'contato@geekhost.com.b
 $companyWhatsapp = preg_replace('/\D+/', '', env('GEEKHOST_WHATSAPP', '5516997399174') ?: '') ?? '';
 $publicUrl = rtrim((string) env('GEEKHOST_PUBLIC_URL', ''), '/');
 
-function e(string $value): string
+function e(string|int|float|null $value): string
 {
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
 /**
