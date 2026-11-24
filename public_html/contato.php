@@ -80,7 +80,7 @@ $subjectLabels = [
             <p>Guias diretos para pagar fatura, cadastrar domínio, publicar o site, entrar no DirectAdmin e criar o banco de dados.</p>
             <a class="button button-lime" href="<?= e(url('/base-de-conhecimento')) ?>">Abrir a base de conhecimento <span aria-hidden="true">↗</span></a>
         </div>
-        <img class="kb-cta-art" src="<?= e(asset('assets/images/mascotes-suporte.png')) ?>" alt="Mascotes GeekHost mostrando um passo no notebook" width="420" height="520">
+        <img class="kb-cta-art" src="<?= e(asset('assets/images/suporte-conhecimento.jpg')) ?>" alt="Pessoa no notebook, em uma mesa de madeira, com uma xícara de café ao lado" width="480" height="332">
     </div>
 </section>
 
