@@ -45,6 +45,8 @@ try {
     geekhost_log('api_checkout_error', ['error' => $e->getMessage()]);
     http_response_code(400);
     $message = $e->getMessage();
-    $asaas = (bool) preg_match('/gateway|asaas|cobran[cç]a|pix|boleto|cart[aã]o|assinatura/i', $message);
+    $billing = strtoupper((string) ($payload['billingType'] ?? ''));
+    $asaas = $billing === 'CREDIT_CARD'
+        || (bool) preg_match('/gateway|asaas|cobran[cç]a|pix|boleto|cart[aã]o|assinatura|recusad|não autorizad|nao autorizad/i', $message);
     echo json_encode(['ok' => false, 'error' => $message, 'asaas' => $asaas], JSON_UNESCAPED_UNICODE);
 }

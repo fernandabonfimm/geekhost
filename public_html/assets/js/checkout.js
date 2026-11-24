@@ -309,13 +309,10 @@
 
         if (trial) {
             setConfirmVisual('ok');
-            const when = order.chargeOn ? new Date(order.chargeOn + 'T12:00:00').toLocaleDateString('pt-BR') : '7 dias';
-            if (title) title.textContent = 'Cartão confirmado — 7 dias grátis';
-            if (status) {
-                status.textContent = `Não cobramos agora. O cartão fica salvo e a primeira cobrança sai em ${when}. PIX, boleto e débito não têm esses 7 dias: esses meios são cobrados na hora. Se cancelar, não há reembolso e o uso segue até a próxima data de cobrança.`;
-            }
+            if (title) title.textContent = 'Cartão confirmado';
+            if (status) status.textContent = 'Enviamos os dados da compra e o acesso do painel para o seu e-mail.';
             if (panelCta) {
-                panelCta.href = root.dataset.panelUrl || root.dataset.loginUrl;
+                panelCta.href = order.panelUrl || root.dataset.panelUrl || root.dataset.loginUrl;
                 panelCta.textContent = 'Ir para o painel';
             }
         } else if (paid) {
@@ -352,12 +349,16 @@
         } else if (refused) {
             setConfirmVisual('danger');
             if (title) title.textContent = 'Não foi possível confirmar seu pagamento';
-            if (status) status.textContent = `Status: ${order.statusLabel || order.status}. Você pode iniciar um novo checkout com o mesmo plano.`;
+            if (status) status.textContent = 'Vamos abrir o WhatsApp para a equipe te ajudar a concluir a compra.';
             if (panelCta) {
                 const url = new URL(window.location.href);
                 url.searchParams.delete('order');
                 panelCta.href = url.pathname + url.search;
                 panelCta.textContent = 'Tentar novamente';
+            }
+            if (order.billingType === 'CREDIT_CARD' && root.dataset.helpOpened !== '1') {
+                root.dataset.helpOpened = '1';
+                openWhatsappHelp('CREDIT_CARD');
             }
         } else {
             setConfirmVisual('warn');
@@ -427,17 +428,12 @@
             if (link) link.href = order.boleto?.url || order.invoiceUrl || '#';
             if (line) line.textContent = order.boleto?.identificationField || '';
         }
-        if (order.billingType === 'CREDIT_CARD' && cardBox) {
-            cardBox.hidden = false;
-            const msg = result.querySelector('[data-card-msg]');
-            if (msg) {
-                msg.textContent = paid
-                    ? 'Pagamento confirmado. Vamos te levar para criar a senha do painel.'
-                    : 'Pagamento em análise. Assim que confirmar, você poderá criar a senha.';
-            }
+        if (order.billingType === 'CREDIT_CARD' && (trial || paid || order.accessGranted) && order.panelUrl) {
+            window.location.assign(order.panelUrl);
+            return;
         }
 
-        if (paid && setupUrl) {
+        if (paid && setupUrl && order.billingType !== 'CREDIT_CARD') {
             window.setTimeout(() => { window.location.href = setupUrl; }, 1200);
         }
         refreshIcons();
@@ -578,6 +574,13 @@
             if (form.cardNumber) form.cardNumber.value = '';
             if (form.cardCcv) form.cardCcv.value = '';
             if (data.order.passwordSetupUrl) setupUrl = data.order.passwordSetupUrl;
+            if (billingType === 'CREDIT_CARD' && data.order.accessGranted && data.order.panelUrl) {
+                window.location.assign(data.order.panelUrl);
+                return;
+            }
+            if (billingType === 'CREDIT_CARD' && ['canceled', 'refunded'].includes(data.order.status)) {
+                openWhatsappHelp('CREDIT_CARD');
+            }
             toast('Pedido criado com sucesso.');
             renderResult(data.order);
             if (data.order.billingType === 'PIX' || data.order.billingType === 'BOLETO' || data.order.status !== 'paid_pending_provisioning') {

@@ -9,6 +9,7 @@ require_once __DIR__ . '/NotificationService.php';
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/ProvisioningStub.php';
 require_once __DIR__ . '/Auth.php';
+require_once __DIR__ . '/Mailer.php';
 
 final class OrderService
 {
@@ -201,19 +202,6 @@ final class OrderService
                 $status = $this->mapAsaasPaymentStatus((string) ($payment['status'] ?? 'PENDING'));
             }
 
-            $pixError = null;
-            if ($billingType === 'PIX') {
-                $paymentId = (string) ($payment['id'] ?? '');
-                try {
-                    $pix = $this->asaas->getPixQrCode($paymentId);
-                    $pixQr = isset($pix['encodedImage']) ? (string) $pix['encodedImage'] : null;
-                    $pixCopy = isset($pix['payload']) ? (string) $pix['payload'] : null;
-                } catch (Throwable $e) {
-                    $pixError = $this->pixFailureMessage($e->getMessage());
-                    geekhost_log('pix_qr_fetch_failed', ['order' => $publicId, 'error' => $e->getMessage()]);
-                }
-            }
-
             if ($billingType === 'BOLETO') {
                 $boletoUrl = isset($payment['bankSlipUrl']) ? (string) $payment['bankSlipUrl'] : (isset($payment['invoiceUrl']) ? (string) $payment['invoiceUrl'] : null);
                 $boletoField = isset($payment['identificationField']) ? (string) $payment['identificationField'] : null;
@@ -277,9 +265,11 @@ final class OrderService
                  WHERE id = :id'
             );
             $paidAt = $status === 'paid_pending_provisioning' ? $now : null;
+            $paymentId = trim((string) ($payment['id'] ?? ''));
+            $subscriptionId = trim((string) ($asaasSubscriptionId ?? ''));
             $upd->execute([
-                ':pid' => (string) ($payment['id'] ?? ''),
-                ':sid' => $asaasSubscriptionId,
+                ':pid' => $paymentId !== '' ? $paymentId : null,
+                ':sid' => $subscriptionId !== '' ? $subscriptionId : null,
                 ':status' => $status,
                 ':invoice' => isset($payment['invoiceUrl']) ? (string) $payment['invoiceUrl'] : null,
                 ':pix_qr' => $pixQr,
@@ -296,18 +286,6 @@ final class OrderService
             if ($userId > 0 && ($cardBrand || $cardLast4 || $creditCardToken)) {
                 $u = $this->db->prepare('UPDATE users SET card_brand = COALESCE(:b, card_brand), card_last4 = COALESCE(:l, card_last4), asaas_credit_card_token = COALESCE(:t, asaas_credit_card_token), updated_at = :u WHERE id = :id');
                 $u->execute([':b' => $cardBrand, ':l' => $this->sealSecret($cardLast4), ':t' => $this->sealSecret($creditCardToken), ':u' => $now, ':id' => $userId]);
-            }
-
-            if ($pixError) {
-                $metaRow = $this->db->prepare('SELECT metadata_json FROM orders WHERE id = :id');
-                $metaRow->execute([':id' => $orderId]);
-                $meta = json_decode((string) $metaRow->fetchColumn(), true);
-                if (!is_array($meta)) {
-                    $meta = [];
-                }
-                $meta['pix_error'] = $pixError;
-                $this->db->prepare('UPDATE orders SET metadata_json = :m, updated_at = :u WHERE id = :id')
-                    ->execute([':m' => json_encode($meta, JSON_UNESCAPED_UNICODE), ':u' => $now, ':id' => $orderId]);
             }
 
             if ($trial && $chargeOn !== null && $billingDay !== null) {
@@ -398,6 +376,10 @@ final class OrderService
                 'status' => $order['status'],
             ]);
 
+            if ($billingType === 'PIX') {
+                $order = $this->refreshPixForOrder($publicId) ?? $order;
+            }
+
             $presented = $this->presentOrder($order);
             $presented['panelLoginHint'] = $customerData['email'];
             $presented['passwordSetupRequired'] = $setupToken !== null;
@@ -405,6 +387,23 @@ final class OrderService
                 $presented['passwordSetupToken'] = $setupToken;
                 $presented['passwordSetupUrl'] = (function_exists('url') ? url('/painel/criar-senha') : '/painel/criar-senha')
                     . '?token=' . rawurlencode($setupToken);
+            }
+            $presented['accessGranted'] = false;
+            if (
+                $billingType === 'CREDIT_CARD'
+                && $userId > 0
+                && in_array((string) $order['status'], ['trial_active', 'paid_pending_provisioning', 'awaiting_payment'], true)
+            ) {
+                $tempPassword = $this->auth->issueTemporaryPassword($userId);
+                $this->sendCardAccessEmail(
+                    $customerData['email'],
+                    $customerData['name'],
+                    $presented,
+                    $tempPassword
+                );
+                $this->auth->startSession($userId);
+                $presented['accessGranted'] = true;
+                $presented['panelUrl'] = function_exists('url') ? url('/painel/') : '/painel/';
             }
             return $presented;
         } catch (Throwable $e) {
@@ -702,14 +701,28 @@ final class OrderService
         if ((string) ($order['billing_type'] ?? '') !== 'PIX') {
             return $order;
         }
-        if (!empty($order['pix_qr_code']) && !empty($order['pix_copy_paste'])) {
+        if (!empty($order['pix_copy_paste']) || !empty($order['pix_qr_code'])) {
             return $order;
         }
         $existingMeta = json_decode((string) ($order['metadata_json'] ?? ''), true);
-        $existingError = is_array($existingMeta) ? (string) ($existingMeta['pix_error'] ?? '') : '';
+        if (!is_array($existingMeta)) {
+            $existingMeta = [];
+        }
+        $existingError = (string) ($existingMeta['pix_error'] ?? '');
         if ($existingError !== '' && str_contains($existingError, 'chave Pix')) {
             return $order;
         }
+        $checkedAt = isset($existingMeta['pix_checked_at']) ? strtotime((string) $existingMeta['pix_checked_at']) : false;
+        if ($checkedAt !== false && (time() - $checkedAt) < 40) {
+            return $order;
+        }
+        $existingMeta['pix_checked_at'] = gmdate('c');
+        $this->db->prepare('UPDATE orders SET metadata_json = :m, updated_at = :u WHERE id = :id')
+            ->execute([
+                ':m' => json_encode($existingMeta, JSON_UNESCAPED_UNICODE),
+                ':u' => gmdate('c'),
+                ':id' => $order['id'],
+            ]);
         $paymentId = (string) ($order['asaas_payment_id'] ?? '');
         if ($paymentId === '') {
             return $order;
@@ -967,10 +980,11 @@ final class OrderService
         if ($localId <= 0) {
             return;
         }
+        $asaasId = trim((string) $asaasId);
         $this->db->prepare(
             'UPDATE subscriptions SET asaas_subscription_id = COALESCE(:a, asaas_subscription_id), status = :st, next_due_date = :n, updated_at = :u WHERE id = :id'
         )->execute([
-            ':a' => $asaasId,
+            ':a' => $asaasId !== '' ? $asaasId : null,
             ':st' => 'active',
             ':n' => geekhost_period_end_date($periodCode),
             ':u' => $now,
@@ -1375,6 +1389,78 @@ final class OrderService
     {
         $this->db->prepare('UPDATE webhook_events SET processed_at = :p WHERE event_key = :k')
             ->execute([':p' => $now, ':k' => $eventKey]);
+    }
+
+    /**
+     * @param array<string, mixed> $order
+     */
+    private function sendCardAccessEmail(string $email, string $name, array $order, ?string $temporaryPassword): void
+    {
+        $panelUrl = function_exists('url') ? url('/painel/') : '/painel/';
+        $profileUrl = function_exists('url') ? url('/painel/perfil') : '/painel/perfil';
+        $when = '';
+        if (!empty($order['chargeOn'])) {
+            $ts = strtotime((string) $order['chargeOn'] . ' 12:00:00');
+            $when = $ts ? date('d/m/Y', $ts) : (string) $order['chargeOn'];
+        }
+        $domain = trim((string) ($order['domain'] ?? ''));
+        $domainLabel = $domain !== '' ? $domain : 'domínio a cadastrar depois';
+        $renew = isset($order['renewAmount']) ? geekhost_format_brl((float) $order['renewAmount']) : '';
+        $h = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        $rows = [
+            'Plano' => (string) ($order['planName'] ?? ''),
+            'Período' => (string) ($order['periodLabel'] ?? ''),
+            'Domínio' => $domainLabel,
+            'Total de hoje' => (string) ($order['amountFormatted'] ?? ''),
+            'Pedido' => (string) ($order['id'] ?? ''),
+        ];
+        if ($when !== '') {
+            $rows['Primeira cobrança'] = $when;
+        }
+        if ($renew !== '') {
+            $rows['Renovação'] = $renew;
+        }
+        $table = '';
+        foreach ($rows as $label => $value) {
+            if ($value === '') {
+                continue;
+            }
+            $table .= '<tr><td style="padding:8px 0;color:#697078;font-size:13px;">' . $h($label) . '</td>'
+                . '<td style="padding:8px 0;text-align:right;font-weight:700;">' . $h($value) . '</td></tr>';
+        }
+        $access = $temporaryPassword !== null && $temporaryPassword !== ''
+            ? '<p style="margin:0 0 8px;font-size:13px;color:#697078;">Senha temporária</p>'
+                . '<p style="margin:0;font-size:22px;font-weight:800;letter-spacing:.04em;">' . $h($temporaryPassword) . '</p>'
+                . '<p style="margin:12px 0 0;font-size:13px;line-height:1.5;color:#3b4148;">Entre com o e-mail desta compra e essa senha. Troque a senha depois em Perfil, no painel.</p>'
+            : '<p style="margin:0;font-size:14px;line-height:1.5;color:#3b4148;">Sua senha atual continua valendo. Você pode trocá-la em Perfil, no painel.</p>';
+        $intro = $order['status'] === 'trial_active'
+            ? 'O cartão foi confirmado e salvo. Não cobramos agora: os 7 dias grátis já começaram'
+                . ($when !== '' ? ' e a primeira cobrança sai em ' . $when : '')
+                . '. PIX, boleto e débito não têm esses 7 dias. Se cancelar, não há reembolso e o uso segue até a próxima data de cobrança.'
+            : ($order['status'] === 'paid_pending_provisioning'
+                ? 'O pagamento no cartão foi aprovado. Estamos preparando a hospedagem.'
+                : 'O cartão foi recebido e o pagamento está pendente de confirmação. Seu acesso ao painel já está liberado.');
+        $html = '<!doctype html><html lang="pt-BR"><body style="margin:0;background:#f3f4f5;font-family:Arial,sans-serif;color:#1a1e24;">'
+            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f5;padding:28px 12px;"><tr><td align="center">'
+            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:18px;overflow:hidden;">'
+            . '<tr><td style="background:#1a1e24;padding:28px 32px;"><div style="font-size:22px;font-weight:800;color:#fff;">GeekHost<span style="color:#01e152;">.</span></div></td></tr>'
+            . '<tr><td style="padding:32px;">'
+            . '<p style="margin:0 0 8px;font-size:13px;color:#697078;">Olá, ' . $h($name !== '' ? $name : 'cliente') . '</p>'
+            . '<h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;">Seu acesso ao painel</h1>'
+            . '<p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#3b4148;">' . $h($intro) . '</p>'
+            . '<table role="presentation" width="100%" style="margin:0 0 18px;">' . $table . '</table>'
+            . '<div style="background:#f6f7f8;border-radius:12px;padding:16px 18px;margin:0 0 22px;">' . $access . '</div>'
+            . '<a href="' . $h($panelUrl) . '" style="display:inline-block;background:#01e152;color:#1a1e24;text-decoration:none;font-weight:800;padding:14px 22px;border-radius:12px;">Abrir o painel</a>'
+            . '<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#697078;">Para trocar a senha: <span style="word-break:break-all;">' . $h($profileUrl) . '</span></p>'
+            . '</td></tr></table></td></tr></table></body></html>';
+        try {
+            $subject = $order['status'] === 'paid_pending_provisioning'
+                ? 'Pagamento aprovado — acesso ao painel GeekHost'
+                : 'Cartão confirmado — acesso ao painel GeekHost';
+            Mailer::send($email, $subject, $html);
+        } catch (Throwable $e) {
+            geekhost_log('card_access_mail_failed', ['order' => $order['id'] ?? '', 'error' => $e->getMessage()]);
+        }
     }
 
     private function clientIp(): string

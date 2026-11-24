@@ -86,6 +86,40 @@ final class Auth
         return ['user' => $this->findById($userId) ?? [], 'setupToken' => $setupToken];
     }
 
+    /**
+     * Sets a one-time password when the account still has none.
+     * Returns null when the person already chose a password.
+     */
+    public function issueTemporaryPassword(int $userId): ?string
+    {
+        $user = $this->findById($userId);
+        if (!$user || (int) ($user['password_is_set'] ?? 0) === 1) {
+            return null;
+        }
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+        $raw = '';
+        $max = strlen($alphabet) - 1;
+        for ($i = 0; $i < 10; $i++) {
+            $raw .= $alphabet[random_int(0, $max)];
+        }
+        $password = 'Gh-' . $raw;
+        $this->db->prepare(
+            'UPDATE users SET
+                password_hash = :p,
+                password_is_set = 1,
+                email_verified = 1,
+                password_setup_token_hash = NULL,
+                password_setup_expires = NULL,
+                updated_at = :u
+             WHERE id = :id'
+        )->execute([
+            ':p' => password_hash($password, PASSWORD_DEFAULT),
+            ':u' => gmdate('c'),
+            ':id' => $userId,
+        ]);
+        return $password;
+    }
+
     public function issuePasswordSetupToken(int $userId): string
     {
         $token = bin2hex(random_bytes(32));
