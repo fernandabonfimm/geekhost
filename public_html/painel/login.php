@@ -6,8 +6,11 @@ $requireAuth = false;
 $panelTitle = 'Entrar';
 require __DIR__ . '/_layout.php';
 
+$nextRaw = (string) ($_GET['next'] ?? $_POST['next'] ?? '');
+$nextTarget = geekhost_safe_painel_next($nextRaw, '/painel/');
+
 if ($panelUser) {
-    header('Location: ' . url('/painel/'));
+    header('Location: ' . url($nextTarget));
     exit;
 }
 
@@ -18,11 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $user = $auth->attempt((string) ($_POST['email'] ?? ''), (string) ($_POST['password'] ?? ''));
         if (!empty($user['unverified'])) {
-            header('Location: ' . url('/painel/confirmar-email?email=' . rawurlencode((string) $user['email'])));
+            $confirm = url('/painel/confirmar-email?email=' . rawurlencode((string) $user['email']));
+            if ($nextTarget !== '/painel/' && $nextTarget !== '') {
+                $confirm .= '&next=' . rawurlencode($nextTarget);
+            }
+            header('Location: ' . $confirm);
             exit;
         }
         if ($user) {
-            header('Location: ' . url('/painel/'));
+            header('Location: ' . url($nextTarget));
             exit;
         }
         $error = 'E-mail ou senha inválidos.';
@@ -36,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($error): ?><div class="auth-alert is-danger"><?= e($error) ?></div><?php endif; ?>
     <form method="post" action="<?= e(url('/painel/login')) ?>" class="auth-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+        <input type="hidden" name="next" value="<?= e($nextTarget) ?>">
         <div>
             <div class="auth-label-row"><span>Endereço de e-mail</span></div>
             <label class="auth-field">

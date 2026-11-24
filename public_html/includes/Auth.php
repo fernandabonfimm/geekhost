@@ -224,7 +224,22 @@ final class Auth
     {
         $user = $this->user();
         if (!$user) {
-            header('Location: ' . (function_exists('url') ? url('/painel/login') : '/painel/login'));
+            $login = function_exists('url') ? url('/painel/login') : '/painel/login';
+            $request = (string) ($_SERVER['REQUEST_URI'] ?? '');
+            $path = parse_url($request, PHP_URL_PATH);
+            $path = is_string($path) ? $path : '';
+            $qs = parse_url($request, PHP_URL_QUERY);
+            $candidate = $path;
+            if (is_string($qs) && $qs !== '') {
+                $candidate .= '?' . $qs;
+            }
+            $next = function_exists('geekhost_safe_painel_next')
+                ? geekhost_safe_painel_next($candidate, '')
+                : '';
+            if ($next !== '') {
+                $login .= (str_contains($login, '?') ? '&' : '?') . 'next=' . rawurlencode($next);
+            }
+            header('Location: ' . $login);
             exit;
         }
         return $user;

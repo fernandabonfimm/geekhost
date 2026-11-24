@@ -120,6 +120,34 @@ function asset(string $path): string
     return url(ltrim(str_replace('\\', '/', $path), '/'));
 }
 
+/**
+ * Safe post-login target inside the client panel only (/painel/*).
+ */
+function geekhost_safe_painel_next(?string $raw, string $fallback = '/painel/'): string
+{
+    $raw = trim((string) $raw);
+    if ($raw === '') {
+        return $fallback;
+    }
+    if (str_contains($raw, '://') || str_starts_with($raw, '//') || str_contains($raw, '..')) {
+        return $fallback;
+    }
+    $path = $raw;
+    $query = '';
+    $qPos = strpos($raw, '?');
+    if ($qPos !== false) {
+        $query = substr($raw, $qPos);
+        $path = substr($raw, 0, $qPos);
+    }
+    if (!preg_match('#^/painel(/[a-zA-Z0-9\-/_]*)?/?$#', $path)) {
+        return $fallback;
+    }
+    if (preg_match('#^/painel/login/?$#', $path) === 1) {
+        return $fallback;
+    }
+    return $path . $query;
+}
+
 function geekhost_send_security_headers(): void
 {
     static $sent = false;

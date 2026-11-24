@@ -70,11 +70,35 @@ body.admin-body.is-auth-screen main {
     animation: auth-drift 14s ease-in-out infinite alternate;
 }
 
+/* Full closed rings (not half-arcs). Sized to fit inside the panel so rotation never shows a cut. */
 .auth-orbit {
-    background:
-        radial-gradient(circle at 50% 120%, transparent 38%, rgba(1, 225, 82, .18) 39%, transparent 40%),
-        radial-gradient(circle at 50% 120%, transparent 58%, rgba(255, 255, 255, .08) 59%, transparent 60%);
-    animation: auth-spin 36s linear infinite;
+    display: grid;
+    place-items: center;
+    animation: auth-spin 48s linear infinite;
+}
+
+.auth-orbit::before,
+.auth-orbit::after {
+    content: '';
+    grid-area: 1 / 1;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border-style: solid;
+    background: transparent;
+}
+
+.auth-orbit::before {
+    width: min(58%, 210px);
+    aspect-ratio: 1;
+    border-width: 1.5px;
+    border-color: rgba(1, 225, 82, .55);
+}
+
+.auth-orbit::after {
+    width: min(82%, 300px);
+    aspect-ratio: 1;
+    border-width: 1.5px;
+    border-color: rgba(255, 255, 255, .22);
 }
 
 .auth-visual-top,
@@ -278,6 +302,94 @@ body.admin-body.is-auth-screen main {
 
 body.panel-body.is-auth .panel-footer-auth { display: none; }
 
+.segunda-via-panel h1 { font-size: clamp(28px, 3vw, 36px); }
+.segunda-via-card-block {
+    display: grid;
+    gap: 10px;
+    margin-top: 4px;
+}
+.segunda-via-card-block > h2 {
+    margin: 0;
+    color: #1a1e24;
+    font-size: 18px;
+    letter-spacing: -.02em;
+}
+.segunda-via-card-block > p { margin: 0; color: #697078; font-size: 14px; }
+.segunda-via-form-grid { display: grid; gap: 18px; }
+.segunda-via-hint {
+    margin: 8px 0 0;
+    color: #697078;
+    font-size: 12px;
+    line-height: 1.45;
+}
+.segunda-via-hint-top { margin: 0 0 10px; }
+.segunda-via-choice {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 12px;
+    align-items: start;
+    margin: 0 0 10px;
+    padding: 14px;
+    border: 1px solid #e3e7ec;
+    border-radius: 14px;
+    background: #f7f8f9;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.segunda-via-choice.is-selected {
+    border-color: #01e152;
+    background: #f3faf5;
+    box-shadow: 0 0 0 3px rgba(1, 225, 82, .14);
+}
+.segunda-via-choice input { margin-top: 3px; accent-color: #01e152; }
+.segunda-via-choice strong {
+    display: block;
+    color: #1a1e24;
+    font-size: 13px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+.segunda-via-choice small {
+    display: block;
+    margin-top: 4px;
+    color: #697078;
+    font-size: 13px;
+    line-height: 1.4;
+}
+.segunda-via-doc { margin-top: 12px; }
+.segunda-via-secure {
+    margin: 4px 0 0;
+    color: #697078;
+    font-size: 12px;
+    text-align: center;
+}
+.segunda-via-list { display: grid; gap: 12px; margin-top: 14px; }
+.segunda-via-card {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px;
+    border: 1px solid #e3e7ec;
+    border-radius: 14px;
+    background: #f8faf9;
+}
+.segunda-via-card p { margin: 4px 0 0; color: #697078; font-size: 13px; }
+.segunda-via-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+@media (min-width: 1440px) {
+    body.panel-body.is-auth .panel-main-auth:has(.segunda-via-panel),
+    .auth-shell:has(.segunda-via-panel) {
+        width: min(1180px, calc(100vw - 48px));
+        grid-template-columns: minmax(280px, .85fr) minmax(420px, 1.15fr);
+    }
+    .segunda-via-form-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+        gap: 28px;
+        align-items: start;
+    }
+}
+
 @media (max-width: 860px) {
     .panel-main-auth,
     .auth-shell { grid-template-columns: 1fr; min-height: 0; }
@@ -286,6 +398,7 @@ body.panel-body.is-auth .panel-footer-auth { display: none; }
     .auth-panel { padding: 28px 20px 32px; }
     .auth-grid { grid-template-columns: 1fr; }
     .auth-panel h1 { font-size: 30px; }
+    .segunda-via-form-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

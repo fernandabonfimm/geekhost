@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $auth = new Auth();
     $actor = $auth->user();
     if (!$actor) {
-        header('Location: ' . url('/painel/login'));
+        header('Location: ' . url('/painel/login?next=' . rawurlencode('/painel/faturas')));
         exit;
     }
     if (!csrf_validate(isset($_POST['csrf']) ? (string) $_POST['csrf'] : null)) {
