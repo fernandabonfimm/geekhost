@@ -1,9 +1,15 @@
 <?php
 
-$pageTitle = 'Entre em contato';
-$pageDescription = 'Entre em contato com a GeekHost para tirar dúvidas sobre hospedagem de sites e encontrar uma opção para seu projeto.';
+$pageTitle = 'Suporte';
+$pageDescription = 'Fale com a GeekHost e consulte a base de conhecimento sobre painel, pagamento, domínio, site e DirectAdmin.';
+$pageDocumentTitle = 'Suporte | GeekHost';
 $currentPage = 'contato';
 require __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/includes/KnowledgeBase.php';
+
+$kb = new KnowledgeBase();
+$kbCategories = $kb->categories();
+$kbArticles = $kb->articles();
 
 $subject = trim((string) ($_GET['assunto'] ?? ''));
 $allowedSubjects = ['light', 'empresa', 'premium'];
@@ -18,7 +24,7 @@ $subjectLabels = [
 ?>
 
 <section class="page-hero page-width contact-hero">
-    <p class="eyebrow">Contato</p>
+    <p class="eyebrow">Suporte</p>
     <h1>Conta pra gente<br>o que você imagina.</h1>
     <p class="page-hero-copy">Dúvidas sobre hospedagem de sites ou sobre o próximo passo do seu site? Envie uma mensagem para a equipe.</p>
 </section>
@@ -68,6 +74,28 @@ $subjectLabels = [
             <p class="form-status" data-contact-status aria-live="polite"></p>
             <p class="fine-print">O envio abrirá o aplicativo de e-mail configurado no seu dispositivo.</p>
         </form>
+    </div>
+</section>
+
+<section class="page-width" id="base-de-conhecimento" style="padding:0 0 80px">
+    <p class="eyebrow">Base de conhecimento</p>
+    <h2>Como usar a hospedagem</h2>
+    <p class="page-hero-copy">Painel, pagamento, domínio, site, DirectAdmin e banco de dados.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:28px 0">
+        <?php foreach ($kbCategories as $category): ?>
+            <a href="<?= e(url('/base-de-conhecimento?cat=' . rawurlencode((string) $category['slug']))) ?>" style="display:block;padding:16px;border:1px solid #e6e8eb;border-radius:16px;background:#fff;color:inherit">
+                <strong><?= e((string) $category['title']) ?></strong>
+                <p style="margin:6px 0 0;color:#697078;font-size:13px"><?= e((string) $category['summary']) ?></p>
+            </a>
+        <?php endforeach; ?>
+    </div>
+    <div style="display:grid;gap:10px">
+        <?php foreach ($kbArticles as $article): ?>
+            <a href="<?= e(url('/base-de-conhecimento?slug=' . rawurlencode((string) $article['slug']))) ?>" style="display:block;padding:14px 16px;border:1px solid #e6e8eb;border-radius:14px;background:#fff;color:inherit">
+                <strong><?= e((string) $article['title']) ?></strong>
+                <p style="margin:4px 0 0;color:#697078;font-size:13px"><?= e((string) $article['summary']) ?></p>
+            </a>
+        <?php endforeach; ?>
     </div>
 </section>
 

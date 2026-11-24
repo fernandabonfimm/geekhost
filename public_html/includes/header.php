@@ -11,8 +11,7 @@ $navigation = [
     'planos' => ['label' => 'Planos', 'href' => 'planos.php'],
     'vantagens' => ['label' => 'Vantagens', 'href' => 'vantagens.php'],
     'quem-somos' => ['label' => 'Quem Somos', 'href' => 'quem-somos.php'],
-    'contato' => ['label' => 'Contato', 'href' => 'contato.php'],
-    'base' => ['label' => 'Base de conhecimento', 'href' => url('/base-de-conhecimento')],
+    'contato' => ['label' => 'Suporte', 'href' => 'contato.php'],
 ];
 $pageDocumentTitle = $pageDocumentTitle ?? 'Hospedagem de Sites: Rápida e Segura';
 ?>

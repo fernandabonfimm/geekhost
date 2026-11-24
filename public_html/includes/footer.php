@@ -41,7 +41,7 @@
             <a href="planos.php">Planos</a>
             <a href="vantagens.php">Vantagens</a>
             <a href="quem-somos.php">Quem Somos</a>
-            <a href="contato.php">Contato</a>
+            <a href="contato.php">Suporte</a>
             <a href="gerador.php">Gerador de WhatsApp</a>
             <a href="termos-de-uso.php">Termos de Uso</a>
             <a href="politica-de-privacidade.php">Política de Privacidade</a>

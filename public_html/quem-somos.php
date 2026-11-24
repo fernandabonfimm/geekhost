@@ -109,7 +109,7 @@ require __DIR__ . '/includes/header.php';
         <?php if ($companyWhatsapp !== ''): ?>
             <a class="button button-lime" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer">WhatsApp <span aria-hidden="true">↗</span></a>
         <?php else: ?>
-            <a class="button button-lime" href="contato.php">Ir para contato <span aria-hidden="true">↗</span></a>
+            <a class="button button-lime" href="contato.php">Ir para suporte <span aria-hidden="true">↗</span></a>
         <?php endif; ?>
     </article>
 </section>
