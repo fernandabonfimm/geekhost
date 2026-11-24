@@ -70,14 +70,21 @@ body.admin-body.is-auth-screen main {
     animation: auth-drift 14s ease-in-out infinite alternate;
 }
 
-/* Circuit gif fills the panel. The veil keeps the copy readable. */
-.auth-orbit {
-    background-image:
-        linear-gradient(180deg, rgba(8, 12, 16, .5) 0%, rgba(8, 12, 16, .34) 48%, rgba(8, 12, 16, .58) 100%),
-        url('../images/login-circuit.gif');
-    background-position: center, center;
-    background-repeat: no-repeat;
-    background-size: cover, cover;
+/* Circuit gif fills the panel. Brightness filter plus a veil keep the lines and the copy readable. */
+.auth-orbit::before,
+.auth-orbit::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+}
+
+.auth-orbit::before {
+    background: url('../images/login-circuit.gif') center / cover no-repeat;
+    filter: brightness(.38) contrast(1.15);
+}
+
+.auth-orbit::after {
+    background: linear-gradient(180deg, rgba(6, 10, 14, .62) 0%, rgba(6, 10, 14, .48) 46%, rgba(6, 10, 14, .7) 100%);
 }
 
 .auth-visual-top,
