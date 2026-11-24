@@ -70,35 +70,14 @@ body.admin-body.is-auth-screen main {
     animation: auth-drift 14s ease-in-out infinite alternate;
 }
 
-/* Full closed rings (not half-arcs). Sized to fit inside the panel so rotation never shows a cut. */
+/* Circuit gif fills the panel. The veil keeps the copy readable. */
 .auth-orbit {
-    display: grid;
-    place-items: center;
-    animation: auth-spin 48s linear infinite;
-}
-
-.auth-orbit::before,
-.auth-orbit::after {
-    content: '';
-    grid-area: 1 / 1;
-    box-sizing: border-box;
-    border-radius: 50%;
-    border-style: solid;
-    background: transparent;
-}
-
-.auth-orbit::before {
-    width: min(58%, 210px);
-    aspect-ratio: 1;
-    border-width: 1.5px;
-    border-color: rgba(1, 225, 82, .55);
-}
-
-.auth-orbit::after {
-    width: min(82%, 300px);
-    aspect-ratio: 1;
-    border-width: 1.5px;
-    border-color: rgba(255, 255, 255, .22);
+    background-image:
+        linear-gradient(180deg, rgba(8, 12, 16, .5) 0%, rgba(8, 12, 16, .34) 48%, rgba(8, 12, 16, .58) 100%),
+        url('../images/login-circuit.gif');
+    background-position: center, center;
+    background-repeat: no-repeat;
+    background-size: cover, cover;
 }
 
 .auth-visual-top,
@@ -294,7 +273,6 @@ body.admin-body.is-auth-screen main {
     from { transform: translate3d(0, 0, 0); }
     to { transform: translate3d(-12px, 10px, 0); }
 }
-@keyframes auth-spin { to { transform: rotate(360deg); } }
 @keyframes auth-float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
