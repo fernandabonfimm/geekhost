@@ -195,7 +195,7 @@ echo '<div class="box">';
 echo '<p class="ok"><strong>Concluído:</strong> ' . $ok . ' ok / ' . $fail . ' erro(s)</p>';
 echo '<p>Tabelas no banco (' . count($tables) . '): <code>' . h(implode(', ', array_map('strval', $tables))) . '</code></p>';
 if ($admin) {
-    echo '<p class="ok">Admin seed OK: <code>admin@geekhost.com.br</code> / senha <code>GeekHost@Admin1</code></p>';
+    echo '<p class="ok">Admin seed OK: <code>admin@geekhost.com.br</code> / senha <code>Senha@123</code></p>';
     echo '<p>Login: <a href="/admin/login">/admin/login</a></p>';
 } else {
     echo '<p class="err">Admin seed não encontrado — veja erros acima.</p>';

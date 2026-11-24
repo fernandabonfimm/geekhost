@@ -22,7 +22,7 @@ GEEKHOST_ADMIN_EMAILS=admin@geekhost.com.br,diretoria@geekhost.com.br,geekhostdi
 
 ## Admin padrão (seed)
 - Email: `admin@geekhost.com.br`
-- Senha: `GeekHost@Admin1`
+- Senha: `Senha@123`
 - Role: `super_admin`
 
 Troque a senha após o primeiro acesso.

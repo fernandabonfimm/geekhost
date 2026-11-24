@@ -27,4 +27,4 @@ Se a mensagem do MySQL vier vazia (“Documentação”), quase sempre: banco n�
 
 - URL: `https://geekhost.com.br/admin/login`
 - Email: `admin@geekhost.com.br`
-- Senha: `GeekHost@Admin1`
+- Senha: `Senha@123`

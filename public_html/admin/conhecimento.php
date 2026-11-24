@@ -63,7 +63,8 @@ $articles = $kb->adminArticles();
                 </select>
             </label>
             <label>Resumo<input name="summary" value="<?= e((string) ($editing['summary'] ?? '')) ?>"></label>
-            <label>Conteúdo<textarea name="body" rows="10" required><?= e((string) ($editing['body'] ?? '')) ?></textarea></label>
+            <label>Conteúdo<textarea name="body" rows="16" required><?= e((string) ($editing['body'] ?? '')) ?></textarea></label>
+            <p style="margin:0;color:#697078;font-size:13px">Uma linha que começa com ## vira uma seção, com tempo de leitura e o índice “Nesta página”.</p>
             <label><input type="checkbox" name="published" <?= !isset($editing['published']) || (int) $editing['published'] === 1 ? 'checked' : '' ?>> Publicado</label>
             <button class="gh-btn gh-btn-primary" type="submit">Salvar</button>
         </form>

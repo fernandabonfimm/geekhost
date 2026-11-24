@@ -53,7 +53,7 @@ try {
 }
 
 $email = 'admin@geekhost.com.br';
-$hash = '$2y$12$cRaQXgSpf.FLKQvQwgNJweXfKXaTFleFGuc4RLJQjofZdj4zRN55e'; // GeekHost@Admin1
+$hash = '$2y$12$j6tlvGIagznBtnjVeJ9l4eDhQ7R/Xvgcy8XgciKWpfhfGUuIzzZSq'; // Senha@123
 $now = gmdate('c');
 $publicId = 'a2222222-2222-4222-8222-222222222222';
 
@@ -130,7 +130,7 @@ try {
     }
 
     echo '<div class="box ok"><strong>Pronto.</strong><br>Login: <a href="/admin/login.php">/admin/login.php</a>';
-    echo '<br>Email: <code>' . h($email) . '</code><br>Senha: <code>GeekHost@Admin1</code></div>';
+    echo '<br>Email: <code>' . h($email) . '</code><br>Senha: <code>Senha@123</code></div>';
     echo '<p><strong>Apague</strong> <code>fix-admin.php</code> e <code>install-db.php</code> agora.</p>';
 } catch (Throwable $e) {
     echo '<p class="err">' . h($e->getMessage()) . '</p>';

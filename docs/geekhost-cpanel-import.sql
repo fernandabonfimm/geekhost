@@ -393,7 +393,7 @@ SELECT
   'a2222222-2222-4222-8222-222222222222',
   NULL,
   'admin@geekhost.com.br',
-  '$2y$12$cRaQXgSpf.FLKQvQwgNJweXfKXaTFleFGuc4RLJQjofZdj4zRN55e',
+  '$2y$12$j6tlvGIagznBtnjVeJ9l4eDhQ7R/Xvgcy8XgciKWpfhfGUuIzzZSq',
   1,
   'Geek Admin',
   '', '', '', '',
@@ -411,7 +411,7 @@ AND NOT EXISTS (
 
 UPDATE `users`
 SET
-  `password_hash` = '$2y$12$cRaQXgSpf.FLKQvQwgNJweXfKXaTFleFGuc4RLJQjofZdj4zRN55e',
+  `password_hash` = '$2y$12$j6tlvGIagznBtnjVeJ9l4eDhQ7R/Xvgcy8XgciKWpfhfGUuIzzZSq',
   `password_is_set` = 1,
   `hosting_status` = 'active',
   `updated_at` = '2026-01-01T00:00:00+00:00'
