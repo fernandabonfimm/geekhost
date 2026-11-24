@@ -25,6 +25,25 @@
     const onlyDigits = (value) => String(value || '').replace(/\D+/g, '');
     const formatBRL = (n) => 'R$ ' + Number(n).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
+    const pixImageSrc = (order) => {
+        const raw = String(order?.pix?.qrCodeBase64 || '').replace(/\s+/g, '');
+        if (raw.startsWith('data:image/')) return raw;
+        if (raw) {
+            const mime = raw.startsWith('/9j/') ? 'jpeg' : 'png';
+            return `data:image/${mime};base64,${raw}`;
+        }
+        const payload = String(order?.pix?.copyPaste || '');
+        if (!payload || typeof qrcode !== 'function') return '';
+        try {
+            const qr = qrcode(0, 'M');
+            qr.addData(payload);
+            qr.make();
+            return qr.createDataURL(6, 8);
+        } catch (_) {
+            return '';
+        }
+    };
+
     const toast = (message, type = 'ok') => {
         if (!toastHost) return;
         const el = document.createElement('div');
@@ -376,19 +395,28 @@
             const hasQr = Boolean(order.pix?.qrCodeBase64);
             const hasCopy = Boolean(order.pix?.copyPaste);
             if (img) {
-                if (hasQr) {
-                    img.src = `data:image/png;base64,${order.pix.qrCodeBase64}`;
+                const drawn = pixImageSrc(order);
+                if (drawn) {
+                    img.src = drawn;
                     img.hidden = false;
                 } else {
+                    img.removeAttribute('src');
                     img.hidden = true;
                 }
             }
             if (copy) copy.value = order.pix?.copyPaste || '';
             if (waiting) {
                 waiting.hidden = hasQr || hasCopy;
-                if (!hasQr && !hasCopy && order.pixError) {
+                if (!hasQr && !hasCopy) {
                     waiting.hidden = false;
-                    waiting.textContent = order.pixError;
+                    const err = String(order.pixError || '');
+                    waiting.textContent = err.includes('chave Pix')
+                        ? err
+                        : 'Gerando o QR Code do Pix…';
+                    if (err && root.dataset.helpOpened !== '1') {
+                        root.dataset.helpOpened = '1';
+                        openWhatsappHelp('PIX');
+                    }
                 }
             }
         }
@@ -413,6 +441,23 @@
             window.setTimeout(() => { window.location.href = setupUrl; }, 1200);
         }
         refreshIcons();
+    };
+
+    const paymentLabel = (type) => {
+        if (type === 'PIX') return 'Pix';
+        if (type === 'BOLETO') return 'boleto';
+        if (type === 'CREDIT_CARD') return 'cartão';
+        return type || 'pagamento';
+    };
+
+    const openWhatsappHelp = (billingType) => {
+        const phone = String(root.dataset.whatsapp || '').replace(/\D/g, '');
+        if (!phone) return;
+        const plan = root.dataset.planName || 'plano';
+        const amount = (root.querySelector('[data-summary-total]')?.textContent || '').trim() || 'o valor do plano';
+        const text = `Preciso de ajuda para finalizar a compra do ${plan} no valor de ${amount} utilizando o método de pagamento ${paymentLabel(billingType)}.`;
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     const startPaymentPoll = (orderId) => {
@@ -526,7 +571,9 @@
                 throw new Error('Resposta inválida do servidor. Recarregue e tente novamente.');
             }
             if (!response.ok || !data?.ok || !data.order) {
-                throw new Error(data?.error || 'Não foi possível concluir o checkout.');
+                const failure = new Error(data?.error || 'Não foi possível concluir o checkout.');
+                failure.asaas = Boolean(data?.asaas);
+                throw failure;
             }
             if (form.cardNumber) form.cardNumber.value = '';
             if (form.cardCcv) form.cardCcv.value = '';
@@ -543,6 +590,9 @@
             showError(message);
             toast(message, 'danger');
             showStep(3);
+            if (error?.asaas) {
+                openWhatsappHelp(billingType);
+            }
         } finally {
             if (timeoutId) window.clearTimeout(timeoutId);
             resetSubmit();

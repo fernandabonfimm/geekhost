@@ -40,9 +40,11 @@ try {
     echo json_encode(['ok' => true, 'order' => $order], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 } catch (InvalidArgumentException $e) {
     http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+    echo json_encode(['ok' => false, 'error' => $e->getMessage(), 'asaas' => false]);
 } catch (Throwable $e) {
     geekhost_log('api_checkout_error', ['error' => $e->getMessage()]);
     http_response_code(400);
-    echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+    $message = $e->getMessage();
+    $asaas = (bool) preg_match('/gateway|asaas|cobran[cç]a|pix|boleto|cart[aã]o|assinatura/i', $message);
+    echo json_encode(['ok' => false, 'error' => $message, 'asaas' => $asaas], JSON_UNESCAPED_UNICODE);
 }

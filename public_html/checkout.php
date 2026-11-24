@@ -57,18 +57,19 @@ require __DIR__ . '/includes/header.php';
 
 <section class="checkout-page" data-checkout
     data-plan="<?= e($planCode) ?>"
+    data-plan-name="<?= e($selection['plan']['name']) ?>"
+    data-whatsapp="<?= e($companyWhatsapp) ?>"
     data-period="<?= e($periodCode) ?>"
     data-amount="<?= e((string) $selection['amount']) ?>"
     data-renew="<?= e((string) $selection['renew_amount']) ?>"
     data-csrf="<?= e($csrf) ?>"
-    data-create-url="<?= e(url('/api/checkout/create')) ?>"
-    data-status-url="<?= e(url('/api/checkout/status')) ?>"
+    data-create-url="<?= e(url('/api/checkout/create.php')) ?>"
+    data-status-url="<?= e(url('/api/checkout/status.php')) ?>"
     data-panel-url="<?= e(url('/painel/')) ?>"
     data-login-url="<?= e(url('/painel/login')) ?>"
     data-periods='<?= e((string) $periodsJson) ?>'>
 
     <div class="co-hero">
-        <img class="co-hero-bg" src="<?= e(asset('assets/images/banner-checkout-para-letras-claras.png')) ?>" alt="" width="1600" height="420">
         <div class="co-hero-inner page-width">
             <div class="co-hero-copy">
                 <p class="co-hero-eyebrow" data-hero-eyebrow>Checkout GeekHost</p>
@@ -310,7 +311,6 @@ require __DIR__ . '/includes/header.php';
             <!-- Step 4: Pay / confirmation -->
             <section class="co-card co-confirm co-step" data-step="4" data-result hidden>
                 <div class="co-confirm-grid">
-                    <img class="co-confirm-art" src="<?= e(asset('assets/images/mascotes-highfive.png')) ?>" alt="" width="280" height="220">
                     <div class="co-confirm-copy">
                         <div class="co-confirm-icon" data-result-icon><i data-lucide="circle-check"></i></div>
                         <h2 data-result-title>Pedido recebido</h2>
@@ -321,7 +321,7 @@ require __DIR__ . '/includes/header.php';
                             <strong class="co-pix-title"><i data-lucide="qr-code"></i> Pague com Pix para liberar sua hospedagem</strong>
                             <p>Escaneie o QR Code ou copie o código Pix abaixo. Esta página atualiza sozinha quando o pagamento for confirmado.</p>
                             <div class="co-pix-layout">
-                                <img data-pix-image alt="QR Code Pix" width="220" height="220">
+                                <img data-pix-image alt="QR Code Pix" width="240" height="240" hidden>
                                 <div class="co-pix-copy-wrap">
                                     <label class="co-field">
                                         <span>Pix copia e cola</span>
@@ -330,7 +330,7 @@ require __DIR__ . '/includes/header.php';
                                     <button type="button" class="co-btn co-btn-primary" data-copy-pix>
                                         <i data-lucide="copy"></i> Copiar código Pix
                                     </button>
-                                    <p class="co-hint" data-pix-waiting hidden>Ainda gerando o QR Code… aguarde alguns segundos.</p>
+                                    <p class="co-hint" data-pix-waiting hidden>Gerando o QR Code do Pix…</p>
                                 </div>
                             </div>
                         </div>
@@ -390,5 +390,6 @@ require __DIR__ . '/includes/header.php';
 </section>
 
 <div class="co-toast-host" data-toast-host aria-live="polite"></div>
+<script src="<?= e(asset('assets/js/qrcode.min.js')) ?>" defer></script>
 <script src="<?= e(asset('assets/js/checkout.js')) ?>" defer></script>
 <?php require __DIR__ . '/includes/footer.php'; ?>
