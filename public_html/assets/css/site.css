@@ -591,7 +591,46 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .simple-cta p { margin: 0; color: var(--forest); font: 600 20px var(--font-display); }
 
 .contact-hero { padding-bottom: 50px; }
-.contact-layout { display: grid; grid-template-columns: .85fr 1.15fr; gap: 90px; padding-bottom: 100px; }
+.contact-layout { display: grid; grid-template-columns: .85fr 1.15fr; gap: 90px; padding-bottom: 48px; }
+.kb-cta { padding-bottom: 88px; }
+.kb-cta-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(220px, .85fr);
+    align-items: end;
+    gap: 24px;
+    min-height: 320px;
+    padding: 42px 36px 0 48px;
+    overflow: hidden;
+    border-radius: 28px;
+    background:
+        radial-gradient(520px 280px at 88% 20%, rgba(1, 225, 82, .35), transparent 60%),
+        linear-gradient(115deg, #0c1014 0%, #14301c 48%, #01e152 100%);
+    color: #fff;
+    box-shadow: 0 24px 60px rgba(12, 16, 20, .28);
+}
+.kb-cta-copy { padding-bottom: 42px; }
+.kb-cta-copy .eyebrow { color: #b8ffcf; }
+.kb-cta-copy h2 {
+    max-width: 14ch;
+    margin: 0 0 14px;
+    color: #fff;
+    font: 600 42px/1.08 var(--font-display);
+    letter-spacing: -.03em;
+}
+.kb-cta-copy p:not(.eyebrow) {
+    max-width: 42ch;
+    margin: 0 0 22px;
+    color: rgba(255, 255, 255, .82);
+    font-size: 17px;
+    line-height: 1.5;
+}
+.kb-cta-art {
+    width: min(100%, 420px);
+    height: auto;
+    justify-self: end;
+    margin-bottom: -8px;
+    filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .28));
+}
 .contact-aside { padding-top: 12px; }
 .contact-aside h2 { font-size: 34px; }
 .contact-aside > p:not(.eyebrow) { max-width: 360px; margin: 17px 0 33px; color: var(--muted); }
@@ -1146,7 +1185,11 @@ body.exit-intent-open { overflow: hidden; }
     .plan-notes { margin-block: 18px 49px; padding: 18px; }
     .simple-cta { align-items: flex-start; flex-direction: column; padding-bottom: 58px; }
     .simple-cta p { font-size: 18px; }
-    .contact-layout { grid-template-columns: 1fr; gap: 28px; padding-bottom: 65px; }
+    .contact-layout { grid-template-columns: 1fr; gap: 28px; padding-bottom: 36px; }
+    .kb-cta { padding-bottom: 56px; }
+    .kb-cta-card { grid-template-columns: 1fr; padding: 28px 22px 0; }
+    .kb-cta-copy h2 { font-size: 32px; }
+    .kb-cta-art { width: min(100%, 280px); justify-self: center; }
     .contact-aside h2 { font-size: 30px; }
     .contact-form-wrap { padding: 19px; }
     .generator-form, .generator-result { padding: 20px; }

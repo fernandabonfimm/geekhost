@@ -5,11 +5,6 @@ $pageDescription = 'Fale com a GeekHost e consulte a base de conhecimento sobre 
 $pageDocumentTitle = 'Suporte | GeekHost';
 $currentPage = 'contato';
 require __DIR__ . '/includes/header.php';
-require_once __DIR__ . '/includes/KnowledgeBase.php';
-
-$kb = new KnowledgeBase();
-$kbCategories = $kb->categories();
-$kbArticles = $kb->articles();
 
 $subject = trim((string) ($_GET['assunto'] ?? ''));
 $allowedSubjects = ['light', 'empresa', 'premium'];
@@ -77,25 +72,15 @@ $subjectLabels = [
     </div>
 </section>
 
-<section class="page-width" id="base-de-conhecimento" style="padding:0 0 80px">
-    <p class="eyebrow">Base de conhecimento</p>
-    <h2>Como usar a hospedagem</h2>
-    <p class="page-hero-copy">Painel, pagamento, domínio, site, DirectAdmin e banco de dados.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:28px 0">
-        <?php foreach ($kbCategories as $category): ?>
-            <a href="<?= e(url('/base-de-conhecimento?cat=' . rawurlencode((string) $category['slug']))) ?>" style="display:block;padding:16px;border:1px solid #e6e8eb;border-radius:16px;background:#fff;color:inherit">
-                <strong><?= e((string) $category['title']) ?></strong>
-                <p style="margin:6px 0 0;color:#697078;font-size:13px"><?= e((string) $category['summary']) ?></p>
-            </a>
-        <?php endforeach; ?>
-    </div>
-    <div style="display:grid;gap:10px">
-        <?php foreach ($kbArticles as $article): ?>
-            <a href="<?= e(url('/base-de-conhecimento?slug=' . rawurlencode((string) $article['slug']))) ?>" style="display:block;padding:14px 16px;border:1px solid #e6e8eb;border-radius:14px;background:#fff;color:inherit">
-                <strong><?= e((string) $article['title']) ?></strong>
-                <p style="margin:4px 0 0;color:#697078;font-size:13px"><?= e((string) $article['summary']) ?></p>
-            </a>
-        <?php endforeach; ?>
+<section class="kb-cta page-width" id="base-de-conhecimento">
+    <div class="kb-cta-card">
+        <div class="kb-cta-copy">
+            <p class="eyebrow">Base de conhecimento</p>
+            <h2>Travou em algum passo? A resposta já está escrita.</h2>
+            <p>Guias diretos para pagar fatura, cadastrar domínio, publicar o site, entrar no DirectAdmin e criar o banco de dados.</p>
+            <a class="button button-lime" href="<?= e(url('/base-de-conhecimento')) ?>">Abrir a base de conhecimento <span aria-hidden="true">↗</span></a>
+        </div>
+        <img class="kb-cta-art" src="<?= e(asset('assets/images/mascotes-suporte.png')) ?>" alt="Mascotes GeekHost mostrando um passo no notebook" width="420" height="520">
     </div>
 </section>
 
