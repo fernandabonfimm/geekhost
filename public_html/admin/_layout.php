@@ -62,6 +62,7 @@ $nav = [
     ['relatorios', 'Relatórios', 'file-bar-chart', '/admin/relatorios'],
     ['auditoria', 'Logs e auditoria', 'scroll-text', '/admin/auditoria'],
     ['configuracoes', 'Configurações', 'settings', '/admin/configuracoes'],
+    ['conhecimento', 'Base de conhecimento', 'book-open', '/admin/conhecimento'],
 ];
 
 $adminAllowed = $adminRow ? $adminGate->pagesFor($adminRow) : [];

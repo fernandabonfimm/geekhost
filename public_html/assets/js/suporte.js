@@ -133,17 +133,15 @@
     const renderList = () => {
         const html = state.items.length === 0
             ? renderEmptyList()
-            : state.items.map((t) => `
-                <button type="button" class="support-ticket-item ${t.id === state.selectedId ? 'is-active' : ''} ${statusClass(t.status)}" data-select-ticket="${esc(t.id)}">
-                    <div class="support-ticket-item-top">
-                        <span class="support-id-badge">${esc(t.numberLabel)}</span>
-                        <span class="support-status-badge ${statusClass(t.status)}">${esc(t.statusLabel)}</span>
-                    </div>
-                    <strong>${esc(t.subject)}</strong>
-                    <p>${esc(t.categoryLabel)} · Atualizado ${esc(relative(t.updatedAt))}</p>
-                    ${t.unread > 0 ? `<span class="support-unread">${t.unread}</span>` : ''}
-                </button>
-            `).join('');
+            : `<table class="support-table"><thead><tr><th>Departamento</th><th>Assunto</th><th>Status</th><th>Última atualização</th></tr></thead><tbody>${
+                state.items.map((t) => `
+                <tr class="${t.id === state.selectedId ? 'is-active' : ''}" data-select-ticket="${esc(t.id)}" tabindex="0">
+                    <td>${esc(t.categoryLabel)}</td>
+                    <td><strong>${esc(t.numberLabel)}</strong><div>${esc(t.subject || 'Sem assunto')}</div></td>
+                    <td><span class="support-status-badge ${statusClass(t.status)}">${esc(t.statusLabel)}</span></td>
+                    <td>${esc(fmtDate(t.updatedAt))}</td>
+                </tr>`).join('')
+            }</tbody></table>`;
 
         els.ticketLists().forEach((list) => { list.innerHTML = html; });
         els.counts().forEach((c) => { c.textContent = String(state.total); });
@@ -259,11 +257,21 @@
         const fill = (select, includeEmpty) => {
             if (!select) return;
             const current = select.value;
-            select.innerHTML = includeEmpty ? '<option value="">Todas as categorias</option>' : '<option value="">Selecione…</option>';
-            Object.entries(cats).forEach(([k, label]) => {
+            const defaults = [
+                ['technical', 'Suporte Técnico e Dúvidas'],
+                ['billing', 'Assuntos Financeiros'],
+                ['relationship', 'Solução e Relacionamento'],
+            ];
+            const entries = Object.keys(cats).length ? Object.entries(cats) : defaults;
+            select.innerHTML = includeEmpty
+                ? '<option value="">Todas as categorias</option>'
+                : '';
+            entries.forEach(([k, label]) => {
+                if (!includeEmpty && !['technical', 'billing', 'relationship'].includes(k)) return;
                 select.insertAdjacentHTML('beforeend', `<option value="${esc(k)}">${esc(label)}</option>`);
             });
-            select.value = current;
+            if (!includeEmpty && !select.value) select.value = 'technical';
+            else select.value = current;
         };
         fill(els.categorySelect, false);
         fill(els.filterCategory, true);

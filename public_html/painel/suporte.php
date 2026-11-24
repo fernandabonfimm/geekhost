@@ -89,7 +89,7 @@ $openTicketId = trim((string) ($_GET['ticket'] ?? ''));
                         <option value="">Todas as categorias</option>
                     </select>
                 </div>
-                <div class="support-ticket-list" data-ticket-list aria-live="polite"></div>
+                <div class="support-ticket-table-wrap" data-ticket-list aria-live="polite"></div>
                 <div class="support-pagination" data-pagination hidden></div>
             </aside>
 
@@ -143,21 +143,31 @@ $openTicketId = trim((string) ($_GET['ticket'] ?? ''));
     <div class="support-panel" data-panel-tab="create" hidden>
         <form class="gh-card gh-card-pad support-create" data-create-form>
             <div class="gh-card-head">
-                <h3>Abrir novo ticket</h3>
+                <h3>Criar nova Solicitação de Suporte</h3>
             </div>
             <div class="support-form-grid">
                 <label>
-                    <span>Assunto *</span>
-                    <input type="text" name="subject" maxlength="160" required placeholder="Resumo do problema">
+                    <span>Nome</span>
+                    <input type="text" value="<?= e((string) ($panelUser['name'] ?? '')) ?>" readonly>
                 </label>
                 <label>
-                    <span>Categoria *</span>
+                    <span>Endereço de e-mail</span>
+                    <input type="email" value="<?= e((string) ($panelUser['email'] ?? '')) ?>" readonly>
+                </label>
+                <label class="support-full">
+                    <span>Assunto *</span>
+                    <input type="text" name="subject" maxlength="160" required placeholder="Resumo do chamado">
+                </label>
+                <label>
+                    <span>Departamento *</span>
                     <select name="category" required data-category-select>
-                        <option value="">Selecione…</option>
+                        <option value="technical" selected>Suporte Técnico e Dúvidas</option>
+                        <option value="billing">Assuntos Financeiros</option>
+                        <option value="relationship">Solução e Relacionamento</option>
                     </select>
                 </label>
                 <label>
-                    <span>Serviço relacionado</span>
+                    <span>Serviço Relacionado</span>
                     <select name="serviceId" data-service-select>
                         <option value="">Nenhum</option>
                     </select>
@@ -166,31 +176,29 @@ $openTicketId = trim((string) ($_GET['ticket'] ?? ''));
                     <span>Prioridade</span>
                     <select name="priority">
                         <option value="low">Baixa</option>
-                        <option value="normal" selected>Normal</option>
+                        <option value="normal" selected>Média</option>
                         <option value="high">Alta</option>
                         <option value="urgent">Urgente</option>
                     </select>
-                    <small class="support-hint">A prioridade é uma classificação inicial e não garante prazo automático.</small>
                 </label>
             </div>
             <label class="support-full">
-                <span>Descrição *</span>
-                <textarea name="body" rows="7" required minlength="10" maxlength="8000" placeholder="Descreva o problema com o máximo de detalhes possível…"></textarea>
+                <span>Mensagem *</span>
+                <textarea name="body" rows="8" required minlength="10" maxlength="8000" placeholder="Descreva o que aconteceu, o domínio e o que você já tentou."></textarea>
             </label>
             <div class="support-full">
                 <span>Anexos</span>
                 <label class="gh-btn gh-btn-secondary support-attach-btn">
-                    <i data-lucide="paperclip" aria-hidden="true"></i> Selecionar arquivos
-                    <input type="file" name="attachments[]" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.txt,.log,.zip,image/*,application/pdf,text/plain" hidden data-create-attach>
+                    <i data-lucide="paperclip" aria-hidden="true"></i> Escolher arquivo
+                    <input type="file" name="attachments[]" multiple accept=".jpg,.gif,.jpeg,.png,.psd,.ai,.cdr,.pdf,.txt,.doc,.docx,.xls,.xlsx,.csv,.zip,.pcapng,.wav,.dat" hidden data-create-attach>
                 </label>
                 <div class="support-attach-preview" data-create-files></div>
-                <small class="support-hint">Imagens, PDF, TXT/LOG ou ZIP até 5 MB cada (máx. 5 arquivos).</small>
+                <small class="support-hint">Extensões: .jpg, .gif, .jpeg, .png, .psd, .ai, .cdr, .pdf, .txt, .doc, .docx, .xls, .xlsx, .csv, .zip, .pcapng, .wav, .dat. Até 8 MB por arquivo (máx. 5).</small>
             </div>
             <p class="support-form-error" data-create-error hidden></p>
             <div class="support-create-actions">
-                <button type="submit" class="gh-btn gh-btn-primary" data-create-submit>
-                    <i data-lucide="send" aria-hidden="true"></i> Enviar ticket
-                </button>
+                <button type="submit" class="gh-btn gh-btn-primary" data-create-submit>Enviar</button>
+                <button type="button" class="gh-btn gh-btn-secondary" data-tab="list">Cancelar</button>
             </div>
         </form>
     </div>

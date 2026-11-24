@@ -1679,6 +1679,15 @@ body.panel-body.is-auth .panel-footer { color: rgba(255, 255, 255, .62); backgro
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 }
+.support-full { grid-column: 1 / -1; }
+.support-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.support-table th { text-align: left; font-size: 11px; letter-spacing: .06em; color: var(--gh-muted); padding: 10px 12px; border-bottom: 1px solid var(--gh-line); }
+.support-table td { padding: 12px; border-bottom: 1px solid var(--gh-line); vertical-align: top; cursor: pointer; }
+.support-table tr.is-active td { background: #f3faf5; }
+.support-table td strong { display: block; color: #008f39; }
+.pref-grid { display: grid; gap: 12px; }
+.pref-row { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gh-line); }
+.pref-row p { margin: 4px 0 0; color: var(--gh-muted); font-size: 13px; }
 .support-create label,
 .support-full {
     display: grid;

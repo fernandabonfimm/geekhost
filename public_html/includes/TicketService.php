@@ -13,14 +13,11 @@ final class TicketService
     public const PRIORITIES = ['low', 'normal', 'high', 'urgent'];
 
     public const CATEGORIES = [
+        'technical' => 'Suporte Técnico e Dúvidas',
+        'billing' => 'Assuntos Financeiros',
+        'relationship' => 'Solução e Relacionamento',
         'hosting' => 'Hospedagem',
         'domains' => 'Domínios e DNS',
-        'wordpress' => 'WordPress',
-        'email' => 'E-mail profissional',
-        'ssl' => 'SSL',
-        'billing' => 'Faturamento e pagamentos',
-        'migration' => 'Migração de site',
-        'technical' => 'Problemas técnicos',
         'other' => 'Outros',
     ];
 
@@ -35,7 +32,7 @@ final class TicketService
         'application/zip' => 'zip',
     ];
 
-    private const MAX_BYTES = 5_242_880; // 5MB
+    private const MAX_BYTES = 8_388_608; // 8MB per file
 
     private PDO $db;
 
@@ -62,7 +59,7 @@ final class TicketService
     {
         return [
             'low' => 'Baixa',
-            'normal' => 'Normal',
+            'normal' => 'Média',
             'high' => 'Alta',
             'urgent' => 'Urgente',
         ];
@@ -654,19 +651,16 @@ final class TicketService
             throw new InvalidArgumentException('Arquivo inválido.');
         }
         if ($size <= 0 || $size > self::MAX_BYTES) {
-            throw new InvalidArgumentException('Cada anexo deve ter no máximo 5 MB.');
+            throw new InvalidArgumentException('Cada anexo deve ter no máximo 8 MB.');
         }
-        $blockedExt = ['php', 'phtml', 'phar', 'exe', 'bat', 'cmd', 'sh', 'js', 'html', 'htm', 'svg'];
+        $allowedExt = ['jpg', 'gif', 'jpeg', 'png', 'psd', 'ai', 'cdr', 'pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'zip', 'pcapng', 'wav', 'dat', 'webp', 'log'];
         $origExt = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        if (in_array($origExt, $blockedExt, true)) {
+        if (!in_array($origExt, $allowedExt, true)) {
             throw new InvalidArgumentException('Extensão de arquivo não permitida.');
         }
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime = (string) ($finfo->file($tmp) ?: ($file['type'] ?? ''));
-        if (!isset(self::ALLOWED_MIME[$mime])) {
-            throw new InvalidArgumentException('Tipo de arquivo não permitido.');
-        }
-        $ext = self::ALLOWED_MIME[$mime];
+        $mime = (string) ($finfo->file($tmp) ?: ($file['type'] ?? 'application/octet-stream'));
+        $ext = $origExt;
         $stored = bin2hex(random_bytes(16)) . '.' . $ext;
         $root = $this->storageRoot();
         if (!is_dir($root) && !mkdir($root, 0750, true) && !is_dir($root)) {
@@ -774,7 +768,7 @@ final class TicketService
         return [
             'id' => $row['public_id'],
             'number' => (int) $row['number'],
-            'numberLabel' => '#' . $row['number'],
+            'numberLabel' => '#GH-' . $row['number'],
             'subject' => $row['subject'],
             'category' => $row['category'],
             'categoryLabel' => self::CATEGORIES[$row['category']] ?? $row['category'],

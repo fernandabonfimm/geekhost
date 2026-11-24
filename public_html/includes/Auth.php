@@ -252,6 +252,10 @@ final class Auth
     {
         $token = $this->readBearerHeader();
         if ($token === null || $token === '') {
+            $user = $this->user();
+            if ($user) {
+                return $user;
+            }
             $this->denyApi('Envie o cabeçalho Authorization: Bearer com o token da sessão.');
         }
         $user = $this->userFromToken($token, false);

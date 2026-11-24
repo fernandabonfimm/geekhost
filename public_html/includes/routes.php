@@ -23,6 +23,14 @@ function geekhost_public_script(string $uri): ?string
         $path = rtrim($path, '/');
     }
 
+    if (preg_match('#^/base-de-conhecimento(?:/([a-z0-9-]+))?$#', $path, $kb) === 1) {
+        if (!empty($kb[1]) && !isset($_GET['slug'])) {
+            $_GET['slug'] = $kb[1];
+        }
+        $file = '/base-de-conhecimento.php';
+        return is_file(geekhost_public_root() . $file) ? $file : null;
+    }
+
     $fixed = [
         '/checkout' => '/checkout.php',
         '/api/checkout/create' => '/api/checkout/create.php',

@@ -32,13 +32,14 @@ final class AdminGate
         'relatorios' => 'Relatórios',
         'auditoria' => 'Logs e auditoria',
         'configuracoes' => 'Configurações',
+        'conhecimento' => 'Base de conhecimento',
     ];
 
     /** @var array<string, list<string>> */
     private const ROLE_PAGES = [
         'super_admin' => ['*'],
         'financeiro' => ['overview', 'vendas', 'faturamento', 'cobrancas', 'cancelamentos', 'datas', 'clientes', 'relatorios'],
-        'suporte' => ['overview', 'clientes', 'hospedagens', 'dominios', 'sites', 'cobrancas', 'cancelamentos'],
+        'suporte' => ['overview', 'clientes', 'hospedagens', 'dominios', 'sites', 'cobrancas', 'cancelamentos', 'conhecimento'],
         'comercial' => ['overview', 'vendas', 'clientes', 'planos', 'relatorios'],
         'staff' => ['overview'],
     ];

@@ -56,9 +56,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'profile_updated',
                         'Senha atualizada',
                         'A senha da sua conta GeekHost foi alterada com sucesso.',
-                        url('/painel/perfil')
-                    );
+                    url('/painel/perfil')
+                );
+            }
+            } elseif ($action === 'preferences') {
+                $activeTab = 'preferencias';
+                $prefs = [
+                    'notify_invoices' => isset($_POST['notify_invoices']),
+                    'notify_tickets' => isset($_POST['notify_tickets']),
+                    'notify_service' => isset($_POST['notify_service']),
+                    'notify_news' => isset($_POST['notify_news']),
+                    'remind_days' => in_array((string) ($_POST['remind_days'] ?? '3'), ['1', '3', '7'], true) ? (string) $_POST['remind_days'] : '3',
+                ];
+                $pdo = geekhost_db();
+                $pdo->exec('CREATE TABLE IF NOT EXISTS user_preferences (user_id INTEGER PRIMARY KEY, prefs_json TEXT NOT NULL, updated_at TEXT NOT NULL)');
+                $now = gmdate('c');
+                $json = json_encode($prefs, JSON_UNESCAPED_UNICODE);
+                $exists = $pdo->prepare('SELECT user_id FROM user_preferences WHERE user_id = :u');
+                $exists->execute([':u' => (int) $panelUser['id']]);
+                if ($exists->fetch()) {
+                    $pdo->prepare('UPDATE user_preferences SET prefs_json = :j, updated_at = :u WHERE user_id = :id')
+                        ->execute([':j' => $json, ':u' => $now, ':id' => (int) $panelUser['id']]);
+                } else {
+                    $pdo->prepare('INSERT INTO user_preferences (user_id, prefs_json, updated_at) VALUES (:id, :j, :u)')
+                        ->execute([':id' => (int) $panelUser['id'], ':j' => $json, ':u' => $now]);
                 }
+                $message = 'Preferências salvas.';
             } else {
                 $activeTab = (string) ($_POST['tab'] ?? 'dados');
                 if (!in_array($activeTab, ['dados', 'endereco', 'preferencias'], true)) {
@@ -231,15 +254,47 @@ $initials = strtoupper(substr((string) ($nameParts[0] ?? 'G'), 0, 1) . substr((s
                 <?php endif; ?>
             </div>
 
+            <?php
+            $prefDefaults = [
+                'notify_invoices' => true,
+                'notify_tickets' => true,
+                'notify_service' => true,
+                'notify_news' => false,
+                'remind_days' => '3',
+            ];
+            try {
+                $prefStmt = geekhost_db()->prepare('SELECT prefs_json FROM user_preferences WHERE user_id = :u');
+                $prefStmt->execute([':u' => (int) $panelUser['id']]);
+                $prefRaw = $prefStmt->fetchColumn();
+                if (is_string($prefRaw) && $prefRaw !== '') {
+                    $decodedPrefs = json_decode($prefRaw, true);
+                    if (is_array($decodedPrefs)) {
+                        $prefDefaults = array_merge($prefDefaults, $decodedPrefs);
+                    }
+                }
+            } catch (Throwable $e) {
+                // table created on first save
+            }
+            ?>
             <div class="gh-card profile-panel" data-profile-panel="preferencias" <?= $activeTab === 'preferencias' ? '' : 'hidden' ?>>
-                <h2 style="margin:0 0 14px;font-size:16px">Preferências</h2>
-                <p style="margin:0 0 12px;color:var(--gh-muted);font-size:14px;line-height:1.5">
-                    Preferências avançadas de notificação serão liberadas quando o backend correspondente estiver disponível.
-                    Por enquanto, use o menu da conta e o WhatsApp de suporte.
-                </p>
-                <?php if (!empty($companyWhatsapp)): ?>
-                    <a class="gh-btn gh-btn-primary" href="https://wa.me/<?= e($companyWhatsapp) ?>" target="_blank" rel="noopener noreferrer">Falar com suporte</a>
-                <?php endif; ?>
+                <h2 style="margin:0 0 8px;font-size:16px">Preferências</h2>
+                <p style="margin:0 0 12px;color:var(--gh-muted);font-size:14px;line-height:1.5">Avisos da conta por e-mail. O suporte continua em Tickets, sem atalho de WhatsApp aqui.</p>
+                <form method="post" class="pref-grid">
+                    <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                    <input type="hidden" name="action" value="preferences">
+                    <label class="pref-row"><span><strong>Faturas e vencimentos</strong><p>Aviso quando uma cobrança abrir ou vencer.</p></span><input type="checkbox" name="notify_invoices" <?= !empty($prefDefaults['notify_invoices']) ? 'checked' : '' ?>></label>
+                    <label class="pref-row"><span><strong>Respostas de ticket</strong><p>E-mail quando a equipe responder um chamado.</p></span><input type="checkbox" name="notify_tickets" <?= !empty($prefDefaults['notify_tickets']) ? 'checked' : '' ?>></label>
+                    <label class="pref-row"><span><strong>Status da hospedagem</strong><p>Suspensão, reativação e provisionamento.</p></span><input type="checkbox" name="notify_service" <?= !empty($prefDefaults['notify_service']) ? 'checked' : '' ?>></label>
+                    <label class="pref-row"><span><strong>Novidades da GeekHost</strong><p>Opcional. Produto e manutenção programada.</p></span><input type="checkbox" name="notify_news" <?= !empty($prefDefaults['notify_news']) ? 'checked' : '' ?>></label>
+                    <label class="pref-row"><span><strong>Antecedência do lembrete</strong><p>Quantos dias antes do vencimento avisar.</p></span>
+                        <select name="remind_days">
+                            <?php foreach (['1' => '1 dia', '3' => '3 dias', '7' => '7 dias'] as $k => $label): ?>
+                                <option value="<?= e($k) ?>" <?= (string) $prefDefaults['remind_days'] === $k ? 'selected' : '' ?>><?= e($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <button class="gh-btn gh-btn-primary" type="submit">Salvar preferências</button>
+                </form>
             </div>
         </div>
     </div>

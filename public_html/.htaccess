@@ -13,6 +13,8 @@ Options -Indexes
     RewriteCond %{REQUEST_URI} ^/geekhost/public_html/?(.*)$
     RewriteRule ^ /geekhost/%1 [R=301,L]
 
+    RewriteRule ^base-de-conhecimento/?$ base-de-conhecimento.php [L,QSA]
+    RewriteRule ^base-de-conhecimento/([a-z0-9-]+)/?$ base-de-conhecimento.php?slug=$1 [L,QSA]
     RewriteRule ^checkout/?$ checkout.php [L,QSA]
     RewriteRule ^api/checkout/create/?$ api/checkout/create.php [L,QSA]
     RewriteRule ^api/checkout/status/?$ api/checkout/status.php [L,QSA]
